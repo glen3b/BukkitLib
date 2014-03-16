@@ -1,0 +1,24 @@
+# Delay, in seconds, that must be waited before teleportation of a player
+# This time must be waited out without movement or taking damage
+# Set to 0 for instant teleports
+# Bypass permission: gbukkitlib.tpdelay.bypass
+teleportDelay: 3
+
+# Messages displayed to users in-game
+# Color codes are supported
+# This is registered as a global MessageProvider service
+messages:
+  # Message to display to user when they are actually teleporting
+  teleporting: "&6Teleporting..."
+  # Message to display to user when they are told they are starting the countdown to teleport
+  # Keys replaced:
+  # %time% - second(s) before teleportation will commence
+  # %units% - "second" if %time% == 1, "seconds" otherwise
+  teleportBegin: "&6Teleporting in &e%time% %units%&6, do not move."
+  # Message to display to user after one second of the teleport delay has decayed
+  # Keys replaced:
+  # %time% - second(s) before teleportation will commence
+  # %units% - "second" if %time% == 1, "seconds" otherwise
+  teleportProgress: "&6Teleporting in &e%time% %units%&6."
+  # Message to display to user if the teleport is cancelled.
+  teleportCancelled: "&4Pending teleportation cancelled."
