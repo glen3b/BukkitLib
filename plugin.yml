@@ -1,0 +1,23 @@
+ name: GBukkitLib
+ version: 1.0.0
+ description: This plugin is a library allowing uniform access to functions used by multiple plugins.
+ author: glen3b
+ 
+ main: me.pagekite.glen3b.gbukkitlib.GBukkitLibraryPlugin
+ 
+ permissions:
+   gbukkitlib.*:
+     description: Allows all things
+     children:
+       gbukkitlib.config: true
+       gbukkitlib.debug: true
+       gbukkitlib.tpdelay.bypass: true
+   gbukkitlib.tpdelay.bypass:
+     description: Allows bypass of the teleportation delay
+     default: op
+   gbukkitlib.debug:
+     description: Allows debug feature access
+     default: op
+   gbukkitlib.config:
+     description: Allows config editing in-game
+     default: op
