@@ -1,6 +1,7 @@
 package me.pagekite.glen3b.gbukkitlib;
 
 import java.util.HashMap;
+import java.util.Set;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -16,7 +17,7 @@ import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
 
-public final class GBukkitLibraryPlugin extends JavaPlugin {
+public final class GBukkitLibraryPlugin extends JavaPlugin implements MessageProvider {
 
 	@Override
 	public void onDisable(){
@@ -26,6 +27,8 @@ public final class GBukkitLibraryPlugin extends JavaPlugin {
 	@Override
 	public void onEnable(){
 		this.getServer().getServicesManager().register(TeleportationManager.class, new GBukkitTPManager(), this, ServicePriority.Normal);
+		this.getServer().getServicesManager().register(MessageProvider.class, this, this, ServicePriority.Low);
+		saveDefaultConfig();
 	}
 	
 	private final class GBukkitTPManager implements TeleportationManager {
@@ -48,7 +51,7 @@ public final class GBukkitLibraryPlugin extends JavaPlugin {
 				Bukkit.getServer().getPluginManager().registerEvents(this, GBukkitLibraryPlugin.this);
 				_target = target;
 
-				player.sendMessage(String.format("%sTeleporting in %d second%s, do not move.", ChatColor.YELLOW.toString(), initialDelay, initialDelay == 1 ? "" : "s"));
+				player.sendMessage(getMessage("teleportBegin").replace("%time%", Integer.toString(initialDelay)).replace("%units%", initialDelay == 1 ? "second" : "seconds"));
 			}
 
 			public void cleanup(boolean notifyPlayer){
@@ -56,7 +59,7 @@ public final class GBukkitLibraryPlugin extends JavaPlugin {
 				_isValid = false;
 				
 				if(notifyPlayer && Bukkit.getPlayer(_playerName) != null){
-					Bukkit.getPlayer(_playerName).sendMessage(ChatColor.DARK_RED + "Pending teleportation cancelled.");
+					Bukkit.getPlayer(_playerName).sendMessage(getMessage("teleportCancelled"));
 				}
 				
 				HandlerList.unregisterAll(this);
@@ -109,11 +112,11 @@ public final class GBukkitLibraryPlugin extends JavaPlugin {
 				
 				if(_remDelay <= 0){
 					//Teleport to location
+					affected.sendMessage(getMessage("teleporting"));
 					affected.teleport(_target);
-					affected.sendMessage(ChatColor.GOLD + "Teleporting...");
 					cleanup(false);
 				}else{
-					affected.sendMessage(String.format("%sTeleporting in %d second%s.", ChatColor.DARK_PURPLE.toString(), _remDelay, _remDelay == 1 ? "" : "s"));
+					affected.sendMessage(getMessage("teleportProgress").replace("%time%", Integer.toString(_remDelay)).replace("%units%", _remDelay == 1 ? "second" : "seconds"));
 				}
 			}
 
@@ -171,7 +174,7 @@ public final class GBukkitLibraryPlugin extends JavaPlugin {
 			
 			//Check for no teleport delay
 			if(teleportDelay == 0 || player.hasPermission("gbukkitlib.tpdelay.bypass")){
-				//TODO: Send message to player indicating teleportation
+				player.sendMessage(getMessage("teleporting"));
 			  	player.teleport(targetLoc);
 			  	return;
 			}
@@ -181,7 +184,7 @@ public final class GBukkitLibraryPlugin extends JavaPlugin {
 		}
 		
 		public void teleportPlayer(Player player, Location targetLoc){
-			teleportPlayer(player, targetLoc, /* TODO: Get delay from configuration */ 3);
+			teleportPlayer(player, targetLoc, getConfig().getInt("teleportDelay"));
 		}
 
 		@Override
@@ -192,6 +195,32 @@ public final class GBukkitLibraryPlugin extends JavaPlugin {
 			
 			return _teleportsQueued.containsKey(teleport.getName().toLowerCase().trim()) ? _teleportsQueued.get(teleport.getName().toLowerCase().trim()) : null;
 		}
+	}
+
+	@Override
+	public Set<String> getProvidedMessages() {
+		return getConfig().getConfigurationSection("messages").getKeys(false);
+	}
+
+	@Override
+	public String getMessage(String messageId) {
+		return ChatColor.translateAlternateColorCodes('&', getConfig().getConfigurationSection("messages").getString(messageId));
+	}
+
+	@Override
+	public void setMessage(String key, String value)
+			throws IllegalStateException {
+		throw new IllegalStateException("This is a read-only message provider.");
+	}
+
+	@Override
+	public void saveMessages() {
+		throw new IllegalStateException("This is a read-only message provider.");
+	}
+
+	@Override
+	public boolean isReadOnly() {
+		return true;
 	}
 	
 }
