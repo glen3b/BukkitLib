@@ -17,8 +17,40 @@ import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
 
-public final class GBukkitLibraryPlugin extends JavaPlugin implements MessageProvider {
+public final class GBukkitLibraryPlugin extends JavaPlugin {
 
+	private final class DefaultMessageProvider implements MessageProvider{
+
+		@Override
+		public Set<String> getProvidedMessages() {
+			return getConfig().getConfigurationSection("messages").getKeys(false);
+		}
+
+		@Override
+		public String getMessage(String messageId) {
+			return ChatColor.translateAlternateColorCodes('&', getConfig().getConfigurationSection("messages").getString(messageId));
+		}
+
+		@Override
+		public void setMessage(String key, String value)
+				throws IllegalStateException {
+			throw new IllegalStateException("This is a read-only message provider.");
+		}
+
+		@Override
+		public void saveMessages() {
+			throw new IllegalStateException("This is a read-only message provider.");
+		}
+
+		@Override
+		public boolean isReadOnly() {
+			return true;
+		}
+		
+	}
+	
+	DefaultMessageProvider _defaultProvider;
+	
 	@Override
 	public void onDisable(){
 		this.getServer().getServicesManager().unregisterAll(this);
@@ -26,8 +58,11 @@ public final class GBukkitLibraryPlugin extends JavaPlugin implements MessagePro
 	
 	@Override
 	public void onEnable(){
+		//_messageProvidingClass = new EncompassingMessageProvider(this);
+		_defaultProvider = new DefaultMessageProvider();
 		this.getServer().getServicesManager().register(TeleportationManager.class, new GBukkitTPManager(), this, ServicePriority.Normal);
-		this.getServer().getServicesManager().register(MessageProvider.class, this, this, ServicePriority.Low);
+		this.getServer().getServicesManager().register(MessageProvider.class, _defaultProvider, this, ServicePriority.Lowest);
+		//this.getServer().getServicesManager().register(MessageProvider.class, _messageProvidingClass, this, ServicePriority.Highest);
 		saveDefaultConfig();
 	}
 	
@@ -51,7 +86,7 @@ public final class GBukkitLibraryPlugin extends JavaPlugin implements MessagePro
 				Bukkit.getServer().getPluginManager().registerEvents(this, GBukkitLibraryPlugin.this);
 				_target = target;
 
-				player.sendMessage(getMessage("teleportBegin").replace("%time%", Integer.toString(initialDelay)).replace("%units%", initialDelay == 1 ? "second" : "seconds"));
+				player.sendMessage(_defaultProvider.getMessage("teleportBegin").replace("%time%", Integer.toString(initialDelay)).replace("%units%", initialDelay == 1 ? "second" : "seconds"));
 			}
 
 			public void cleanup(boolean notifyPlayer){
@@ -59,12 +94,13 @@ public final class GBukkitLibraryPlugin extends JavaPlugin implements MessagePro
 				_isValid = false;
 				
 				if(notifyPlayer && Bukkit.getPlayer(_playerName) != null){
-					Bukkit.getPlayer(_playerName).sendMessage(getMessage("teleportCancelled"));
+					Bukkit.getPlayer(_playerName).sendMessage(_defaultProvider.getMessage("teleportCancelled"));
 				}
 				
 				HandlerList.unregisterAll(this);
 			}
 			
+			@SuppressWarnings("unused")
 			@EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
 			public void onPlayerDamage(EntityDamageEvent event){
 				if(!_isValid){
@@ -76,6 +112,7 @@ public final class GBukkitLibraryPlugin extends JavaPlugin implements MessagePro
 				}
 			}
 			
+			@SuppressWarnings("unused")
 			@EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
 			public void onPlayerMove(PlayerMoveEvent event){
 				if(!_isValid){
@@ -112,11 +149,11 @@ public final class GBukkitLibraryPlugin extends JavaPlugin implements MessagePro
 				
 				if(_remDelay <= 0){
 					//Teleport to location
-					affected.sendMessage(getMessage("teleporting"));
+					affected.sendMessage(_defaultProvider.getMessage("teleporting"));
 					affected.teleport(_target);
 					cleanup(false);
 				}else{
-					affected.sendMessage(getMessage("teleportProgress").replace("%time%", Integer.toString(_remDelay)).replace("%units%", _remDelay == 1 ? "second" : "seconds"));
+					affected.sendMessage(_defaultProvider.getMessage("teleportProgress").replace("%time%", Integer.toString(_remDelay)).replace("%units%", _remDelay == 1 ? "second" : "seconds"));
 				}
 			}
 
@@ -174,7 +211,7 @@ public final class GBukkitLibraryPlugin extends JavaPlugin implements MessagePro
 			
 			//Check for no teleport delay
 			if(teleportDelay == 0 || player.hasPermission("gbukkitlib.tpdelay.bypass")){
-				player.sendMessage(getMessage("teleporting"));
+				player.sendMessage(_defaultProvider.getMessage("teleporting"));
 			  	player.teleport(targetLoc);
 			  	return;
 			}
@@ -195,32 +232,6 @@ public final class GBukkitLibraryPlugin extends JavaPlugin implements MessagePro
 			
 			return _teleportsQueued.containsKey(teleport.getName().toLowerCase().trim()) ? _teleportsQueued.get(teleport.getName().toLowerCase().trim()) : null;
 		}
-	}
-
-	@Override
-	public Set<String> getProvidedMessages() {
-		return getConfig().getConfigurationSection("messages").getKeys(false);
-	}
-
-	@Override
-	public String getMessage(String messageId) {
-		return ChatColor.translateAlternateColorCodes('&', getConfig().getConfigurationSection("messages").getString(messageId));
-	}
-
-	@Override
-	public void setMessage(String key, String value)
-			throws IllegalStateException {
-		throw new IllegalStateException("This is a read-only message provider.");
-	}
-
-	@Override
-	public void saveMessages() {
-		throw new IllegalStateException("This is a read-only message provider.");
-	}
-
-	@Override
-	public boolean isReadOnly() {
-		return true;
 	}
 	
 }

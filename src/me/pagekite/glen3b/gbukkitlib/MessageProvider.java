@@ -3,7 +3,7 @@ package me.pagekite.glen3b.gbukkitlib;
 import java.util.Set;
 
 /**
- * A provider of user-friendly color-formatted messages.
+ * A provider of user-friendly color-formatted messages. Note that although this is intended to be used with the bukkit services API, multiple non-overlapping MessageProvider instances may be registered, hence for a reliable source of a user-provided message all registrations must be searched.
  * @author Glen
  */
 public interface MessageProvider {
@@ -16,7 +16,7 @@ public interface MessageProvider {
 	
 	/**
 	 * Gets the message with the specified message ID.
-	 * @return The color-formatted message with the specified ID.
+	 * @return The color-formatted message with the specified ID, or {@code null} if it is not provided by this {@link me.pagekite.glen3b.gbukkitlib.MessageProvider}.
 	 */
 	public String getMessage(String messageId);
 	
