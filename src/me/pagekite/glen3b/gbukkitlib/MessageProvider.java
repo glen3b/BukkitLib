@@ -3,8 +3,9 @@ package me.pagekite.glen3b.gbukkitlib;
 import java.util.Set;
 
 /**
- * A provider of user-friendly color-formatted messages. Note that although this is intended to be used with the bukkit services API, multiple non-overlapping MessageProvider instances may be registered, hence for a reliable source of a user-provided message all registrations must be searched.
- * @author Glen
+ * A provider of user-friendly color-formatted messages.
+ * To access a message provided by a {@link me.pagekite.glen3b.gbukkitlib.MessageProvider}, it is recommended that you use the static methods present on the {@link me.pagekite.glen3b.gbukkitlib.Message} class.
+ * @author Glen Husman
  */
 public interface MessageProvider {
 

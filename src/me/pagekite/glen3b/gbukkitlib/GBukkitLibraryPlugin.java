@@ -49,8 +49,6 @@ public final class GBukkitLibraryPlugin extends JavaPlugin {
 		
 	}
 	
-	DefaultMessageProvider _defaultProvider;
-	
 	@Override
 	public void onDisable(){
 		this.getServer().getServicesManager().unregisterAll(this);
@@ -59,9 +57,9 @@ public final class GBukkitLibraryPlugin extends JavaPlugin {
 	@Override
 	public void onEnable(){
 		//_messageProvidingClass = new EncompassingMessageProvider(this);
-		_defaultProvider = new DefaultMessageProvider();
 		this.getServer().getServicesManager().register(TeleportationManager.class, new GBukkitTPManager(), this, ServicePriority.Normal);
-		this.getServer().getServicesManager().register(MessageProvider.class, _defaultProvider, this, ServicePriority.Lowest);
+		//XXX: Should the configuration-provided server owner-registered messages be at the highest priority, or the lowest priority?
+		this.getServer().getServicesManager().register(MessageProvider.class, new DefaultMessageProvider(), this, ServicePriority.Highest);
 		//this.getServer().getServicesManager().register(MessageProvider.class, _messageProvidingClass, this, ServicePriority.Highest);
 		saveDefaultConfig();
 	}
@@ -86,7 +84,7 @@ public final class GBukkitLibraryPlugin extends JavaPlugin {
 				Bukkit.getServer().getPluginManager().registerEvents(this, GBukkitLibraryPlugin.this);
 				_target = target;
 
-				player.sendMessage(_defaultProvider.getMessage("teleportBegin").replace("%time%", Integer.toString(initialDelay)).replace("%units%", initialDelay == 1 ? "second" : "seconds"));
+				player.sendMessage(Message.get("teleportBegin").replace("%time%", Integer.toString(initialDelay)).replace("%units%", initialDelay == 1 ? "second" : "seconds"));
 			}
 
 			public void cleanup(boolean notifyPlayer){
@@ -94,7 +92,7 @@ public final class GBukkitLibraryPlugin extends JavaPlugin {
 				_isValid = false;
 				
 				if(notifyPlayer && Bukkit.getPlayer(_playerName) != null){
-					Bukkit.getPlayer(_playerName).sendMessage(_defaultProvider.getMessage("teleportCancelled"));
+					Bukkit.getPlayer(_playerName).sendMessage(Message.get("teleportCancelled"));
 				}
 				
 				HandlerList.unregisterAll(this);
@@ -149,11 +147,11 @@ public final class GBukkitLibraryPlugin extends JavaPlugin {
 				
 				if(_remDelay <= 0){
 					//Teleport to location
-					affected.sendMessage(_defaultProvider.getMessage("teleporting"));
+					affected.sendMessage(Message.get("teleporting"));
 					affected.teleport(_target);
 					cleanup(false);
 				}else{
-					affected.sendMessage(_defaultProvider.getMessage("teleportProgress").replace("%time%", Integer.toString(_remDelay)).replace("%units%", _remDelay == 1 ? "second" : "seconds"));
+					affected.sendMessage(Message.get("teleportProgress").replace("%time%", Integer.toString(_remDelay)).replace("%units%", _remDelay == 1 ? "second" : "seconds"));
 				}
 			}
 
@@ -211,7 +209,7 @@ public final class GBukkitLibraryPlugin extends JavaPlugin {
 			
 			//Check for no teleport delay
 			if(teleportDelay == 0 || player.hasPermission("gbukkitlib.tpdelay.bypass")){
-				player.sendMessage(_defaultProvider.getMessage("teleporting"));
+				player.sendMessage(Message.get("teleporting"));
 			  	player.teleport(targetLoc);
 			  	return;
 			}
