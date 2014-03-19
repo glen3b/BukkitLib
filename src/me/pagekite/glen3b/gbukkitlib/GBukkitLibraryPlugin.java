@@ -150,7 +150,7 @@ public final class GBukkitLibraryPlugin extends JavaPlugin {
 					affected.sendMessage(Message.get("teleporting"));
 					affected.teleport(_target);
 					cleanup(false);
-				}else{
+				}else if(getConfig().getBoolean("showIncrementalMessages")){
 					affected.sendMessage(Message.get("teleportProgress").replace("%time%", Integer.toString(_remDelay)).replace("%units%", _remDelay == 1 ? "second" : "seconds"));
 				}
 			}

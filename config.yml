@@ -4,6 +4,9 @@
 # Bypass permission: gbukkitlib.tpdelay.bypass
 teleportDelay: 3
 
+# Whether to show a countdown after the initial teleporting message
+showIncrementalMessages: true
+
 # Messages displayed to users in-game
 # Color codes are supported
 # This is registered as a global MessageProvider service

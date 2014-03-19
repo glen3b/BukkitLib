@@ -8,14 +8,56 @@ import org.bukkit.ChatColor;
 import org.bukkit.plugin.RegisteredServiceProvider;
 
 /**
- * A class which enumerates through all registered {@link MessageProvider} instances to find a specified message.
+ * A class representing a retrieved message.
+ * Static methods in the class enumerate through all registered {@link MessageProvider} instances to find a specified message.
  * @author Glen Husman
  */
 public final class Message {
 
-	private Message(){
-		//Static class, so to speak
+	/**
+	 * Creates an instance of Message with the specified key and value. Does not add to any {@link MessageProvider}.
+	 * @param key The {@link MessageProvider} key for this message.
+	 * @param value The value of the message.
+	 */
+	public Message(String key, String value){
+		if(key == null){
+			throw new IllegalArgumentException("Key cannot be null.");
+		}
+		
+		if(value == null){
+			throw new IllegalArgumentException("Value cannot be null.");
+		}
+		
+		_key = key;
+		_value = value;
 	}
+	
+	/**
+	 * Gets the value of this message, as input.
+	 * @return The unformatted value of the message.
+	 */
+	public String getUnformattedValue(){
+		return _value;
+	}
+	
+	/**
+	 * Gets the value of this message, color code formatted with the & character.
+	 * @return The color formatted value of the message.
+	 */
+	public String getValue(){
+		return ChatColor.translateAlternateColorCodes('&', getUnformattedValue());
+	}
+	
+	/**
+	 * Gets the key of this message.
+	 * @return The {@link MessageProvider} backend storage key.
+	 */
+	public String getKey(){
+		return _key;
+	}
+	
+	private String _key;
+	private String _value;
 	
 	/**
 	 * Search all {@link MessageProvider}s registered via the {@link org.bukkit.plugin.ServicesManager}, sorting by priority, to find the specified message.
