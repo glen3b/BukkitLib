@@ -27,8 +27,12 @@ public final class GBukkitLibraryPlugin extends JavaPlugin {
 		}
 
 		@Override
-		public String getMessage(String messageId) {
-			return ChatColor.translateAlternateColorCodes('&', getConfig().getConfigurationSection("messages").getString(messageId));
+		public Message getMessage(String messageId) {
+			if(getConfig().getConfigurationSection("messages").getString(messageId) == null){
+				return null;
+			}
+			
+			return new Message(messageId, getConfig().getConfigurationSection("messages").getString(messageId));
 		}
 
 		@Override
@@ -45,6 +49,15 @@ public final class GBukkitLibraryPlugin extends JavaPlugin {
 		@Override
 		public boolean isReadOnly() {
 			return true;
+		}
+
+		@Override
+		public void setMessage(Message value) throws IllegalStateException {
+			if(value == null){
+				throw new IllegalArgumentException("The message cannot be null.");
+			}
+			
+			setMessage(value.getKey(), value.getUnformattedValue());
 		}
 		
 	}

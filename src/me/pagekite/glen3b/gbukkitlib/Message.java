@@ -106,7 +106,7 @@ public final class Message {
 	private static String getMessageFromList(ArrayList<MessageProvider> list, String key){
 		for(MessageProvider provider : list){
 			if(provider.getMessage(key) != null){
-				return ChatColor.translateAlternateColorCodes('&', provider.getMessage(key));
+				return provider.getMessage(key).getValue();
 			}
 		}
 		

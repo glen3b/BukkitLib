@@ -17,9 +17,16 @@ public interface MessageProvider {
 	
 	/**
 	 * Gets the message with the specified message ID.
-	 * @return The color-formatted message with the specified ID, or {@code null} if it is not provided by this {@link me.pagekite.glen3b.gbukkitlib.MessageProvider}.
+	 * @return The message with the specified ID, or {@code null} if it is not provided by this {@link me.pagekite.glen3b.gbukkitlib.MessageProvider}.
 	 */
-	public String getMessage(String messageId);
+	public Message getMessage(String messageId);
+	
+	/**
+	 * Adds a message to this provider.
+	 * @param value The {@link Message} instance to set.
+	 * @exception java.lang.IllegalStateException Thrown if this is a read-only message provider.
+	 */
+	public void setMessage(Message value) throws IllegalStateException;
 	
 	/**
 	 * Adds a message to this provider.
