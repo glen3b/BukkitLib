@@ -69,11 +69,10 @@ public final class GBukkitLibraryPlugin extends JavaPlugin {
 	
 	@Override
 	public void onEnable(){
-		//_messageProvidingClass = new EncompassingMessageProvider(this);
+		this.getServer().getServicesManager().register(AutoSaverScheduler.class, new AutoSaverScheduler(this), this, ServicePriority.Normal);
 		this.getServer().getServicesManager().register(TeleportationManager.class, new GBukkitTPManager(), this, ServicePriority.Normal);
-		//XXX: Should the configuration-provided server owner-registered messages be at the highest priority, or the lowest priority?
+		//XXX: Should the configuration-provided server-owner registered messages be at the highest priority, or the lowest priority?
 		this.getServer().getServicesManager().register(MessageProvider.class, new DefaultMessageProvider(), this, ServicePriority.Highest);
-		//this.getServer().getServicesManager().register(MessageProvider.class, _messageProvidingClass, this, ServicePriority.Highest);
 		saveDefaultConfig();
 	}
 	
