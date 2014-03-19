@@ -15,26 +15,26 @@
     along with GBukkitLib.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package me.pagekite.glen3b.gbukkitlib;
+package me.pagekite.glen3b.library.bukkit.datastore;
 
 import java.util.Set;
 
 /**
  * A provider of user-friendly color-formatted messages.
- * To access a message provided by a {@link me.pagekite.glen3b.gbukkitlib.MessageProvider}, it is recommended that you use the static methods present on the {@link me.pagekite.glen3b.gbukkitlib.Message} class.
+ * To access a message provided by a {@link me.pagekite.glen3b.library.bukkit.datastore.MessageProvider}, it is recommended that you use the static methods present on the {@link me.pagekite.glen3b.library.bukkit.datastore.Message} class.
  * @author Glen Husman
  */
 public interface MessageProvider {
 
 	/**
 	 * Gets the set of provided messages. This is a collection of keys, not values.
-	 * @return A {@link java.util.Set} of keys of messages provided by this {@link me.pagekite.glen3b.gbukkitlib.MessageProvider}.
+	 * @return A {@link java.util.Set} of keys of messages provided by this {@link me.pagekite.glen3b.library.bukkit.datastore.MessageProvider}.
 	 */
 	public Set<String> getProvidedMessages();
 	
 	/**
 	 * Gets the message with the specified message ID.
-	 * @return The message with the specified ID, or {@code null} if it is not provided by this {@link me.pagekite.glen3b.gbukkitlib.MessageProvider}.
+	 * @return The message with the specified ID, or {@code null} if it is not provided by this {@link me.pagekite.glen3b.library.bukkit.datastore.MessageProvider}.
 	 */
 	public Message getMessage(String messageId);
 	

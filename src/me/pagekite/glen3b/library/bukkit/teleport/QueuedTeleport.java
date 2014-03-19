@@ -15,7 +15,7 @@
     along with GBukkitLib.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package me.pagekite.glen3b.gbukkitlib;
+package me.pagekite.glen3b.library.bukkit.teleport;
 
 import org.bukkit.Location;
 import org.bukkit.entity.Player;

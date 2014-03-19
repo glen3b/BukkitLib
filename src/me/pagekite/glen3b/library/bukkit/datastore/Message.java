@@ -15,7 +15,7 @@
     along with GBukkitLib.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package me.pagekite.glen3b.gbukkitlib;
+package me.pagekite.glen3b.library.bukkit.datastore;
 
 import java.util.ArrayList;
 import java.util.Collection;

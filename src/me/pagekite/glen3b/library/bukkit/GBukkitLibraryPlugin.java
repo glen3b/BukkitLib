@@ -15,10 +15,16 @@
     along with GBukkitLib.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package me.pagekite.glen3b.gbukkitlib;
+package me.pagekite.glen3b.library.bukkit;
 
 import java.util.HashMap;
 import java.util.Set;
+
+import me.pagekite.glen3b.library.bukkit.datastore.AutoSaverScheduler;
+import me.pagekite.glen3b.library.bukkit.datastore.Message;
+import me.pagekite.glen3b.library.bukkit.datastore.MessageProvider;
+import me.pagekite.glen3b.library.bukkit.teleport.QueuedTeleport;
+import me.pagekite.glen3b.library.bukkit.teleport.TeleportationManager;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -33,6 +39,10 @@ import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
 
+/**
+ * The plugin class for GBukkitLibrary. Contains many implementation classes of registered services.
+ * @author Glen Husman
+ */
 public final class GBukkitLibraryPlugin extends JavaPlugin {
 
 	private final class DefaultMessageProvider implements MessageProvider{

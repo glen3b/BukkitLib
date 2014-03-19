@@ -15,7 +15,7 @@
     along with GBukkitLib.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package me.pagekite.glen3b.gbukkitlib;
+package me.pagekite.glen3b.library.bukkit.datastore;
 
 import java.io.File;
 import java.io.IOException;
@@ -34,9 +34,12 @@ public final class AutoSaverScheduler {
 	
 	/**
 	 * Internal constructor for service registration.
+	 * <br/><br/>
+	 * <b>This constructor should only be called by GBukkitLib to register this service.</b>
+	 * 
 	 * @param plugin The plugin to use to register autosave tasks.
 	 */
-	AutoSaverScheduler(Plugin plugin){
+	public AutoSaverScheduler(Plugin plugin){
 		_plugin = plugin;
 	}
 	
@@ -62,7 +65,9 @@ public final class AutoSaverScheduler {
 	/**
 	 * Gets the configuration path for the file name fileName within a plugin's data directory.
 	 * @param plugin The plugin who's configuration file's path should be retrieved.
-	 * @return A @{link File} instance which represents fileName in the plugin.
+	 * @return A File instance which represents fileName in the plugin.
+	 * @see File#File(File, String)
+	 * @see Plugin#getDataFolder()
 	 */
 	public File getConfigurationPath(Plugin plugin, String fileName){
 		if(plugin == null){
@@ -79,7 +84,8 @@ public final class AutoSaverScheduler {
 	/**
 	 * Gets the configuration path for the file name "config.yml" within a plugin's data directory.
 	 * @param plugin The plugin who's configuration file's path should be retrieved.
-	 * @return A @{link File} instance which represents config.yml in the plugin. The name config.yml is hardcoded.
+	 * @return A File instance which represents config.yml in the plugin. The name config.yml is hardcoded.
+	 * @see #getConfigurationPath(Plugin, String)
 	 */
 	public File getConfigurationPath(Plugin plugin){
 		return getConfigurationPath(plugin, "config.yml");
@@ -90,7 +96,7 @@ public final class AutoSaverScheduler {
 	 * @param path The path of the configuration to save.
 	 * @param config The configuration to save to the specified file.
 	 * @param saveInterval The interval, in server ticks, between autosaves.
-	 * @see {@link getConfigurationPath}
+	 * @see #getConfigurationPath(Plugin)
 	 */
 	public void registerAutosave(File path, FileConfiguration config, long saveInterval){
 		if(path == null){
