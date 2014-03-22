@@ -25,7 +25,7 @@ public final class BaseCommand implements CommandExecutor {
 	
 	/**
 	 * Create a base command. For this class to execute a command, {@code getCommand("commandNameInPluginYaml").setExecutor(new BaseCommand(...))} must be called.
-	 * @param helpHeader The header to display on help pages, where {@code %d} is substituted with the page number. Color codes must be translated by the caller.
+	 * @param helpHeader The header to display on help pages, where {@code %d} is substituted with the page number. If used, color codes must be translated by the caller.
 	 * @param commands The array of commands which are executed via this base command.
 	 */
 	public BaseCommand(String helpHeader, SubCommand... commands){
@@ -102,7 +102,7 @@ public final class BaseCommand implements CommandExecutor {
     			page *= -1;
     		}
     		
-    		sender.sendMessage(String.format(_helpPageHeader, ChatColor.AQUA.toString(), page + 1));
+    		sender.sendMessage(String.format(ChatColor.AQUA + _helpPageHeader, page + 1));
     		
     		if(page * getConfig().getInt("cmdPerPage") > _subCommands.size()){
     			return true;

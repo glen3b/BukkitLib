@@ -6,7 +6,7 @@ import org.bukkit.command.CommandSender;
 
 /**
  * Represents a command that can be used via a base command.
- * TODO: TSender type argument (validates sender instance) and argument list.
+ * TODO: TSender type argument (validates sender instance, such as players only command) and an Argument class and list.
  */
 public abstract class SubCommand {
 
