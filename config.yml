@@ -7,6 +7,9 @@ teleportDelay: 3
 # Whether to show a countdown after the initial teleporting message
 showIncrementalMessages: true
 
+# The number of commands to display per base command help page
+commandsPerPage: 10
+
 # Messages displayed to users in-game
 # Color codes are supported
 # This is registered as a global MessageProvider service
