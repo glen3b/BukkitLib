@@ -23,11 +23,13 @@ import java.util.Set;
 import me.pagekite.glen3b.library.bukkit.datastore.AutoSaverScheduler;
 import me.pagekite.glen3b.library.bukkit.datastore.Message;
 import me.pagekite.glen3b.library.bukkit.datastore.MessageProvider;
+import me.pagekite.glen3b.library.bukkit.datastore.SerializableLocation;
 import me.pagekite.glen3b.library.bukkit.teleport.QueuedTeleport;
 import me.pagekite.glen3b.library.bukkit.teleport.TeleportationManager;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.configuration.serialization.ConfigurationSerialization;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -99,6 +101,7 @@ public final class GBukkitLibraryPlugin extends JavaPlugin {
 		this.getServer().getServicesManager().register(TeleportationManager.class, new GBukkitTPManager(), this, ServicePriority.Normal);
 		//XXX: Should the configuration-provided server-owner registered messages be at the highest priority, or the lowest priority?
 		this.getServer().getServicesManager().register(MessageProvider.class, new DefaultMessageProvider(), this, ServicePriority.Highest);
+		ConfigurationSerialization.registerClass(SerializableLocation.class);
 		saveDefaultConfig();
 	}
 	
