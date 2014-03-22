@@ -1,7 +1,7 @@
 package me.pagekite.glen3b.library.bukkit.command;
 
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 
 import me.pagekite.glen3b.library.bukkit.GBukkitLibraryPlugin;
 
@@ -11,7 +11,6 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.entity.Player;
 
 import com.google.common.collect.Lists;
 
@@ -121,11 +120,6 @@ public final class BaseCommand implements CommandExecutor {
     		
     		return true;
     	}else if(args.length >= 1){
-    		if(!(sender instanceof Player)){
-    			sender.sendMessage(ChatColor.DARK_RED + "Currently only players can run teams commands.");
-    			return true;
-    		}
-    		
     		for(SubCommand cmd : _subCommands){
     			for(String alias : cmd.getAliases()){
     				if(alias != null && args[0].equalsIgnoreCase(alias)){
@@ -137,7 +131,7 @@ public final class BaseCommand implements CommandExecutor {
     		
     		sender.sendMessage(ChatColor.DARK_RED + "Unknown command.");			
     	}
-		return false;
+		return true;
 	}
 
 }

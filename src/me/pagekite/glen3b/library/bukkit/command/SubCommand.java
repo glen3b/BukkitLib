@@ -4,6 +4,10 @@ import java.util.List;
 
 import org.bukkit.command.CommandSender;
 
+/**
+ * Represents a command that can be used via a base command.
+ * TODO: TSender type argument (validates sender instance) and argument list.
+ */
 public abstract class SubCommand {
 
 	private List<String> _aliases;
