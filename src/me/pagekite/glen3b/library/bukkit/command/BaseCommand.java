@@ -10,6 +10,8 @@ import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.PluginCommand;
+import org.bukkit.command.TabExecutor;
 import org.bukkit.configuration.file.FileConfiguration;
 
 import com.google.common.collect.Lists;
@@ -18,13 +20,26 @@ import com.google.common.collect.Lists;
  * Represents a base command that can execute subcommands
  * @author Glen Husman
  */
-public final class BaseCommand implements CommandExecutor {
+public final class BaseCommand implements TabExecutor {
 
 	private String _helpPageHeader = "Help (page %d):";
 	private ArrayList<SubCommand> _subCommands;
 	
 	/**
-	 * Create a base command. For this class to execute a command, {@code getCommand("commandNameInPluginYaml").setExecutor(new BaseCommand(...))} must be called.
+	 * Register a base command as a command executor
+	 * @param cmd The command which this instance represents.
+	 */
+	public void register(PluginCommand cmd){
+		if(cmd == null){
+			throw new IllegalArgumentException("The plugin command must not be null.");
+		}
+		
+		cmd.setExecutor(this);
+		cmd.setTabCompleter(this);
+	}
+	
+	/**
+	 * Create a base command. For this class to execute a command, {@code register(getCommand("commandNameInPluginYaml"))} must be called.
 	 * @param helpHeader The header to display on help pages, where {@code %d} is substituted with the page number. If used, color codes must be translated by the caller.
 	 * @param commands The array of commands which are executed via this base command.
 	 */
@@ -120,18 +135,54 @@ public final class BaseCommand implements CommandExecutor {
     		
     		return true;
     	}else if(args.length >= 1){
-    		for(SubCommand cmd : _subCommands){
-    			for(String alias : cmd.getAliases()){
-    				if(alias != null && args[0].equalsIgnoreCase(alias)){
-    					//Execute this command!
-    					cmd.execute(sender, args);
-    				}
-    			}
+    		List<SubCommand> cmd = getCommands(args[0]);
+    		
+    		if(cmd.size() == 1){
+    			cmd.get(0).execute(sender, args);
+    			return true;
     		}
     		
     		sender.sendMessage(ChatColor.DARK_RED + "Unknown command.");			
     	}
 		return true;
+	}
+
+	
+	private List<SubCommand> getCommands(String label){
+		ArrayList<SubCommand> retVal = new ArrayList<SubCommand>();
+		
+		for(SubCommand cmd : _subCommands){
+			for(String alias : cmd.getAliases()){
+				if(alias != null && label.equalsIgnoreCase(alias)){
+					retVal.add(cmd);
+
+				}
+			}
+		}
+		
+		return retVal;
+	}
+	
+	/**
+	 * Tab completes the base command.
+	 * @see TabCompleter
+	 * @see Command
+	 */
+	@Override
+	public List<String> onTabComplete(CommandSender sender, Command command,
+			String label, String[] args) {
+		List<String> completions = new ArrayList<String>();
+		if(args.length == 0 || args.length == 1){
+			List<SubCommand> cmd = args.length == 0 ? _subCommands : getCommands(args[0]);
+			
+			for(SubCommand cmds : cmd){
+				completions.add(cmds.getAliases().get(0));
+			}
+		}
+		//TODO: Pass tab completion on to sub-command if it implements the right interfaces.
+		//else if(args.length >= 1 && args[1] != null)
+		
+		return completions;
 	}
 
 }
