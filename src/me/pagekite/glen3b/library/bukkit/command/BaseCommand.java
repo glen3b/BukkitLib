@@ -11,6 +11,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.PluginCommand;
+import org.bukkit.command.TabCompleter;
 import org.bukkit.command.TabExecutor;
 import org.bukkit.configuration.file.FileConfiguration;
 
@@ -135,7 +136,7 @@ public final class BaseCommand implements TabExecutor {
     		
     		return true;
     	}else if(args.length >= 1){
-    		List<SubCommand> cmd = getCommands(args[0]);
+    		List<SubCommand> cmd = getCommands(args[0], true);
     		
     		if(cmd.size() == 1){
     			cmd.get(0).execute(sender, args);
@@ -148,14 +149,15 @@ public final class BaseCommand implements TabExecutor {
 	}
 
 	
-	private List<SubCommand> getCommands(String label){
+	private List<SubCommand> getCommands(String label, boolean getExact){
 		ArrayList<SubCommand> retVal = new ArrayList<SubCommand>();
 		
 		for(SubCommand cmd : _subCommands){
 			for(String alias : cmd.getAliases()){
-				if(alias != null && label.equalsIgnoreCase(alias)){
+				if(alias != null && (label.equalsIgnoreCase(alias) || (!getExact && alias.toLowerCase().startsWith(label.toLowerCase())))){
 					retVal.add(cmd);
-
+					//Break out of the alias loop
+					break;
 				}
 			}
 		}
@@ -172,15 +174,19 @@ public final class BaseCommand implements TabExecutor {
 	public List<String> onTabComplete(CommandSender sender, Command command,
 			String label, String[] args) {
 		List<String> completions = new ArrayList<String>();
+		SubCommand argOne = args.length < 1 ? null : (getCommands(args[0], true).size() == 1 ? getCommands(args[0], true).get(0) : null);
 		if(args.length == 0 || args.length == 1){
-			List<SubCommand> cmd = args.length == 0 ? _subCommands : getCommands(args[0]);
+			//XXX does MC automatically do the "startsWith" check?
+			List<SubCommand> cmd = args.length == 0 ? _subCommands : getCommands(args[0], false);
 			
 			for(SubCommand cmds : cmd){
 				completions.add(cmds.getAliases().get(0));
 			}
 		}
-		//TODO: Pass tab completion on to sub-command if it implements the right interfaces.
-		//else if(args.length >= 1 && args[1] != null)
+		else if(args.length >= 1 && argOne != null && (argOne instanceof TabCompleter)){
+			//Pass tab completion on to subclass
+			completions = ((TabCompleter)argOne).onTabComplete(sender, command, label, args);
+		}
 		
 		return completions;
 	}
