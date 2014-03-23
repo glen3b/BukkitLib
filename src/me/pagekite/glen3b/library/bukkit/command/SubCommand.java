@@ -4,6 +4,8 @@ import java.util.List;
 
 import org.bukkit.command.CommandSender;
 
+import com.google.common.collect.Lists;
+
 /**
  * Represents a command that can be used via a base command.
  * TODO: TSender type argument (validates sender instance, such as players only command) and an Argument class and list.
@@ -20,6 +22,7 @@ public abstract class SubCommand {
 		if(aliases == null || aliases.length == 0){
 			throw new IllegalArgumentException("There must be at least one alias.");
 		}
+		_aliases = Lists.newArrayList(aliases);
 	}
 	
 	/**

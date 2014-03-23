@@ -3,7 +3,7 @@
  description: This plugin is a library allowing uniform access to functions used by multiple plugins.
  author: glen3b
  
- main: me.pagekite.glen3b.gbukkitlib.GBukkitLibraryPlugin
+ main: me.pagekite.glen3b.library.bukkit.GBukkitLibraryPlugin
  
  permissions:
    gbukkitlib.*:
