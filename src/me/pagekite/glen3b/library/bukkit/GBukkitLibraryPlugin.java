@@ -105,12 +105,12 @@ public final class GBukkitLibraryPlugin extends JavaPlugin {
 		saveDefaultConfig();
 	}
 	
-	private final class GBukkitTPManager implements TeleportationManager {
+	final class GBukkitTPManager implements TeleportationManager {
 		private GBukkitTPManager(){
 			
 		}
 		
-		private final class ScheduledDecrementRunner implements Runnable, Listener, QueuedTeleport{
+		final class ScheduledDecrementRunner implements Runnable, Listener, QueuedTeleport{
 			
 			private int _remDelay;
 			private String _playerName;
@@ -139,7 +139,6 @@ public final class GBukkitLibraryPlugin extends JavaPlugin {
 				HandlerList.unregisterAll(this);
 			}
 			
-			@SuppressWarnings("unused")
 			@EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
 			public void onPlayerDamage(EntityDamageEvent event){
 				if(!_isValid){
@@ -151,7 +150,6 @@ public final class GBukkitLibraryPlugin extends JavaPlugin {
 				}
 			}
 			
-			@SuppressWarnings("unused")
 			@EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
 			public void onPlayerMove(PlayerMoveEvent event){
 				if(!_isValid){
