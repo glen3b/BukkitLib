@@ -176,16 +176,19 @@ public final class BaseCommand implements TabExecutor {
 		List<String> completions = new ArrayList<String>();
 		SubCommand argOne = args.length < 1 ? null : (getCommands(args[0], true).size() == 1 ? getCommands(args[0], true).get(0) : null);
 		if(args.length == 0 || args.length == 1){
-			//XXX does MC automatically do the "startsWith" check?
 			List<SubCommand> cmd = args.length == 0 ? _subCommands : getCommands(args[0], false);
 			
 			for(SubCommand cmds : cmd){
-				completions.add(cmds.getAliases().get(0));
+				completions.add(cmds.getName());
 			}
 		}
-		else if(args.length >= 1 && argOne != null && (argOne instanceof TabCompleter)){
+		else if(args.length >= 1 && argOne != null){
 			//Pass tab completion on to subclass
-			completions = ((TabCompleter)argOne).onTabComplete(sender, command, label, args);
+			completions = argOne.tabComplete(sender, args);
+		}
+		
+		if(completions == null){
+			completions = new ArrayList<String>();
 		}
 		
 		return completions;
