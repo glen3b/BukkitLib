@@ -17,7 +17,9 @@
 
 package me.pagekite.glen3b.library.bukkit;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Set;
 
 import me.pagekite.glen3b.library.bukkit.datastore.AutoSaverScheduler;
@@ -134,9 +136,14 @@ public final class GBukkitLibraryPlugin extends JavaPlugin {
 				
 				if(notifyPlayer && Bukkit.getPlayer(_playerName) != null){
 					Bukkit.getPlayer(_playerName).sendMessage(Message.get("teleportCancelled"));
+					for(Runnable r : _onTPCancel){
+						r.run();
+					}
 				}
 				
 				HandlerList.unregisterAll(this);
+				_onTP.clear();
+				_onTPCancel.clear();
 			}
 			
 			@EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
@@ -149,6 +156,9 @@ public final class GBukkitLibraryPlugin extends JavaPlugin {
 					cleanup(true);
 				}
 			}
+			
+			private List<Runnable> _onTP = new ArrayList<Runnable>();
+			private List<Runnable> _onTPCancel = new ArrayList<Runnable>();
 			
 			@EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
 			public void onPlayerMove(PlayerMoveEvent event){
@@ -189,6 +199,10 @@ public final class GBukkitLibraryPlugin extends JavaPlugin {
 					affected.sendMessage(Message.get("teleporting"));
 					affected.teleport(_target);
 					cleanup(false);
+					
+					for(Runnable r : _onTP){
+						r.run();
+					}
 				}else if(getConfig().getBoolean("showIncrementalMessages")){
 					affected.sendMessage(Message.get("teleportProgress").replace("%time%", Integer.toString(_remDelay)).replace("%units%", _remDelay == 1 ? "second" : "seconds"));
 				}
@@ -224,11 +238,29 @@ public final class GBukkitLibraryPlugin extends JavaPlugin {
 				
 				return Bukkit.getPlayer(_playerName);
 			}
+
+			@Override
+			public void registerOnTeleport(Runnable delegate) {
+				if(delegate == null){
+					throw new IllegalArgumentException("The delegate must not be null.");
+				}
+				
+				_onTP.add(delegate);
+			}
+
+			@Override
+			public void registerOnTeleportCancel(Runnable delegate) {
+				if(delegate == null){
+					throw new IllegalArgumentException("The delegate must not be null.");
+				}
+				
+				_onTPCancel.add(delegate);
+			}
 		}
 		
 		private HashMap<String, ScheduledDecrementRunner> _teleportsQueued = new HashMap<String, ScheduledDecrementRunner>();
 		
-		public void teleportPlayer(Player player, Location targetLoc, int teleportDelay){
+		public QueuedTeleport teleportPlayer(Player player, Location targetLoc, int teleportDelay){
 			if(teleportDelay < 0){
 				throw new IllegalArgumentException("Teleport delay must not be negative.");
 			}
@@ -250,15 +282,18 @@ public final class GBukkitLibraryPlugin extends JavaPlugin {
 			if(teleportDelay == 0 || player.hasPermission("gbukkitlib.tpdelay.bypass")){
 				player.sendMessage(Message.get("teleporting"));
 			  	player.teleport(targetLoc);
-			  	return;
+			  	return null;
 			}
 			
 			//Queue new teleportation
-			_teleportsQueued.put(player.getName().toLowerCase().trim(), new ScheduledDecrementRunner(player, teleportDelay, targetLoc));
+			ScheduledDecrementRunner runner = new ScheduledDecrementRunner(player, teleportDelay, targetLoc);
+			_teleportsQueued.put(player.getName().toLowerCase().trim(), runner);
+			
+			return runner;
 		}
 		
-		public void teleportPlayer(Player player, Location targetLoc){
-			teleportPlayer(player, targetLoc, getConfig().getInt("teleportDelay"));
+		public QueuedTeleport teleportPlayer(Player player, Location targetLoc){
+			return teleportPlayer(player, targetLoc, getConfig().getInt("teleportDelay"));
 		}
 
 		@Override
