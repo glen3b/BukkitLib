@@ -27,4 +27,4 @@ messages:
   # %units% - "second" if %time% == 1, "seconds" otherwise
   teleportProgress: "&6Teleporting in &c%time% %units%&6."
   # Message to display to user if the teleport is cancelled.
-  teleportCancelled: "&4Pending teleportation cancelled."
+  teleportCancelled: "&4Pending teleportation request cancelled."
