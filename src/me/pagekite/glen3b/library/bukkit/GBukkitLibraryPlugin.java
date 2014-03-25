@@ -198,11 +198,12 @@ public final class GBukkitLibraryPlugin extends JavaPlugin {
 					//Teleport to location
 					affected.sendMessage(Message.get("teleporting"));
 					affected.teleport(_target);
-					cleanup(false);
 					
 					for(Runnable r : _onTP){
 						r.run();
 					}
+					
+					cleanup(false);
 				}else if(getConfig().getBoolean("showIncrementalMessages")){
 					affected.sendMessage(Message.get("teleportProgress").replace("%time%", Integer.toString(_remDelay)).replace("%units%", _remDelay == 1 ? "second" : "seconds"));
 				}
