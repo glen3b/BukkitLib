@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import me.pagekite.glen3b.library.bukkit.GBukkitLibraryPlugin;
+import me.pagekite.glen3b.library.bukkit.datastore.Message;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -125,13 +126,11 @@ public final class BaseCommand implements TabExecutor {
     		}
     		
     		for(int i = page * getConfig().getInt("commandsPerPage"); (i < ((page + 1) * getConfig().getInt("commandsPerPage")) && i < _subCommands.size()); i++){
-
-    			//TODO: Configurable message format
-    			sender.sendMessage(ChatColor.GOLD + "/" + label + " " + _subCommands.get(i).getUsage() + ChatColor.GRAY + " - " + ChatColor.YELLOW + _subCommands.get(i).getDescription());
+    			sender.sendMessage(Message.get("cmdHelpEntry").replace("%basecommand%", label).replace("%usage%", _subCommands.get(i).getUsage()).replace("%desc%", _subCommands.get(i).getDescription()));
     		}
     		
     		if(((page + 1) * getConfig().getInt("commandsPerPage")) < _subCommands.size()){
-    			sender.sendMessage(ChatColor.YELLOW + "Type " + ChatColor.GOLD + "/"+ label + " help " + (page + 2) + ChatColor.YELLOW + " to see more commands.");
+    			sender.sendMessage(Message.get("cmdHelpSeeMore").replace("%basecommand%", label).replace("%page%", Integer.valueOf(page + 2).toString()));
     		}
     		
     		return true;
@@ -143,7 +142,7 @@ public final class BaseCommand implements TabExecutor {
     			return true;
     		}
     		
-    		sender.sendMessage(ChatColor.DARK_RED + "Unknown command.");			
+    		sender.sendMessage(Message.get("cmdUnknown"));			
     	}
 		return true;
 	}

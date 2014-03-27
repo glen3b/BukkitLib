@@ -28,3 +28,17 @@ messages:
   teleportProgress: "&6Teleporting in &c%time% %units%&6."
   # Message to display to user if the teleport is cancelled.
   teleportCancelled: "&4Pending teleportation request cancelled."
+  
+  # Message for "see more" at the bottom of a base command help page
+  # Keys replaced:
+  # %basecommand% - the command without the slash
+  # %page% - the next page number
+  cmdHelpSeeMore: "&eType &6/%basecommand% help %page%&e to see more commands." 
+  # Message for each command in a base command help page
+  # Keys replaced:
+  # %basecommand% - the command without the slash
+  # %usage% - usage of the subcommand
+  # %desc% - the description of the subcommand
+  cmdHelpEntry: "&6/%basecommand% %usage% &7- &e%desc%"
+  # Message to display when a user invokes an unknown subcommand
+  cmdUnknown: "&cUnknown command."

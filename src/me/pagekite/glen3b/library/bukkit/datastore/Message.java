@@ -79,7 +79,7 @@ public final class Message {
 	/**
 	 * Search all {@link MessageProvider}s registered via the {@link org.bukkit.plugin.ServicesManager}, sorting by priority, to find the specified message.
 	 * @param key The key of the message to retrieve.
-	 * @return The message associated with the specified key, or {@code null} if not found.
+	 * @return The color formatted message associated with the specified key, or {@code null} if not found.
 	 */
 	public static String get(String key) {
 		if(key == null){
