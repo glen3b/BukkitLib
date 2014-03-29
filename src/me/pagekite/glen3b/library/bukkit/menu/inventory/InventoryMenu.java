@@ -1,4 +1,4 @@
-package me.pagekite.glen3b.library.bukkit.inventory.menu;
+package me.pagekite.glen3b.library.bukkit.menu.inventory;
 
 import java.util.ArrayList;
 import java.util.List;

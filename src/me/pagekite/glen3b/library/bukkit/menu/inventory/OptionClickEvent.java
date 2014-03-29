@@ -1,4 +1,4 @@
-package me.pagekite.glen3b.library.bukkit.inventory.menu;
+package me.pagekite.glen3b.library.bukkit.menu.inventory;
 
 import org.bukkit.entity.Player;
 

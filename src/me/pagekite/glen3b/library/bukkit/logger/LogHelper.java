@@ -1,4 +1,4 @@
-package me.pagekite.glen3b.library.bukkit.log;
+package me.pagekite.glen3b.library.bukkit.logger;
 
 import java.util.logging.Level;
 
