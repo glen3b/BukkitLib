@@ -30,6 +30,7 @@ import me.pagekite.glen3b.library.bukkit.teleport.QueuedTeleport;
 import me.pagekite.glen3b.library.bukkit.teleport.TeleportationManager;
 import me.pagekite.glen3b.library.bungeecord.ServerTransportManager;
 
+import org.apache.commons.lang.Validate;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.configuration.serialization.ConfigurationSerialization;
@@ -84,9 +85,7 @@ public final class GBukkitLibraryPlugin extends JavaPlugin {
 
 		@Override
 		public void setMessage(Message value) throws IllegalStateException {
-			if(value == null){
-				throw new IllegalArgumentException("The message cannot be null.");
-			}
+			Validate.notNull(value, "The value cannot be null.");
 			
 			setMessage(value.getKey(), value.getUnformattedValue());
 		}
@@ -109,7 +108,11 @@ public final class GBukkitLibraryPlugin extends JavaPlugin {
 		saveDefaultConfig();
 	}
 	
-	final class GBukkitTPManager implements TeleportationManager {
+	/**
+	 * Default implementation class for teleportation management.
+	 * @author Glen Husman
+	 */
+	public final class GBukkitTPManager implements TeleportationManager {
 		private GBukkitTPManager(){
 			
 		}
@@ -179,13 +182,9 @@ public final class GBukkitLibraryPlugin extends JavaPlugin {
 				}
 			}
 			
-			public boolean isValid(){
-				return _isValid;
-			}
-			
 			@Override
 			public void run() {
-				_isValid = _isValid && Bukkit.getPlayer(_playerName) != null;
+				_isValid = !isCancelled() && Bukkit.getPlayer(_playerName) != null;
 				
 				if(!_isValid){
 					cleanup(false);
@@ -213,14 +212,14 @@ public final class GBukkitLibraryPlugin extends JavaPlugin {
 
 			@Override
 			public void cancel() {
-				if(isValid()){
+				if(!isCancelled()){
 					cleanup(false);
 				}
 			}
 
 			@Override
 			public boolean isCancelled() {
-				return !isValid();
+				return !_isValid;
 			}
 
 			@Override
@@ -244,18 +243,14 @@ public final class GBukkitLibraryPlugin extends JavaPlugin {
 
 			@Override
 			public void registerOnTeleport(Runnable delegate) {
-				if(delegate == null){
-					throw new IllegalArgumentException("The delegate must not be null.");
-				}
+				Validate.notNull(delegate, "The method to call must not be null.");
 				
 				_onTP.add(delegate);
 			}
 
 			@Override
 			public void registerOnTeleportCancel(Runnable delegate) {
-				if(delegate == null){
-					throw new IllegalArgumentException("The delegate must not be null.");
-				}
+				Validate.notNull(delegate, "The method to call must not be null.");
 				
 				_onTPCancel.add(delegate);
 			}
@@ -264,17 +259,9 @@ public final class GBukkitLibraryPlugin extends JavaPlugin {
 		private HashMap<String, ScheduledDecrementRunner> _teleportsQueued = new HashMap<String, ScheduledDecrementRunner>();
 		
 		public QueuedTeleport teleportPlayer(Player player, Location targetLoc, int teleportDelay){
-			if(teleportDelay < 0){
-				throw new IllegalArgumentException("Teleport delay must not be negative.");
-			}
-			
-			if(player == null){
-				throw new IllegalArgumentException("The player cannot be null.");
-			}
-			
-			if(targetLoc == null){
-				throw new IllegalArgumentException("The target location cannot be null.");
-			}
+			Validate.isTrue(teleportDelay >= 0, "Teleport delay must not be negative. Value: ", teleportDelay);
+			Validate.notNull(player, "The player must not be null.");
+			Validate.notNull(targetLoc, "The target location must not be null.");
 			
 			//Cleanup existing teleport, if any, in the queue
 			if(getTeleport(player) != null){
@@ -301,9 +288,7 @@ public final class GBukkitLibraryPlugin extends JavaPlugin {
 
 		@Override
 		public QueuedTeleport getTeleport(Player teleport) {
-			if(teleport == null){
-				throw new IllegalArgumentException("The player cannot be null.");
-			}
+			Validate.notNull(teleport, "The player is null.");
 			
 			return _teleportsQueued.containsKey(teleport.getName().toLowerCase().trim()) ? _teleportsQueued.get(teleport.getName().toLowerCase().trim()) : null;
 		}

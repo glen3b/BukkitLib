@@ -1,5 +1,6 @@
 package me.pagekite.glen3b.library.bukkit.menu.inventory;
 
+import org.apache.commons.lang.Validate;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
@@ -70,9 +71,7 @@ public class InventoryMenuFactory {
 	 */
 	@Deprecated
 	public InventoryMenuFactory registerClickHandler(final int position, final Function<Player, Void> handler){
-		if(position < 0){
-			throw new IllegalArgumentException("The position must be a positive index.");
-		}
+		Validate.isTrue(position >= 0 && position < _wrapped.getSize(), "The position is not within the bounds of the menu. Position: ", position);
 		
 		_wrapped.registerOptionClickHandler(new OptionClickEvent.Handler() {
 			
@@ -130,8 +129,8 @@ public class InventoryMenuFactory {
 	 * @param wrapped The inventory menu so far.
 	 */
 	public InventoryMenuFactory(InventoryMenu wrapped){
-		if(wrapped == null)
-			throw new IllegalArgumentException("The warpped menu must not be null.");
+		Validate.notNull(wrapped, "The wrapped inventory menu must not be null.");
+		Validate.isTrue(wrapped.getSize() > 0, "The wrapped inventory menu has an illegal internal state.");
 		
 		_wrapped = wrapped;
 	}

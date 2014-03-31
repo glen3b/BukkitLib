@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.commons.lang.Validate;
 import org.bukkit.Bukkit;
 import org.bukkit.Server;
 import org.bukkit.entity.Player;
@@ -43,13 +44,10 @@ public final class Utilities {
 	 */
 	public static ItemStack setItemNameAndLore(ItemStack item, String name,
 			String[] lore) {
-		if(item == null){
-			throw new IllegalArgumentException("The item is null.");
-		}
-		
-		if(name == null){
-			throw new IllegalArgumentException("The item name is null.");
-		}
+		Validate.notNull(item, "The item is null.");
+		Validate.notEmpty(name, "The name is null.");
+		Validate.notNull(lore, "The lore array is null.");
+		Validate.noNullElements(lore, "The lore array contains null elements.");
 		
 		ItemMeta im = item.getItemMeta();
 		im.setDisplayName(name);

@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.logging.Level;
 
+import org.apache.commons.lang.Validate;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.Plugin;
@@ -99,11 +100,8 @@ public class CustomConfiguration {
 	 * @param name The filename of the configuration file.
 	 */
 	public CustomConfiguration(Plugin backingStore, String name){
-		if(name == null)
-			throw new IllegalArgumentException("The filename is null.");
-		
-		if(backingStore == null)
-			throw new IllegalArgumentException("The plugin is null.");
+		Validate.notEmpty(name, "The file name must not be null or empty.");
+		Validate.notNull(backingStore, "The plugin is null.");
 		
 		_backend = backingStore;
 		_fileName = name;

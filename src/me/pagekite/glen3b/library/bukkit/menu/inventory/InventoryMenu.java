@@ -6,6 +6,7 @@ import java.util.List;
 import me.pagekite.glen3b.library.bukkit.GBukkitLibraryPlugin;
 import me.pagekite.glen3b.library.bukkit.Utilities;
 
+import org.apache.commons.lang.Validate;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -32,6 +33,19 @@ public class InventoryMenu implements Listener {
 	private String[] optionNames;
 	private ItemStack[] optionIcons;
 
+	/**
+	 * Gets the number of available option slots in this {@code InventoryMenu} instance.
+	 * @return The number of available option slots in this inventory menu instance. If there is an illegal internal state, this method will return {@code -1}.
+	 */
+	public int getSize(){
+		if(optionNames == null || optionIcons == null || optionNames.length != optionIcons.length){
+			// Illegal internal state
+			return -1;
+		}
+		
+		return optionNames.length;
+	}
+	
 	private List<OptionClickEvent.Handler> _eventHandlers = new ArrayList<OptionClickEvent.Handler>();
 	
 	/**
@@ -39,9 +53,7 @@ public class InventoryMenu implements Listener {
 	 * @param handler An event handler that will be invoked upon option selection.
 	 */
 	public void registerOptionClickHandler(OptionClickEvent.Handler handler){
-		if(handler == null){
-			throw new IllegalArgumentException("The handler must not be null.");
-		}
+		Validate.notNull(handler, "The handler must not be null.");
 		
 		_eventHandlers.add(handler);
 	}
@@ -52,13 +64,8 @@ public class InventoryMenu implements Listener {
 	 * @param size The size of the inventory, which must be a multiple of 9.
 	 */
 	public InventoryMenu(String name, int size) {
-		if(name == null){
-			throw new IllegalArgumentException("The name must not be null.");
-		}
-		
-		if(size <= 0 || size % 9 != 0){
-			throw new IllegalArgumentException("The size of the inventory must be a multiple of 9.");
-		}
+		Validate.notNull(name, "The name must not be null.");
+		Validate.isTrue(size <= 0 || size % 9 != 0, "The size of the inventory must be a multiple of 9. Size: ", size);
 		
 		this.name = name;
 		this.size = size;
@@ -83,9 +90,8 @@ public class InventoryMenu implements Listener {
 	 * @param position The zero-based index of the item.
 	 */
 	public void deleteOption(int position){
-		if(position < 0){
-			throw new IllegalArgumentException("The position must be a positive index.");
-		}
+		Validate.isTrue(position >= 0 && position < getSize(), "The position is not within the bounds of the menu. Position: ", position);
+		
 		optionNames[position] = null;
 		optionIcons[position] = null;
 	}
@@ -100,12 +106,10 @@ public class InventoryMenu implements Listener {
 	 */
 	public void setOption(int position, ItemStack icon, String name,
 			String... info) {
-		if(position < 0){
-			throw new IllegalArgumentException("The position must be a positive index.");
-		}
-		if(icon == null || info == null || name == null){
-			throw new IllegalArgumentException("All item information must not be null.");
-		}
+		Validate.isTrue(position >= 0 && position < getSize(), "The position is not within the bounds of the menu. Position: ", position);
+		Validate.notNull(icon, "The icon is null.");
+		Validate.notNull(name, "The item name is null.");
+		Validate.noNullElements(info, "Item information contains null values.");
 		
 		optionNames[position] = name;
 		optionIcons[position] = Utilities.setItemNameAndLore(icon, name, info);
@@ -116,9 +120,7 @@ public class InventoryMenu implements Listener {
 	 * @param player The player for which to show the inventory.
 	 */
 	public void open(Player player) {
-		if(player == null){
-			throw new IllegalArgumentException("The player must not be null.");
-		}
+		Validate.notNull(player, "The player must not be null.");
 		
 		Inventory inventory = Bukkit.createInventory(player, size, name);
 		for (int i = 0; i < optionIcons.length; i++) {

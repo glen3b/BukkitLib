@@ -1,10 +1,12 @@
 package me.pagekite.glen3b.library.bukkit.command;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import me.pagekite.glen3b.library.bukkit.Utilities;
 
+import org.apache.commons.lang.Validate;
 import org.bukkit.command.CommandSender;
 
 import com.google.common.collect.Lists;
@@ -63,18 +65,16 @@ public abstract class SubCommand {
 	 * @param aliases All command aliases, including the main alias as the first element.
 	 */
 	public SubCommand(String... aliases){
-		if(aliases == null || aliases.length == 0){
-			throw new IllegalArgumentException("There must be at least one alias.");
-		}
+		Validate.notEmpty(aliases, "There must be at least one alias.");
 		_aliases = Lists.newArrayList(aliases);
 	}
 	
 	/**
 	 * Gets a list of strings which act as aliases for this command.
-	 * @return A {@code List<String>} instance of aliases, including the primary name (first element) of this command.
+	 * @return A new read only {@code List<String>} instance of aliases, including the primary name (first element) of this command.
 	 */
 	public final List<String> getAliases(){
-		return _aliases;
+		return Collections.unmodifiableList(_aliases);
 	}
 	
 	/**

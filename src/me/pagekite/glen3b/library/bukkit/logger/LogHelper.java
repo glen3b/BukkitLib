@@ -2,6 +2,7 @@ package me.pagekite.glen3b.library.bukkit.logger;
 
 import java.util.logging.Level;
 
+import org.apache.commons.lang.Validate;
 import org.bukkit.ChatColor;
 import org.bukkit.plugin.Plugin;
 
@@ -137,13 +138,8 @@ public class LogHelper {
 	 * @param format The objects to use to format the string, if any.
 	 */
 	public void log(Level severity, Throwable error, String message, Object... format){
-		if(severity == null){
-			throw new IllegalArgumentException("The severity must not be null.");
-		}
-		
-		if(message == null){
-			throw new IllegalArgumentException("The message must not be null.");
-		}
+		Validate.notNull(severity, "The severity must not be null.");
+		Validate.notNull(message, "The message must not be null.");
 		
 		message = processLogStatement(message, format);
 		
@@ -170,9 +166,7 @@ public class LogHelper {
 	 * @param format The arguments to pass to the string formatter, if not null and length > 0.
 	 */
 	public void debugLog(String message, Throwable error, Object... format){
-		if(message == null){
-			throw new IllegalArgumentException("The message must not be null.");
-		}
+		Validate.notNull(message, "The message must not be null.");
 		
 		if(!isDebugLoggerEnabled()){
 			return;
@@ -192,9 +186,7 @@ public class LogHelper {
 	 * @param plugin The plugin for which to log.
 	 */
 	public LogHelper(Plugin plugin) {
-		if(plugin == null){
-			throw new IllegalArgumentException("The plugin must not be null.");
-		}
+		Validate.notNull(plugin, "The plugin must not be null.");
 		
 		_logged = plugin;
 	}

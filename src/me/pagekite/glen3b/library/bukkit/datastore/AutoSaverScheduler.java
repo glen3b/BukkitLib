@@ -21,6 +21,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.logging.Level;
 
+import org.apache.commons.lang.Validate;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.Plugin;
 
@@ -65,18 +66,13 @@ public final class AutoSaverScheduler {
 	/**
 	 * Gets the configuration path for the file name fileName within a plugin's data directory.
 	 * @param plugin The plugin who's configuration file's path should be retrieved.
-	 * @return A File instance which represents fileName in the plugin.
+	 * @return A new File instance which represents fileName in the plugin.
 	 * @see File#File(File, String)
 	 * @see Plugin#getDataFolder()
 	 */
 	public File getConfigurationPath(Plugin plugin, String fileName){
-		if(plugin == null){
-			throw new IllegalArgumentException("The plugin must not be null.");
-		}
-		
-		if(fileName == null){
-			throw new IllegalArgumentException("The file name must not be null.");
-		}
+		Validate.notNull(plugin, "The plugin must not be null.");
+		Validate.notEmpty(fileName, "The file name must not be empty.");
 		
 		return new File(plugin.getDataFolder(), fileName);
 	}
@@ -84,7 +80,7 @@ public final class AutoSaverScheduler {
 	/**
 	 * Gets the configuration path for the file name "config.yml" within a plugin's data directory.
 	 * @param plugin The plugin who's configuration file's path should be retrieved.
-	 * @return A File instance which represents config.yml in the plugin. The name config.yml is hardcoded.
+	 * @return A new File instance which represents config.yml in the plugin. The name config.yml is hardcoded.
 	 * @see #getConfigurationPath(Plugin, String)
 	 */
 	public File getConfigurationPath(Plugin plugin){
@@ -99,15 +95,9 @@ public final class AutoSaverScheduler {
 	 * @see #getConfigurationPath(Plugin)
 	 */
 	public void registerAutosave(File path, FileConfiguration config, long saveInterval){
-		if(path == null){
-			throw new IllegalArgumentException("The configuration path cannot be null.");
-		}
-		if(config == null){
-			throw new IllegalArgumentException("The configuration object cannot be null.");
-		}
-		if(saveInterval <= 0){
-			throw new IllegalArgumentException("The save interval must be at least one tick.");
-		}
+		Validate.notNull(path, "The configuration file path must not be null.");
+		Validate.notNull(config, "The configuration file object reference must not be null.");
+		Validate.isTrue(saveInterval > 0, "The save interval must be at least one tick. Value: ", saveInterval);
 		
 		//Schedule the task
 		_plugin.getServer().getScheduler().runTaskTimer(_plugin, new AutosavedConfig(path, config), saveInterval, saveInterval);

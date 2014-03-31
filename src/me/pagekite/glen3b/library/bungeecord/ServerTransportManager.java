@@ -1,5 +1,6 @@
 package me.pagekite.glen3b.library.bungeecord;
 
+import org.apache.commons.lang.Validate;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
@@ -13,7 +14,7 @@ import com.google.common.io.ByteStreams;
 public final class ServerTransportManager {
 
 	/**
-	 * Internal constructor.
+	 * Internal constructor. <b>Should not be called except by the GBukkitLib plugin instance.</b>
 	 * @param plugin The GBukkitLib plugin instance.
 	 */
 	public ServerTransportManager(Plugin plugin){
@@ -30,11 +31,8 @@ public final class ServerTransportManager {
 	 * @param serverName The name of the target server on the BungeeCord network.
 	 */
 	public void sendPlayer(Player player, String serverName){
-		if(player == null)
-			throw new IllegalArgumentException("Player must not be null.");
-		
-		if(serverName == null)
-			throw new IllegalArgumentException("Server name must not be null.");
+		Validate.notNull(player, "Player must not be null.");
+		Validate.notEmpty(serverName, "The server name must not be empty.");
 		
 		ByteArrayDataOutput out = ByteStreams.newDataOutput();
 		out.writeUTF("Connect");

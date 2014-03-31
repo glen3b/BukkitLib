@@ -1,11 +1,13 @@
 package me.pagekite.glen3b.library.bukkit.command;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import me.pagekite.glen3b.library.bukkit.GBukkitLibraryPlugin;
 import me.pagekite.glen3b.library.bukkit.datastore.Message;
 
+import org.apache.commons.lang.Validate;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
@@ -32,9 +34,7 @@ public final class BaseCommand implements TabExecutor {
 	 * @param cmd The command which this instance represents.
 	 */
 	public void register(PluginCommand cmd){
-		if(cmd == null){
-			throw new IllegalArgumentException("The plugin command must not be null.");
-		}
+		Validate.notNull(cmd, "The plugin command is null.");
 		
 		cmd.setExecutor(this);
 		cmd.setTabCompleter(this);
@@ -46,9 +46,8 @@ public final class BaseCommand implements TabExecutor {
 	 * @param commands The array of commands which are executed via this base command.
 	 */
 	public BaseCommand(String helpHeader, SubCommand... commands){
-		if(commands == null || commands.length == 0){
-			throw new IllegalArgumentException("Subcommands are required.");
-		}
+		Validate.notEmpty(commands, "At least one subcommand is required.");
+		Validate.noNullElements(commands, "Null subcommand are not allowed.");
 		
 		if(helpHeader != null){
 			_helpPageHeader = helpHeader;
@@ -59,10 +58,10 @@ public final class BaseCommand implements TabExecutor {
 	
 	/**
 	 * Get a list of subcommands executed by this BaseCommand instance.
-	 * @return An {@code ArrayList<SubCommand>} instance that can be manipulated via reference to change the subcommands executed by this base command.
+	 * @return A read only {@code Collection<SubCommand>} instance that can be manipulated via reference to change the subcommands executed by this base command.
 	 */
 	public List<SubCommand> getSubCommands(){
-		return _subCommands;
+		return Collections.unmodifiableList(_subCommands);
 	}
 	
 	private GBukkitLibraryPlugin _plugin;
@@ -121,7 +120,7 @@ public final class BaseCommand implements TabExecutor {
     		
     		sender.sendMessage(String.format(ChatColor.AQUA + _helpPageHeader, page + 1));
     		
-    		if(page * getConfig().getInt("cmdPerPage") > _subCommands.size()){
+    		if(page * getConfig().getInt("commandsPerPage") > _subCommands.size()){
     			return true;
     		}
     		
