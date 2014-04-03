@@ -35,6 +35,20 @@ import org.bukkit.inventory.meta.ItemMeta;
 public final class Utilities {
 
 	/**
+	 * Determine if str is an integer.
+	 * @param str The string to validate.
+	 * @return If str is a valid, parseable integer.
+	 */
+	public static boolean isInt(String str){
+		try{
+			Integer.parseInt(str);
+		}catch(Throwable thr){
+			return false;
+		}
+    	return true;
+    }
+	
+	/**
 	 * Sets the display name and lore of the specified item.
 	 * The item that is passed in should not be assumed to be unmodified.
 	 * @param item The item to modify the data of.

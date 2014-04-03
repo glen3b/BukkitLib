@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.List;
 
 import me.pagekite.glen3b.library.bukkit.GBukkitLibraryPlugin;
+import me.pagekite.glen3b.library.bukkit.Utilities;
 import me.pagekite.glen3b.library.bukkit.datastore.Message;
 
 import org.apache.commons.lang.Validate;
@@ -76,18 +77,6 @@ public final class BaseCommand implements TabExecutor {
 	}
 	
 	/**
-	 * Determine if str is an integer.
-	 */
-	private boolean isInt(String str){
-		try{
-			Integer.parseInt(str);
-		}catch(Throwable thr){
-			return false;
-		}
-    	return true;
-    }
-	
-	/**
 	 * Executes the base command, attempting to parse arguments.
 	 * @see CommandExecutor
 	 * @see Command
@@ -95,7 +84,7 @@ public final class BaseCommand implements TabExecutor {
 	@Override
 	public boolean onCommand(CommandSender sender, Command command, String label,
 			String[] args) {
-		if(args.length == 0 || (args.length == 2 && isInt(args[1]) && (args[0].equalsIgnoreCase("help") || args[0].equalsIgnoreCase("?"))) || (args.length == 1 && (isInt(args[0]) || args[0].equalsIgnoreCase("help") || args[0].equalsIgnoreCase("?")))){
+		if(args.length == 0 || (args.length == 2 && Utilities.isInt(args[1]) && (args[0].equalsIgnoreCase("help") || args[0].equalsIgnoreCase("?"))) || (args.length == 1 && (Utilities.isInt(args[0]) || args[0].equalsIgnoreCase("help") || args[0].equalsIgnoreCase("?")))){
     		//Show help manual and quit
     		int page = 0;
     		if(args.length == 2){
