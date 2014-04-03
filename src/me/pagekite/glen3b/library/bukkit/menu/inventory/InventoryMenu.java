@@ -66,7 +66,7 @@ public class InventoryMenu implements Listener {
 	 */
 	public InventoryMenu(String name, int size) {
 		Validate.notNull(name, "The name must not be null.");
-		Validate.isTrue(size <= 0 || size % 9 != 0, "The size of the inventory must be a multiple of 9. Size: ", size);
+		Validate.isTrue(size > 0 && size % 9 == 0, "The size of the inventory must be a multiple of 9. Size: ", size);
 		
 		this.name = name;
 		this.size = size;
