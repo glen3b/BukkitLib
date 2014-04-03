@@ -18,6 +18,14 @@ public class InventoryMenuFactory {
 	protected InventoryMenu _wrapped;
 	
 	/**
+	 * Gets the size of the inventory.
+	 * @return The size (in slots) of the underlying inventory menu.
+	 */
+	public int getSize(){
+		return _wrapped.getSize();
+	}
+	
+	/**
 	 * Creates an inventory menu with one row.
 	 * @param name The name of the inventory.
 	 * @return The new factory instance.
@@ -110,7 +118,7 @@ public class InventoryMenuFactory {
 	
 	/**
 	 * Sets the option at the specified position to the specified item.
-	 * The item will have the specified name and lore.
+	 * The item will have the specified name and lore. All strings must be color-formatted by the caller.
 	 * @param position The zero-based index of the item.
 	 * @param icon The item itself to use.
 	 * @param name The color-formatted name of the item.
@@ -119,7 +127,7 @@ public class InventoryMenuFactory {
 	 */
 	public InventoryMenuFactory setOption(int position, ItemStack icon, String name,
 			String... info){
-		_wrapped.setOption(position, icon, name, info);
+		_wrapped.setOption(position, icon, name, info == null ? new String[0] : info);
 		
 		return this;
 	}
