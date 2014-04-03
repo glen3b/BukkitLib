@@ -1,21 +1,18 @@
 package me.pagekite.glen3b.library.bukkit.menu.inventory;
 
 import org.apache.commons.lang.Validate;
-import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
-import com.google.common.base.Function;
-
 /**
- * A class for the creation of inventory menus.
+ * A class for the creation of cycling inventory menus.
  * @author Glen Husman
  */
-public final class InventoryMenuFactory {
+public final class CyclingInventoryMenuFactory {
 
 	/**
 	 * The inventory menu as constructed so far.
 	 */
-	protected InventoryMenu _wrapped;
+	protected CyclingInventoryMenu _wrapped;
 	
 	/**
 	 * Gets the size of the inventory.
@@ -30,7 +27,7 @@ public final class InventoryMenuFactory {
 	 * @param name The name of the inventory.
 	 * @return The new factory instance.
 	 */
-	public static InventoryMenuFactory createRow(String name){
+	public static CyclingInventoryMenuFactory createRow(String name){
 		return create(name, 1);
 	}
 	
@@ -40,8 +37,8 @@ public final class InventoryMenuFactory {
 	 * @param rows The number of rows in the inventory.
 	 * @return The new factory instance.
 	 */
-	public static InventoryMenuFactory create(String name, int rows){
-		return new InventoryMenuFactory(new InventoryMenu(name, rows * 9));
+	public static CyclingInventoryMenuFactory create(String name, int rows){
+		return new CyclingInventoryMenuFactory(new CyclingInventoryMenu(name, rows * 9));
 	}
 	
 	/**
@@ -49,7 +46,7 @@ public final class InventoryMenuFactory {
 	 * @param name The name of the inventory.
 	 * @return The new factory instance.
 	 */
-	public static InventoryMenuFactory createChest(String name){
+	public static CyclingInventoryMenuFactory createChest(String name){
 		return create(name, 3);
 	}
 	
@@ -58,7 +55,7 @@ public final class InventoryMenuFactory {
 	 * @param name The name of the inventory.
 	 * @return The new factory instance.
 	 */
-	public static InventoryMenuFactory createLargeChest(String name){
+	public static CyclingInventoryMenuFactory createLargeChest(String name){
 		return create(name, 6);
 	}
 	
@@ -66,32 +63,8 @@ public final class InventoryMenuFactory {
 	 * Builds the inventory menu.
 	 * @return A reference to the inventory menu created by this factory.
 	 */
-	public InventoryMenu build(){
+	public CyclingInventoryMenu build(){
 		return _wrapped;
-	}
-	
-	/**
-	 * Registers an option selection handler.
-	 * @param position The position for which to call this handler.
-	 * @param handler The option click handler. The argument is the player that clicked on the slot.
-	 * @return This instance.
-	 * @deprecated Use your own implementation.
-	 */
-	@Deprecated
-	public InventoryMenuFactory registerClickHandler(final int position, final Function<Player, Void> handler){
-		Validate.isTrue(position >= 0 && position < _wrapped.getSize(), "The position is not within the bounds of the menu. Position: ", position);
-		
-		_wrapped.registerOptionClickHandler(new OptionClickEvent.Handler() {
-			
-			@Override
-			public void onOptionClick(OptionClickEvent event) {
-				if(event.getPosition() == position){
-					handler.apply(event.getPlayer());
-				}
-			}
-		});
-		
-		return this;
 	}
 	
 	/**
@@ -99,7 +72,7 @@ public final class InventoryMenuFactory {
 	 * @param handler The option click handler.
 	 * @return This instance.
 	 */
-	public InventoryMenuFactory registerClickHandler(OptionClickEvent.Handler handler){
+	public CyclingInventoryMenuFactory registerClickHandler(OptionClickEvent.Handler handler){
 		_wrapped.registerOptionClickHandler(handler);
 		
 		return this;
@@ -110,8 +83,22 @@ public final class InventoryMenuFactory {
 	 * @param position The zero-based index of the item.
 	 * @return This instance.
 	 */
-	public InventoryMenuFactory removeOption(int position){
+	public CyclingInventoryMenuFactory removeOption(int position){
 		_wrapped.deleteOption(position);
+		
+		return this;
+	}
+	
+	/**
+	 * Sets the option at the specified position to the specified item.
+	 * The item will have the name and lore as they were when the array was passed in.
+	 * @param position The zero-based index of the item.
+	 * @param icons The items to use.
+	 * @param cycleDelay The delay between cycles of the item, in server ticks.
+	 * @return This instance.
+	 */
+	public CyclingInventoryMenuFactory setOption(int position, ItemStack[] icons, long cycleDelay){
+		_wrapped.setOption(position, icons, cycleDelay);
 		
 		return this;
 	}
@@ -125,7 +112,7 @@ public final class InventoryMenuFactory {
 	 * @param info The color-formatted lore of the item.
 	 * @return This instance.
 	 */
-	public InventoryMenuFactory setOption(int position, ItemStack icon, String name,
+	public CyclingInventoryMenuFactory setOption(int position, ItemStack icon, String name,
 			String... info){
 		_wrapped.setOption(position, icon, name, info == null ? new String[0] : info);
 		
@@ -136,7 +123,7 @@ public final class InventoryMenuFactory {
 	 * Creates an inventory menu factory.
 	 * @param wrapped The inventory menu so far.
 	 */
-	public InventoryMenuFactory(InventoryMenu wrapped){
+	public CyclingInventoryMenuFactory(CyclingInventoryMenu wrapped){
 		Validate.notNull(wrapped, "The wrapped inventory menu must not be null.");
 		Validate.isTrue(wrapped.getSize() > 0, "The wrapped inventory menu has an illegal internal state.");
 		

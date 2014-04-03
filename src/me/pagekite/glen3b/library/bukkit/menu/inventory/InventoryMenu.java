@@ -28,11 +28,11 @@ import org.bukkit.inventory.ItemStack;
  */
 public class InventoryMenu implements Listener {
 
-	private String name;
-	private int size;
+	protected String name;
+	protected int size;
 
-	private String[] optionNames;
-	private ItemStack[] optionIcons;
+	protected String[] optionNames;
+	protected ItemStack[] optionIcons;
 
 	/**
 	 * Gets the number of available option slots in this {@code InventoryMenu} instance.
@@ -47,7 +47,7 @@ public class InventoryMenu implements Listener {
 		return optionNames.length;
 	}
 	
-	private List<OptionClickEvent.Handler> _eventHandlers = new ArrayList<OptionClickEvent.Handler>();
+	protected List<OptionClickEvent.Handler> _eventHandlers = new ArrayList<OptionClickEvent.Handler>();
 	
 	/**
 	 * Register an event handler to be invoked when an option is clicked.
@@ -77,7 +77,7 @@ public class InventoryMenu implements Listener {
 
 	private GBukkitLibraryPlugin _plugin;
 	
-	private GBukkitLibraryPlugin getPlugin(){
+	protected GBukkitLibraryPlugin getPlugin(){
 		if(_plugin == null || !_plugin.isEnabled()){
 			_plugin = (GBukkitLibraryPlugin)Bukkit.getServer().getPluginManager().getPlugin("GBukkitLib");
 		}
@@ -144,12 +144,16 @@ public class InventoryMenu implements Listener {
 		_eventHandlers = null;
 	}
 
-	@EventHandler(priority = EventPriority.MONITOR)
-	void onInventoryClick(InventoryClickEvent event) {
+	/**
+	 * Event handler for inventory clicks.
+	 * @param event The event.
+	 */
+	@EventHandler(priority = EventPriority.HIGH)
+	protected void onInventoryClick(InventoryClickEvent event) {
 		if (event.getInventory().getTitle().equals(name)) {
 			event.setCancelled(true);
 			int slot = event.getRawSlot();
-			if (slot >= 0 && slot < size && optionNames[slot] != null) {
+			if (slot >= 0 && slot < size && optionIcons[slot] != null) {
 				OptionClickEvent e = new OptionClickEvent(
 						(Player) event.getWhoClicked(), slot, optionNames[slot]);
 				for(OptionClickEvent.Handler handlr :_eventHandlers){
