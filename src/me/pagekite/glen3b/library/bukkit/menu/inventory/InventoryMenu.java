@@ -15,6 +15,7 @@ import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemStack;
 
 /**
@@ -118,8 +119,9 @@ public class InventoryMenu implements Listener {
 	/**
 	 * Opens this inventory menu for the specified player.
 	 * @param player The player for which to show the inventory.
+	 * @return The resulting inventory view.
 	 */
-	public void open(Player player) {
+	public InventoryView open(Player player) {
 		Validate.notNull(player, "The player must not be null.");
 		
 		Inventory inventory = Bukkit.createInventory(player, size, name);
@@ -128,7 +130,7 @@ public class InventoryMenu implements Listener {
 				inventory.setItem(i, optionIcons[i]);
 			}
 		}
-		player.openInventory(inventory);
+		return player.openInventory(inventory);
 	}
 
 	/**
