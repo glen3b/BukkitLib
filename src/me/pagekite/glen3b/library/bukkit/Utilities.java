@@ -49,8 +49,19 @@ public final class Utilities {
     }
 	
 	/**
+	 * Sets the display name of the specified item. It also removes any lore.
+	 * The item that is passed in should not be assumed to be unmodified after the operation.
+	 * @param item The item to modify the data of.
+	 * @param name The new display name of the item.
+	 * @return The modified item.
+	 */
+	public static ItemStack setItemNameAndLore(ItemStack item, String name) {
+		return setItemNameAndLore(item, name, new String[0]);
+	}
+	
+	/**
 	 * Sets the display name and lore of the specified item.
-	 * The item that is passed in should not be assumed to be unmodified.
+	 * The item that is passed in should not be assumed to be unmodified after the operation.
 	 * @param item The item to modify the data of.
 	 * @param name The new display name of the item.
 	 * @param lore The new lore of the item.
