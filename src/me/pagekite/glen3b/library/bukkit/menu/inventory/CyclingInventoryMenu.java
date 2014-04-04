@@ -1,7 +1,5 @@
 package me.pagekite.glen3b.library.bukkit.menu.inventory;
 
-import java.util.Arrays;
-
 import me.pagekite.glen3b.library.bukkit.Utilities;
 
 import org.apache.commons.lang.Validate;
@@ -113,8 +111,8 @@ public class CyclingInventoryMenu extends InventoryMenu {
 	 * 
 	 * @param position
 	 *            The zero-based index of the item.
-	 * @param icon
-	 *            The item itself to use.
+	 * @param icons
+	 *            The items to use.
 	 * @param name
 	 *            The color-formatted name of the item. This name will override
 	 *            all provided names. If it is null, the name will remain
@@ -142,7 +140,7 @@ public class CyclingInventoryMenu extends InventoryMenu {
 		}
 
 		optionNames[position] = name;
-		optionIcons[position] = Arrays.copyOf(icons, icons.length);
+		optionIcons[position] = icons;
 		cycleDelays[position] = cycleDelay;
 	}
 
