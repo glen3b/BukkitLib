@@ -277,7 +277,7 @@ public class CyclingInventoryMenu extends InventoryMenu {
 	 */
 	@EventHandler(priority = EventPriority.HIGH)
 	protected void onInventoryClick(InventoryClickEvent event) {
-		if(event.getView().getBottomInventory().getTitle().equals(name) || event.getView().getTopInventory().getTitle().equals(name)){
+		if((event.getView().getBottomInventory() != null && event.getView().getBottomInventory().getTitle().equals(name)) || (event.getView().getTopInventory() != null && event.getView().getTopInventory().getTitle().equals(name))){
 			// Stop dupes
 			event.setCancelled(true);
 			event.setResult(Result.DENY);
