@@ -1,8 +1,6 @@
 package me.pagekite.glen3b.library.bukkit.menu.inventory;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 import me.pagekite.glen3b.library.bukkit.Utilities;
 
@@ -26,9 +24,6 @@ import org.bukkit.scheduler.BukkitRunnable;
  */
 public class CyclingInventoryMenu extends InventoryMenu {
 
-	private String name;
-	private int size;
-
 	protected Long[] cycleDelays;
 	protected ItemStack[][] optionIcons;
 
@@ -48,20 +43,6 @@ public class CyclingInventoryMenu extends InventoryMenu {
 		}
 
 		return optionNames.length;
-	}
-
-	private List<OptionClickEvent.Handler> _eventHandlers = new ArrayList<OptionClickEvent.Handler>();
-
-	/**
-	 * Register an event handler to be invoked when an option is clicked.
-	 * 
-	 * @param handler
-	 *            An event handler that will be invoked upon option selection.
-	 */
-	public void registerOptionClickHandler(OptionClickEvent.Handler handler) {
-		Validate.notNull(handler, "The handler must not be null.");
-
-		_eventHandlers.add(handler);
 	}
 
 	/**
