@@ -9,6 +9,7 @@ import me.pagekite.glen3b.library.bukkit.Utilities;
 import org.apache.commons.lang.Validate;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Event.Result;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.HandlerList;
@@ -150,10 +151,16 @@ public class InventoryMenu implements Listener {
 	 */
 	@EventHandler(priority = EventPriority.HIGH)
 	protected void onInventoryClick(InventoryClickEvent event) {
-		if (event.getInventory().getTitle().equals(name)) {
+		if(event.getView().getBottomInventory().getTitle().equals(name) || event.getView().getTopInventory().getTitle().equals(name)){
+			// Stop dupes
+			event.setCancelled(true);
+			event.setResult(Result.DENY);
+		}
+		
+		if (event.getInventory().getTitle().equals(name) && event.getWhoClicked() instanceof Player) {
 			event.setCancelled(true);
 			int slot = event.getRawSlot();
-			if (slot >= 0 && slot < size && optionIcons[slot] != null) {
+			if (slot >= 0 && slot < getSize() && optionIcons[slot] != null) {
 				OptionClickEvent e = new OptionClickEvent(
 						(Player) event.getWhoClicked(), slot, optionNames[slot]);
 				for(OptionClickEvent.Handler handlr :_eventHandlers){

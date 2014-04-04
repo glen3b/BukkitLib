@@ -5,6 +5,10 @@ import me.pagekite.glen3b.library.bukkit.Utilities;
 import org.apache.commons.lang.Validate;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.Event.Result;
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemStack;
@@ -265,6 +269,43 @@ public class CyclingInventoryMenu extends InventoryMenu {
 	public void destroy() {
 		super.destroy();
 		cycleDelays = null;
+	}
+	
+	/**
+	 * Event handler for inventory clicks.
+	 * @param event The event.
+	 */
+	@EventHandler(priority = EventPriority.HIGH)
+	protected void onInventoryClick(InventoryClickEvent event) {
+		if(event.getView().getBottomInventory().getTitle().equals(name) || event.getView().getTopInventory().getTitle().equals(name)){
+			// Stop dupes
+			event.setCancelled(true);
+			event.setResult(Result.DENY);
+		}
+		
+		if (event.getInventory().getTitle().equals(name) && event.getWhoClicked() instanceof Player) {
+			event.setCancelled(true);
+			int slot = event.getRawSlot();
+			if (slot >= 0 && slot < getSize() && optionIcons[slot] != null && optionIcons[slot].length > 0) {
+				OptionClickEvent e = new OptionClickEvent(
+						(Player) event.getWhoClicked(), slot, optionNames[slot]);
+				for(OptionClickEvent.Handler handlr :_eventHandlers){
+					handlr.onOptionClick(e);
+				}
+				if (e.willClose()) {
+					final Player p = (Player) event.getWhoClicked();
+					Bukkit.getScheduler().scheduleSyncDelayedTask(getPlugin(),
+							new Runnable() {
+								public void run() {
+									p.closeInventory();
+								}
+							}, 1);
+				}
+				if (e.willDestroy()) {
+					destroy();
+				}
+			}
+		}
 	}
 
 }
