@@ -227,7 +227,7 @@ public class CyclingInventoryMenu extends InventoryMenu {
 		@Override
 		public void run() {
 			_viewed.setItem(_itemIndex, optionIcons[_itemIndex][++_cycleNumber
-					% optionIcons.length]);
+					% optionIcons[_itemIndex].length]);
 
 			if (_viewed.getViewers().size() < 1) {
 				// Nobody's watching us
