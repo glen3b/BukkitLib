@@ -36,6 +36,7 @@ public interface ServerTeleportationManager {
 	
 	/**
 	 * Gets the queued teleportation of the specified player.
+	 * Queued teleports that have already executed (for cross-server operations) may return {@code null} on some methods.
 	 * @param teleport The player who's teleport will be returned.
 	 * @return The last queued teleport of the specified player, or null if none. The destination of the teleport will be the name of the server.
 	 */

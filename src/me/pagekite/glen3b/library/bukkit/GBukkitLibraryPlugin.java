@@ -27,7 +27,9 @@ import me.pagekite.glen3b.library.bukkit.datastore.Message;
 import me.pagekite.glen3b.library.bukkit.datastore.MessageProvider;
 import me.pagekite.glen3b.library.bukkit.datastore.SerializableLocation;
 import me.pagekite.glen3b.library.bukkit.teleport.QueuedTeleport;
+import me.pagekite.glen3b.library.bukkit.teleport.ServerTeleportationManager;
 import me.pagekite.glen3b.library.bukkit.teleport.TeleportationManager;
+import me.pagekite.glen3b.library.bungeecord.DefaultServerTeleportationManager;
 import me.pagekite.glen3b.library.bungeecord.ServerTransportManager;
 
 import org.apache.commons.lang.Validate;
@@ -104,6 +106,8 @@ public final class GBukkitLibraryPlugin extends JavaPlugin {
 		//XXX: Should the configuration-provided server-owner registered messages be at the highest priority, or the lowest priority?
 		this.getServer().getServicesManager().register(MessageProvider.class, new DefaultMessageProvider(), this, ServicePriority.Highest);
 		this.getServer().getServicesManager().register(ServerTransportManager.class, new ServerTransportManager(this), this, ServicePriority.High);
+		// Register DefaultServerTeleportationManager AFTER registering ServerTransportManager
+		this.getServer().getServicesManager().register(ServerTeleportationManager.class, new DefaultServerTeleportationManager(this), this, ServicePriority.Highest);
 		ConfigurationSerialization.registerClass(SerializableLocation.class);
 		saveDefaultConfig();
 	}
@@ -128,7 +132,7 @@ public final class GBukkitLibraryPlugin extends JavaPlugin {
 			private ScheduledDecrementRunner(final Player player, final int initialDelay, final Location target){
 				_remDelay = initialDelay;
 				_playerName = player.getName().toLowerCase().trim();
-				_ownTask = Bukkit.getServer().getScheduler().runTaskTimer(GBukkitLibraryPlugin.this, this, 20L, 20L);
+				_ownTask = Bukkit.getServer().getScheduler().runTaskTimer(GBukkitLibraryPlugin.this, this, Utilities.TICKS_PER_SECOND, Utilities.TICKS_PER_SECOND);
 				Bukkit.getServer().getPluginManager().registerEvents(this, GBukkitLibraryPlugin.this);
 				_target = target;
 
@@ -136,8 +140,8 @@ public final class GBukkitLibraryPlugin extends JavaPlugin {
 			}
 
 			public void cleanup(boolean notifyPlayer){
-				_ownTask.cancel();
 				_isValid = false;
+				_ownTask.cancel();
 				
 				if(notifyPlayer && Bukkit.getPlayer(_playerName) != null){
 					Bukkit.getPlayer(_playerName).sendMessage(Message.get("teleportCancelled"));
@@ -258,6 +262,7 @@ public final class GBukkitLibraryPlugin extends JavaPlugin {
 		
 		private HashMap<String, ScheduledDecrementRunner> _teleportsQueued = new HashMap<String, ScheduledDecrementRunner>();
 		
+		@Override
 		public QueuedTeleport<Location> teleportPlayer(Player player, Location targetLoc, int teleportDelay){
 			Validate.isTrue(teleportDelay >= 0, "Teleport delay must not be negative. Value: ", teleportDelay);
 			Validate.notNull(player, "The player must not be null.");
@@ -282,6 +287,7 @@ public final class GBukkitLibraryPlugin extends JavaPlugin {
 			return runner;
 		}
 		
+		@Override
 		public QueuedTeleport<Location> teleportPlayer(Player player, Location targetLoc){
 			return teleportPlayer(player, targetLoc, getConfig().getInt("teleportDelay"));
 		}
