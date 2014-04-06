@@ -17,14 +17,14 @@
 
 package me.pagekite.glen3b.library.bukkit.teleport;
 
-import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
 /**
  * A type representing a queued player teleportation.
+ * @param <D> The class of the destination type appropriate to this teleportation.
  * @author Glen
  */
-public interface QueuedTeleport {
+public interface QueuedTeleport<D> {
 
 	/**
 	 * Cancel this queued teleport, if not cancelled already. This method is expected not to notify the user automatically.
@@ -37,10 +37,10 @@ public interface QueuedTeleport {
 	public boolean isCancelled();
 	
 	/**
-	 * Gets the {@link org.bukkit.Location} which is the target of this teleportation.
-	 * @return The {@link org.bukkit.Location} instance representing the destination of this teleport.
+	 * Gets the target of this teleportation.
+	 * @return The {@link D} instance representing the destination of this teleport.
 	 */
-	public Location getTo();
+	public D getDestination();
 	
 	/**
 	 * Gets the remaining time, in seconds, of the teleportation delay.

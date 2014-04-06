@@ -105,12 +105,12 @@ public final class GBukkitLibraryPlugin extends JavaPlugin {
 		saveDefaultConfig();
 	}
 	
-	final class GBukkitTPManager implements TeleportationManager {
+	final class GBukkitTPManager implements TeleportationManager{
 		private GBukkitTPManager(){
 			
 		}
 		
-		final class ScheduledDecrementRunner implements Runnable, Listener, QueuedTeleport{
+		final class ScheduledDecrementRunner implements Runnable, Listener, QueuedTeleport<Location> {
 			
 			private int _remDelay;
 			private String _playerName;
@@ -207,7 +207,7 @@ public final class GBukkitLibraryPlugin extends JavaPlugin {
 			}
 
 			@Override
-			public Location getTo() {
+			public Location getDestination() {
 				return _target;
 			}
 
@@ -262,7 +262,7 @@ public final class GBukkitLibraryPlugin extends JavaPlugin {
 		}
 
 		@Override
-		public QueuedTeleport getTeleport(Player teleport) {
+		public QueuedTeleport<Location> getTeleport(Player teleport) {
 			if(teleport == null){
 				throw new IllegalArgumentException("The player cannot be null.");
 			}
