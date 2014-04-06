@@ -35,30 +35,9 @@ public class InventoryMenu implements Listener {
 	protected String[] optionNames;
 	protected ItemStack[] optionIcons;
 
-	/**
-	 * Gets the number of available option slots in this {@code InventoryMenu} instance.
-	 * @return The number of available option slots in this inventory menu instance. If there is an illegal internal state, this method will return {@code -1}.
-	 */
-	public int getSize(){
-		if(optionNames == null || optionIcons == null || optionNames.length != optionIcons.length){
-			// Illegal internal state
-			return -1;
-		}
-		
-		return optionNames.length;
-	}
-	
 	protected List<OptionClickEvent.Handler> _eventHandlers = new ArrayList<OptionClickEvent.Handler>();
 	
-	/**
-	 * Register an event handler to be invoked when an option is clicked.
-	 * @param handler An event handler that will be invoked upon option selection.
-	 */
-	public void registerOptionClickHandler(OptionClickEvent.Handler handler){
-		Validate.notNull(handler, "The handler must not be null.");
-		
-		_eventHandlers.add(handler);
-	}
+	private GBukkitLibraryPlugin _plugin;
 	
 	/**
 	 * Creates an inventory menu.
@@ -75,17 +54,6 @@ public class InventoryMenu implements Listener {
 		this.optionIcons = new ItemStack[size];
 		getPlugin().getServer().getPluginManager().registerEvents(this, getPlugin());
 	}
-
-	private GBukkitLibraryPlugin _plugin;
-	
-	protected GBukkitLibraryPlugin getPlugin(){
-		if(_plugin == null || !_plugin.isEnabled()){
-			_plugin = (GBukkitLibraryPlugin)Bukkit.getServer().getPluginManager().getPlugin("GBukkitLib");
-		}
-		
-		return _plugin;
-		
-	}
 	
 	/**
 	 * Removes the icon at the specified position.
@@ -96,42 +64,6 @@ public class InventoryMenu implements Listener {
 		
 		optionNames[position] = null;
 		optionIcons[position] = null;
-	}
-	
-	/**
-	 * Sets the option at the specified position to the specified item.
-	 * The item will have the specified name and lore.
-	 * @param position The zero-based index of the item.
-	 * @param icon The item itself to use.
-	 * @param name The color-formatted name of the item.
-	 * @param info The color formatted lore of the item.
-	 */
-	public void setOption(int position, ItemStack icon, String name,
-			String... info) {
-		Validate.isTrue(position >= 0 && position < getSize(), "The position is not within the bounds of the menu. Position: ", position);
-		Validate.notNull(icon, "The icon is null.");
-		Validate.notNull(name, "The item name is null.");
-		Validate.noNullElements(info, "Item information contains null values.");
-		
-		optionNames[position] = name;
-		optionIcons[position] = Utilities.setItemNameAndLore(icon, name, info);
-	}
-
-	/**
-	 * Opens this inventory menu for the specified player.
-	 * @param player The player for which to show the inventory.
-	 * @return The resulting inventory view.
-	 */
-	public InventoryView open(Player player) {
-		Validate.notNull(player, "The player must not be null.");
-		
-		Inventory inventory = Bukkit.createInventory(player, size, name);
-		for (int i = 0; i < optionIcons.length; i++) {
-			if (optionIcons[i] != null) {
-				inventory.setItem(i, optionIcons[i]);
-			}
-		}
-		return player.openInventory(inventory);
 	}
 
 	/**
@@ -144,7 +76,29 @@ public class InventoryMenu implements Listener {
 		_eventHandlers.clear();
 		_eventHandlers = null;
 	}
-
+	
+	protected GBukkitLibraryPlugin getPlugin(){
+		if(_plugin == null || !_plugin.isEnabled()){
+			_plugin = (GBukkitLibraryPlugin)Bukkit.getServer().getPluginManager().getPlugin("GBukkitLib");
+		}
+		
+		return _plugin;
+		
+	}
+	
+	/**
+	 * Gets the number of available option slots in this {@code InventoryMenu} instance.
+	 * @return The number of available option slots in this inventory menu instance. If there is an illegal internal state, this method will return {@code -1}.
+	 */
+	public int getSize(){
+		if(optionNames == null || optionIcons == null || optionNames.length != optionIcons.length){
+			// Illegal internal state
+			return -1;
+		}
+		
+		return optionNames.length;
+	}
+	
 	/**
 	 * Event handler for inventory clicks.
 	 * @param event The event.
@@ -180,6 +134,52 @@ public class InventoryMenu implements Listener {
 				}
 			}
 		}
+	}
+
+	/**
+	 * Opens this inventory menu for the specified player.
+	 * @param player The player for which to show the inventory.
+	 * @return The resulting inventory view.
+	 */
+	public InventoryView open(Player player) {
+		Validate.notNull(player, "The player must not be null.");
+		
+		Inventory inventory = Bukkit.createInventory(player, size, name);
+		for (int i = 0; i < optionIcons.length; i++) {
+			if (optionIcons[i] != null) {
+				inventory.setItem(i, optionIcons[i]);
+			}
+		}
+		return player.openInventory(inventory);
+	}
+
+	/**
+	 * Register an event handler to be invoked when an option is clicked.
+	 * @param handler An event handler that will be invoked upon option selection.
+	 */
+	public void registerOptionClickHandler(OptionClickEvent.Handler handler){
+		Validate.notNull(handler, "The handler must not be null.");
+		
+		_eventHandlers.add(handler);
+	}
+
+	/**
+	 * Sets the option at the specified position to the specified item.
+	 * The item will have the specified name and lore.
+	 * @param position The zero-based index of the item.
+	 * @param icon The item itself to use.
+	 * @param name The color-formatted name of the item.
+	 * @param info The color formatted lore of the item.
+	 */
+	public void setOption(int position, ItemStack icon, String name,
+			String... info) {
+		Validate.isTrue(position >= 0 && position < getSize(), "The position is not within the bounds of the menu. Position: ", position);
+		Validate.notNull(icon, "The icon is null.");
+		Validate.notNull(name, "The item name is null.");
+		Validate.noNullElements(info, "Item information contains null values.");
+		
+		optionNames[position] = name;
+		optionIcons[position] = Utilities.setItemNameAndLore(icon, name, info);
 	}
 
 }

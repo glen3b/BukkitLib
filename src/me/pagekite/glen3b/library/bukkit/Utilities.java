@@ -36,6 +36,33 @@ import org.bukkit.plugin.Plugin;
 public final class Utilities {
 
 	/**
+	 * The target number of server ticks per second.
+	 * One server tick, on a server which is running at perfect target framerate, is 0.05 seconds.
+	 */
+	public static final long TICKS_PER_SECOND = 20L;
+	
+	/**
+	 * The target number of server ticks per minute.
+	 */
+	public static final long TICKS_PER_MINUTE = TICKS_PER_SECOND * 60;
+	
+	/**
+	 * Gets a list of the names of all online players.
+	 * @return A list of all of the <b>usernames</b> of all of the players currently online on the {@code Bukkit} server.
+	 * @see Server#getOnlinePlayers()
+	 * @see Player
+	 */
+	public static List<String> getOnlinePlayerNames(){
+		ArrayList<String> players = new ArrayList<String>();
+		
+		for(Player player : Bukkit.getServer().getOnlinePlayers()){
+			players.add(player.getName());
+		}
+		
+		return players;
+	}
+	
+	/**
 	 * Attempt to parse {@code str} as an integer.
 	 * @param str The string to attempt to parse.
 	 * @return A {@code boolean} indicating if the parsing of the string was successful.
@@ -74,6 +101,19 @@ public final class Utilities {
     }
 	
 	/**
+	 * Schedules a task to execute on the main server thread after one tick.
+	 * @param host The plugin under which to schedule this task. If this parameter is {@code null}, the GBukkitLib plugin instance as retrieved by the {@code PluginManager} will be used for scheduling. Using this method with a {@code null} plugin argument is deprecated.
+	 * @param task The task to execute on the main server thread after one server tick. It must not be {@code null}.
+	 * @return The ID of the scheduled task.
+	 * @see org.bukkit.scheduler.BukkitScheduler#scheduleSyncDelayedTask(Plugin plugin, Runnable task, long delay)
+	 */
+	public static int schedule(Plugin host, Runnable task){
+		Validate.notNull(task, "The task must not be null.");
+		
+		return Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(host == null ? Bukkit.getServer().getPluginManager().getPlugin("GBukkitLib") : host, task, 1L);
+	}
+	
+	/**
 	 * Sets the display name of the specified item. It also removes any lore.
 	 * The item that is passed in should not be assumed to be unmodified after the operation.
 	 * @param item The item to modify the data of.
@@ -105,46 +145,6 @@ public final class Utilities {
 		item.setItemMeta(im);
 		return item;
 	}
-	
-	/**
-	 * Schedules a task to execute on the main server thread after one tick.
-	 * @param host The plugin under which to schedule this task. If this parameter is {@code null}, the GBukkitLib plugin instance as retrieved by the {@code PluginManager} will be used for scheduling. Using this method with a {@code null} plugin argument is deprecated.
-	 * @param task The task to execute on the main server thread after one server tick. It must not be {@code null}.
-	 * @return The ID of the scheduled task.
-	 * @see org.bukkit.scheduler.BukkitScheduler#scheduleSyncDelayedTask(Plugin plugin, Runnable task, long delay)
-	 */
-	public static int schedule(Plugin host, Runnable task){
-		Validate.notNull(task, "The task must not be null.");
-		
-		return Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(host == null ? Bukkit.getServer().getPluginManager().getPlugin("GBukkitLib") : host, task, 1L);
-	}
-	
-	/**
-	 * Gets a list of the names of all online players.
-	 * @return A list of all of the <b>usernames</b> of all of the players currently online on the {@code Bukkit} server.
-	 * @see Server#getOnlinePlayers()
-	 * @see Player
-	 */
-	public static List<String> getOnlinePlayerNames(){
-		ArrayList<String> players = new ArrayList<String>();
-		
-		for(Player player : Bukkit.getServer().getOnlinePlayers()){
-			players.add(player.getName());
-		}
-		
-		return players;
-	}
-	
-	/**
-	 * The target number of server ticks per second.
-	 * One server tick, on a server which is running at perfect target framerate, is 0.05 seconds.
-	 */
-	public static final long TICKS_PER_SECOND = 20L;
-	
-	/**
-	 * The target number of server ticks per minute.
-	 */
-	public static final long TICKS_PER_MINUTE = TICKS_PER_SECOND * 60;
 	
 	private Utilities(){
 		//No instance should be created

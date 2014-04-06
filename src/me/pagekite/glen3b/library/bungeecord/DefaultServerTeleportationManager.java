@@ -30,16 +30,6 @@ import org.bukkit.scheduler.BukkitTask;
 public final class DefaultServerTeleportationManager implements
 		ServerTeleportationManager {
 
-	private ServerTransportManager _transporter;
-	
-	public ServerTransportManager getServerTransporter(){
-		if(_transporter == null){
-			_transporter = _instance.getServer().getServicesManager().getRegistration(ServerTransportManager.class).getProvider();
-		}
-		
-		return _transporter;
-	}
-	
 	final class ScheduledDecrementRunner implements Runnable, Listener, QueuedTeleport<String> {
 		
 		private int _remDelay;
@@ -47,6 +37,10 @@ public final class DefaultServerTeleportationManager implements
 		private BukkitTask _ownTask;
 		private String _target;
 		private boolean _isValid = true;
+		
+		private List<Runnable> _onTP = new ArrayList<Runnable>();
+
+		private List<Runnable> _onTPCancel = new ArrayList<Runnable>();
 		
 		private ScheduledDecrementRunner(final Player player, final int initialDelay, final String target){
 			_remDelay = initialDelay;
@@ -57,7 +51,13 @@ public final class DefaultServerTeleportationManager implements
 
 			player.sendMessage(Message.get("teleportBegin").replace("%time%", Integer.toString(initialDelay)).replace("%units%", initialDelay == 1 ? "second" : "seconds"));
 		}
-
+		
+		@Override
+		public void cancel() {
+			if(!isCancelled()){
+				cleanup(false);
+			}
+		}
 		public void cleanup(boolean notifyPlayer){
 			_isValid = false;
 			_ownTask.cancel();
@@ -74,6 +74,30 @@ public final class DefaultServerTeleportationManager implements
 			_onTPCancel.clear();
 		}
 		
+		@Override
+		public String getDestination() {
+			return _target;
+		}
+		
+		@Override
+		public Player getEntity() {
+			if(isCancelled()){
+				throw new IllegalStateException("This method cannot be called on a cancelled queued teleport.");
+			}
+			
+			return Bukkit.getPlayer(_playerName);
+		}
+
+		@Override
+		public int getRemainingDelay() {
+			return _remDelay < 0 ? 0 : _remDelay;
+		}
+
+		@Override
+		public boolean isCancelled() {
+			return !_isValid;
+		}
+
 		@EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
 		public void onPlayerDamage(EntityDamageEvent event){
 			if(!_isValid){
@@ -84,10 +108,7 @@ public final class DefaultServerTeleportationManager implements
 				cleanup(true);
 			}
 		}
-		
-		private List<Runnable> _onTP = new ArrayList<Runnable>();
-		private List<Runnable> _onTPCancel = new ArrayList<Runnable>();
-		
+
 		@EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
 		public void onPlayerMove(PlayerMoveEvent event){
 			if(!_isValid){
@@ -104,7 +125,21 @@ public final class DefaultServerTeleportationManager implements
 				cleanup(true);
 			}
 		}
-		
+
+		@Override
+		public void registerOnTeleport(Runnable delegate) {
+			Validate.notNull(delegate, "The method to call must not be null.");
+			
+			_onTP.add(delegate);
+		}
+
+		@Override
+		public void registerOnTeleportCancel(Runnable delegate) {
+			Validate.notNull(delegate, "The method to call must not be null.");
+			
+			_onTPCancel.add(delegate);
+		}
+
 		@Override
 		public void run() {
 			_isValid = !isCancelled() && Bukkit.getPlayer(_playerName) != null;
@@ -132,54 +167,41 @@ public final class DefaultServerTeleportationManager implements
 				affected.sendMessage(Message.get("teleportProgress").replace("%time%", Integer.toString(_remDelay)).replace("%units%", _remDelay == 1 ? "second" : "seconds"));
 			}
 		}
-
-		@Override
-		public void cancel() {
-			if(!isCancelled()){
-				cleanup(false);
-			}
-		}
-
-		@Override
-		public boolean isCancelled() {
-			return !_isValid;
-		}
-
-		@Override
-		public String getDestination() {
-			return _target;
-		}
-
-		@Override
-		public int getRemainingDelay() {
-			return _remDelay < 0 ? 0 : _remDelay;
-		}
-
-		@Override
-		public Player getEntity() {
-			if(isCancelled()){
-				throw new IllegalStateException("This method cannot be called on a cancelled queued teleport.");
-			}
-			
-			return Bukkit.getPlayer(_playerName);
-		}
-
-		@Override
-		public void registerOnTeleport(Runnable delegate) {
-			Validate.notNull(delegate, "The method to call must not be null.");
-			
-			_onTP.add(delegate);
-		}
-
-		@Override
-		public void registerOnTeleportCancel(Runnable delegate) {
-			Validate.notNull(delegate, "The method to call must not be null.");
-			
-			_onTPCancel.add(delegate);
-		}
 	}
 	
+	private ServerTransportManager _transporter;
+	
 	private HashMap<String, ScheduledDecrementRunner> _teleportsQueued = new HashMap<String, ScheduledDecrementRunner>();
+	
+	private Plugin _instance;
+	
+	/**
+	 * Creates a server transport manager. <br/><br/><b>This constructor should only be invoked by the GBukkitLib plugin instance.</b>
+	 * @param instance The host plugin.
+	 */
+	public DefaultServerTeleportationManager(Plugin instance) {
+		_instance = instance;
+	}
+	
+	public ServerTransportManager getServerTransporter(){
+		if(_transporter == null){
+			_transporter = _instance.getServer().getServicesManager().getRegistration(ServerTransportManager.class).getProvider();
+		}
+		
+		return _transporter;
+	}
+
+	@Override
+	public QueuedTeleport<String> getTeleport(Player teleport) {
+		Validate.notNull(teleport, "The player is null.");
+		
+		return _teleportsQueued.containsKey(teleport.getName().toLowerCase().trim()) ? _teleportsQueued.get(teleport.getName().toLowerCase().trim()) : null;
+	}
+	
+	@Override
+	public QueuedTeleport<String> teleportPlayer(Player player, String targetServer){
+		return teleportPlayer(player, targetServer, _instance.getConfig().getInt("teleportDelay"));
+	}
 	
 	@Override
 	public QueuedTeleport<String> teleportPlayer(Player player, String targetServer, int teleportDelay){
@@ -204,28 +226,6 @@ public final class DefaultServerTeleportationManager implements
 		_teleportsQueued.put(player.getName().toLowerCase().trim(), runner);
 		
 		return runner;
-	}
-	
-	@Override
-	public QueuedTeleport<String> teleportPlayer(Player player, String targetServer){
-		return teleportPlayer(player, targetServer, _instance.getConfig().getInt("teleportDelay"));
-	}
-
-	@Override
-	public QueuedTeleport<String> getTeleport(Player teleport) {
-		Validate.notNull(teleport, "The player is null.");
-		
-		return _teleportsQueued.containsKey(teleport.getName().toLowerCase().trim()) ? _teleportsQueued.get(teleport.getName().toLowerCase().trim()) : null;
-	}
-	
-	private Plugin _instance;
-	
-	/**
-	 * Creates a server transport manager. <br/><br/><b>This constructor should only be invoked by the GBukkitLib plugin instance.</b>
-	 * @param instance The host plugin.
-	 */
-	public DefaultServerTeleportationManager(Plugin instance) {
-		_instance = instance;
 	}
 
 }

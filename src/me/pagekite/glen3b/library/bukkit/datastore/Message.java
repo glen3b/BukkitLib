@@ -33,46 +33,6 @@ import org.bukkit.plugin.RegisteredServiceProvider;
 public final class Message {
 
 	/**
-	 * Creates an instance of Message with the specified key and value. Does not add to any {@link MessageProvider}.
-	 * @param key The {@link MessageProvider} key for this message.
-	 * @param value The value of the message.
-	 */
-	public Message(String key, String value){
-		Validate.notEmpty(key, "The key cannot be null or empty.");
-		Validate.notNull(value, "The message cannot be null.");
-		
-		_key = key;
-		_value = value;
-	}
-	
-	/**
-	 * Gets the value of this message, as input.
-	 * @return The unformatted value of the message.
-	 */
-	public String getUnformattedValue(){
-		return _value;
-	}
-	
-	/**
-	 * Gets the value of this message, color code formatted with the & character.
-	 * @return The color formatted value of the message.
-	 */
-	public String getValue(){
-		return ChatColor.translateAlternateColorCodes('&', getUnformattedValue());
-	}
-	
-	/**
-	 * Gets the key of this message.
-	 * @return The {@link MessageProvider} backend storage key.
-	 */
-	public String getKey(){
-		return _key;
-	}
-	
-	private String _key;
-	private String _value;
-	
-	/**
 	 * Search all {@link MessageProvider}s registered via the {@link org.bukkit.plugin.ServicesManager}, sorting by priority, to find the specified message.
 	 * @param key The key of the message to retrieve.
 	 * @return The color formatted message associated with the specified key, or {@code null} if not found.
@@ -149,34 +109,6 @@ public final class Message {
 				}
 	}
 	
-	private static boolean write(ArrayList<MessageProvider> list, String key, String value){
-		for(MessageProvider provider : list){
-			if(!provider.isReadOnly()){
-				provider.setMessage(key, value);
-				return true;
-			}
-		}
-		return false;
-	}
-	
-	/**
-	 * Sets the specified key to map to the specified value in all registered read/write {@link MessageProvider} instances.
-	 * @param key The key of the message to set.
-	 * @param value The value of the message to set.
-	 */
-	public static void setAll(String key, String value){
-		Validate.notEmpty(key, "The key cannot be null or empty.");
-		Validate.notNull(value, "The message cannot be null.");
-		
-		Collection<RegisteredServiceProvider<MessageProvider>> registeredMsgs = Bukkit.getServer().getServicesManager().getRegistrations(MessageProvider.class);
-		
-		for(RegisteredServiceProvider<MessageProvider> message : registeredMsgs){
-			if(!message.getProvider().isReadOnly()){
-				message.getProvider().setMessage(key, value);
-			}
-		}
-	}
-	
 	/**
 	 * Set the specified key to map to the specified value in the highest-priority read/write {@link MessageProvider} registered via the {@link org.bukkit.plugin.ServicesManager}.
 	 * @param key The key of the message to set.
@@ -209,5 +141,73 @@ public final class Message {
 			return true;
 		
 		return write(lowest, key, value);
+	}
+	
+	/**
+	 * Sets the specified key to map to the specified value in all registered read/write {@link MessageProvider} instances.
+	 * @param key The key of the message to set.
+	 * @param value The value of the message to set.
+	 */
+	public static void setAll(String key, String value){
+		Validate.notEmpty(key, "The key cannot be null or empty.");
+		Validate.notNull(value, "The message cannot be null.");
+		
+		Collection<RegisteredServiceProvider<MessageProvider>> registeredMsgs = Bukkit.getServer().getServicesManager().getRegistrations(MessageProvider.class);
+		
+		for(RegisteredServiceProvider<MessageProvider> message : registeredMsgs){
+			if(!message.getProvider().isReadOnly()){
+				message.getProvider().setMessage(key, value);
+			}
+		}
+	}
+	private static boolean write(ArrayList<MessageProvider> list, String key, String value){
+		for(MessageProvider provider : list){
+			if(!provider.isReadOnly()){
+				provider.setMessage(key, value);
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	private String _key;
+	
+	private String _value;
+	
+	/**
+	 * Creates an instance of Message with the specified key and value. Does not add to any {@link MessageProvider}.
+	 * @param key The {@link MessageProvider} key for this message.
+	 * @param value The value of the message.
+	 */
+	public Message(String key, String value){
+		Validate.notEmpty(key, "The key cannot be null or empty.");
+		Validate.notNull(value, "The message cannot be null.");
+		
+		_key = key;
+		_value = value;
+	}
+	
+	/**
+	 * Gets the key of this message.
+	 * @return The {@link MessageProvider} backend storage key.
+	 */
+	public String getKey(){
+		return _key;
+	}
+	
+	/**
+	 * Gets the value of this message, as input.
+	 * @return The unformatted value of the message.
+	 */
+	public String getUnformattedValue(){
+		return _value;
+	}
+	
+	/**
+	 * Gets the value of this message, color code formatted with the & character.
+	 * @return The color formatted value of the message.
+	 */
+	public String getValue(){
+		return ChatColor.translateAlternateColorCodes('&', getUnformattedValue());
 	}
 }

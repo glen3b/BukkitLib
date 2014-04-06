@@ -24,6 +24,19 @@ public class CustomConfiguration {
 	private FileConfiguration _cfg;
 	
 	/**
+	 * Creates a new custom configuration instance.
+	 * @param backingStore The plugin which contains this configuration.
+	 * @param name The filename of the configuration file.
+	 */
+	public CustomConfiguration(Plugin backingStore, String name){
+		Validate.notEmpty(name, "The file name must not be null or empty.");
+		Validate.notNull(backingStore, "The plugin is null.");
+		
+		_backend = backingStore;
+		_fileName = name;
+	}
+	
+	/**
 	 * Gets the configuration instance.
 	 * @return An object representing the custom configuration file.
 	 */
@@ -34,7 +47,19 @@ public class CustomConfiguration {
         return _cfg;
     }
 	
-	/**
+    /**
+     * Gets the path of the configuration.
+     * @return The path of the configuration file in the data directory of the plugin.
+     */
+    public File getPath(){
+    	if (_file == null) {
+            _file = new File(_backend.getDataFolder(), _fileName);
+        }
+    	
+    	return _file;
+    }
+    
+    /**
 	 * Reloads the configuration file.
 	 */
     public void reloadConfig() {
@@ -50,7 +75,7 @@ public class CustomConfiguration {
             _cfg.setDefaults(defConfig);
         }
     }
-	
+    
     /**
      * Saves the configuration file to disc.
      */
@@ -65,7 +90,7 @@ public class CustomConfiguration {
         }
     }
     
-    /**
+	/**
      * Saves the default configuration to disc.
      * @return Whether the configuration was saved. This method returns {@code true} if the file was saved (because the file did not previously exist), and {@code false} if the file was already present.
      */
@@ -81,30 +106,5 @@ public class CustomConfiguration {
         
         return false;
     }
-    
-    /**
-     * Gets the path of the configuration.
-     * @return The path of the configuration file in the data directory of the plugin.
-     */
-    public File getPath(){
-    	if (_file == null) {
-            _file = new File(_backend.getDataFolder(), _fileName);
-        }
-    	
-    	return _file;
-    }
-    
-	/**
-	 * Creates a new custom configuration instance.
-	 * @param backingStore The plugin which contains this configuration.
-	 * @param name The filename of the configuration file.
-	 */
-	public CustomConfiguration(Plugin backingStore, String name){
-		Validate.notEmpty(name, "The file name must not be null or empty.");
-		Validate.notNull(backingStore, "The plugin is null.");
-		
-		_backend = backingStore;
-		_fileName = name;
-	}
 	
 }

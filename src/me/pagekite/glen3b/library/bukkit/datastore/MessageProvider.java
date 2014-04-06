@@ -27,16 +27,28 @@ import java.util.Set;
 public interface MessageProvider {
 
 	/**
+	 * Gets the message with the specified message ID.
+	 * @return The message with the specified ID, or {@code null} if it is not provided by this {@link me.pagekite.glen3b.library.bukkit.datastore.MessageProvider}.
+	 */
+	public Message getMessage(String messageId);
+	
+	/**
 	 * Gets the set of provided messages. This is a collection of keys, not values.
 	 * @return A {@link java.util.Set} of keys of messages provided by this {@link me.pagekite.glen3b.library.bukkit.datastore.MessageProvider}.
 	 */
 	public Set<String> getProvidedMessages();
 	
 	/**
-	 * Gets the message with the specified message ID.
-	 * @return The message with the specified ID, or {@code null} if it is not provided by this {@link me.pagekite.glen3b.library.bukkit.datastore.MessageProvider}.
+	 * Determines the read/write status of this message provider.
+	 * @return If this is a read-only message provider.
 	 */
-	public Message getMessage(String messageId);
+	public boolean isReadOnly();
+	
+	/**
+	 * Saves all messages stored by this provider to the backend, if applicable.
+	 * @exception java.lang.IllegalStateException Thrown if this is a read-only message provider.
+	 */
+	public void saveMessages();
 	
 	/**
 	 * Adds a message to this provider.
@@ -52,16 +64,4 @@ public interface MessageProvider {
 	 * @exception java.lang.IllegalStateException Thrown if this is a read-only message provider.
 	 */
 	public void setMessage(String key, String value) throws IllegalStateException;
-	
-	/**
-	 * Saves all messages stored by this provider to the backend, if applicable.
-	 * @exception java.lang.IllegalStateException Thrown if this is a read-only message provider.
-	 */
-	public void saveMessages();
-	
-	/**
-	 * Determines the read/write status of this message provider.
-	 * @return If this is a read-only message provider.
-	 */
-	public boolean isReadOnly();
 }

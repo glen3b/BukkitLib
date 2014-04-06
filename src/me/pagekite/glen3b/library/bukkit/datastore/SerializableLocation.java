@@ -32,18 +32,6 @@ public final class SerializableLocation implements Serializable, ConfigurationSe
     }
     
     /**
-     * Gets the deserialized location.
-     * @return The Location instance, or null if the serialized form was invalid.
-     */
-    public Location getLocation() {
-        World w = Bukkit.getWorld(world);
-        if(w==null)
-            return null;
-        Location toRet = new Location(w,x,y,z);
-        return toRet;
-    }
-    
-    /**
      * Deserialization constructor.
      * @see ConfigurationSerializable
      * @param serialized The serialized form of the object.
@@ -54,6 +42,18 @@ public final class SerializableLocation implements Serializable, ConfigurationSe
   		z = (Double)serialized.get("z");
   		world = (String)serialized.get("world");
   	}
+    
+    /**
+     * Gets the deserialized location.
+     * @return The Location instance, or null if the serialized form was invalid.
+     */
+    public Location getLocation() {
+        World w = Bukkit.getWorld(world);
+        if(w==null)
+            return null;
+        Location toRet = new Location(w,x,y,z);
+        return toRet;
+    }
     
   	/**
   	 * Serializes the object.

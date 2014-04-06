@@ -40,24 +40,6 @@ public abstract class SubCommand {
 		return retVal;
 	}
 	
-	/**
-	 * Gets all possible tab completion arguments, given the arguments so far and the sender of the command.
-	 * The first element of the {@code arguments} array will always be the alias of this {@code SubCommand} that is used in invokation.
-	 * The default implementation of this method returns all online players that start with the argument so far.
-	 * @param sender The requester of tab completion options.
-	 * @param arguments The arguments passed to the command so far.
-	 * @return A list of strings which are possibilities for the tab completion argument.
-	 * @see SubCommand#getTabCompletions(List)
-	 */
-	public List<String> tabComplete(CommandSender sender, String[] arguments){
-		// Get all online players
-		List<String> players = Utilities.getOnlinePlayerNames();
-		
-		String argSoFar = arguments.length >= 2 ? arguments[1] : null;
-		
-		return SubCommand.getTabCompletions(argSoFar, players);
-	}
-	
 	private List<String> _aliases;
 	
 	/**
@@ -70,12 +52,25 @@ public abstract class SubCommand {
 	}
 	
 	/**
+	 * Execute this subcommand.
+	 * @param sender The sender of this command.
+	 * @param arguments The arguments, including the command name, that were passed to this command. Index 0 will always be the alias of the command that was used in execution.
+	 */
+	public abstract void execute(CommandSender sender, String[] arguments);
+	
+	/**
 	 * Gets a list of strings which act as aliases for this command.
 	 * @return A new read only {@code List<String>} instance of aliases, including the primary name (first element) of this command.
 	 */
 	public final List<String> getAliases(){
 		return Collections.unmodifiableList(_aliases);
 	}
+	
+	/**
+	 * Gets a description of the command.
+	 * @return A description of the command to be displayed in the base command's help page.
+	 */
+	public abstract String getDescription();
 	
 	/**
 	 * Gets the name of the command, also known as the primary alias.
@@ -93,16 +88,21 @@ public abstract class SubCommand {
 	public abstract String getUsage();
 	
 	/**
-	 * Gets a description of the command.
-	 * @return A description of the command to be displayed in the base command's help page.
+	 * Gets all possible tab completion arguments, given the arguments so far and the sender of the command.
+	 * The first element of the {@code arguments} array will always be the alias of this {@code SubCommand} that is used in invokation.
+	 * The default implementation of this method returns all online players that start with the argument so far.
+	 * @param sender The requester of tab completion options.
+	 * @param arguments The arguments passed to the command so far.
+	 * @return A list of strings which are possibilities for the tab completion argument.
+	 * @see SubCommand#getTabCompletions(List)
 	 */
-	public abstract String getDescription();
-	
-	/**
-	 * Execute this subcommand.
-	 * @param sender The sender of this command.
-	 * @param arguments The arguments, including the command name, that were passed to this command. Index 0 will always be the alias of the command that was used in execution.
-	 */
-	public abstract void execute(CommandSender sender, String[] arguments);
+	public List<String> tabComplete(CommandSender sender, String[] arguments){
+		// Get all online players
+		List<String> players = Utilities.getOnlinePlayerNames();
+		
+		String argSoFar = arguments.length >= 2 ? arguments[1] : null;
+		
+		return SubCommand.getTabCompletions(argSoFar, players);
+	}
 	
 }

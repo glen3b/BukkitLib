@@ -27,20 +27,20 @@ import org.bukkit.entity.Player;
 public interface ServerTeleportationManager {
 
 	/**
-	 * Queues the specified player to be teleported to the specified server after the default delay. Queued teleportation cancelled upon movement or receiving damage. If the player has the permission node gbukkitlib.tpdelay.bypass, the teleportation will be instant.
-	 * @param player The player to teleport.
-	 * @param targetServer The server to teleport to.
-	 * @return The queued teleport, or {@code null} if it was instant.
-	 */
-	public QueuedTeleport<String> teleportPlayer(Player player, String targetServer);
-	
-	/**
 	 * Gets the queued teleportation of the specified player.
 	 * Queued teleports that have already executed (for cross-server operations) may return {@code null} on some methods.
 	 * @param teleport The player who's teleport will be returned.
 	 * @return The last queued teleport of the specified player, or null if none. The destination of the teleport will be the name of the server.
 	 */
 	public QueuedTeleport<String> getTeleport(Player teleport);
+	
+	/**
+	 * Queues the specified player to be teleported to the specified server after the default delay. Queued teleportation cancelled upon movement or receiving damage. If the player has the permission node gbukkitlib.tpdelay.bypass, the teleportation will be instant.
+	 * @param player The player to teleport.
+	 * @param targetServer The server to teleport to.
+	 * @return The queued teleport, or {@code null} if it was instant.
+	 */
+	public QueuedTeleport<String> teleportPlayer(Player player, String targetServer);
 	
 	/**
 	 * Queues the specified player to be teleported to the specified server after the specified delay. Queued teleportation cancelled upon movement or receiving damage.
