@@ -32,7 +32,7 @@ public interface TeleportationManager {
 	 * @param targetLoc The location to teleport to.
 	 * @return The queued teleport, or {@code null} if it was instant.
 	 */
-	public QueuedTeleport teleportPlayer(Player player, Location targetLoc);
+	public QueuedTeleport<Location> teleportPlayer(Player player, Location targetLoc);
 	
 	/**
 	 * Gets the queued teleportation of the specified player.
@@ -48,5 +48,5 @@ public interface TeleportationManager {
 	 * @param teleportDelay The delay, in seconds, after which the player will be teleported. If this value is 0 OR the player has the permission node {@code gbukkitlib.tpdelay.bypass}, the teleportation will be instant.
 	 * @return The queued teleport, or {@code null} if it was instant.
 	 */
-	public QueuedTeleport teleportPlayer(Player player, Location targetLoc, int teleportDelay);
+	public QueuedTeleport<Location> teleportPlayer(Player player, Location targetLoc, int teleportDelay);
 }

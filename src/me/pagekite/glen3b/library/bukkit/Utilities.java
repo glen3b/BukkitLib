@@ -27,6 +27,7 @@ import org.bukkit.Server;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.plugin.Plugin;
 
 /**
  * A static class housing common methods and constants.
@@ -35,17 +36,41 @@ import org.bukkit.inventory.meta.ItemMeta;
 public final class Utilities {
 
 	/**
-	 * Determine if str is an integer.
-	 * @param str The string to validate.
-	 * @return If str is a valid, parseable integer.
+	 * Attempt to parse {@code str} as an integer.
+	 * @param str The string to attempt to parse.
+	 * @return A {@code boolean} indicating if the parsing of the string was successful.
 	 */
+	@Deprecated
 	public static boolean isInt(String str){
+		if(str == null || str.trim().isEmpty()){
+			return false;
+		}
+		
 		try{
 			Integer.parseInt(str);
 		}catch(Throwable thr){
 			return false;
 		}
-    	return true;
+		
+		return true;
+    }
+	
+	/**
+	 * Attempt to parse {@code str} as an integer, returning a default value if it is not possible.
+	 * @param str The string to attempt to parse.
+	 * @param defaultVal The value to return if {@code str} cannot be parsed.
+	 * @return {@code str} as an integer if it is a valid, parseable integer; {@code defaultVal} otherwise.
+	 */
+	public static int parseInt(String str, int defaultVal){
+		if(str == null || str.trim().isEmpty()){
+			return defaultVal;
+		}
+		
+		try{
+			return Integer.parseInt(str);
+		}catch(Throwable thr){
+			return defaultVal;
+		}
     }
 	
 	/**
@@ -82,10 +107,23 @@ public final class Utilities {
 	}
 	
 	/**
+	 * Schedules a task to execute on the main server thread after one tick.
+	 * @param host The plugin under which to schedule this task. If this parameter is {@code null}, the GBukkitLib plugin instance as retrieved by the {@code PluginManager} will be used for scheduling. Using this method with a {@code null} plugin argument is deprecated.
+	 * @param task The task to execute on the main server thread after one server tick. It must not be {@code null}.
+	 * @return The ID of the scheduled task.
+	 * @see org.bukkit.scheduler.BukkitScheduler#scheduleSyncDelayedTask(Plugin plugin, Runnable task, long delay)
+	 */
+	public static int schedule(Plugin host, Runnable task){
+		Validate.notNull(task, "The task must not be null.");
+		
+		return Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(host == null ? Bukkit.getServer().getPluginManager().getPlugin("GBukkitLib") : host, task, 1L);
+	}
+	
+	/**
 	 * Gets a list of the names of all online players.
-	 * @return A list of all of the minecraft usernames currently online on the {@code Bukkit} server.
-	 * @see Bukkit#getServer()
+	 * @return A list of all of the <b>usernames</b> of all of the players currently online on the {@code Bukkit} server.
 	 * @see Server#getOnlinePlayers()
+	 * @see Player
 	 */
 	public static List<String> getOnlinePlayerNames(){
 		ArrayList<String> players = new ArrayList<String>();
@@ -99,6 +137,7 @@ public final class Utilities {
 	
 	/**
 	 * The target number of server ticks per second.
+	 * One server tick, on a server which is running at perfect target framerate, is 0.05 seconds.
 	 */
 	public static final long TICKS_PER_SECOND = 20L;
 	

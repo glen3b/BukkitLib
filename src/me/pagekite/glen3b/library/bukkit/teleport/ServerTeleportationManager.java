@@ -30,8 +30,9 @@ public interface ServerTeleportationManager {
 	 * Queues the specified player to be teleported to the specified server after the default delay. Queued teleportation cancelled upon movement or receiving damage. If the player has the permission node gbukkitlib.tpdelay.bypass, the teleportation will be instant.
 	 * @param player The player to teleport.
 	 * @param targetServer The server to teleport to.
+	 * @return The queued teleport, or {@code null} if it was instant.
 	 */
-	public void teleportPlayer(Player player, String targetServer);
+	public QueuedTeleport<String> teleportPlayer(Player player, String targetServer);
 	
 	/**
 	 * Gets the queued teleportation of the specified player.
@@ -45,6 +46,7 @@ public interface ServerTeleportationManager {
 	 * @param player The player to teleport.
 	 * @param targetServer The server to teleport to.
 	 * @param teleportDelay The delay, in seconds, after which the player will be teleported. If this value is 0 OR the player has the permission node gbukkitlib.tpdelay.bypass, the teleportation will be instant.
+	 * @return The queued teleport, or {@code null} if it was instant.
 	 */
-	public void teleportPlayer(Player player, String targetServer, int teleportDelay);
+	public QueuedTeleport<String> teleportPlayer(Player player, String targetServer, int teleportDelay);
 }
