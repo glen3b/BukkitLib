@@ -1,5 +1,7 @@
 package me.pagekite.glen3b.library.bukkit.command;
 
+import org.apache.commons.lang.Validate;
+
 public class Argument {
 
 	private String _name;
@@ -36,9 +38,7 @@ public class Argument {
 	 * @param mandatory Whether the argument is mandatory.
 	 */
 	public Argument(String argName, boolean mandatory){
-		if(argName == null){
-			throw new IllegalArgumentException("The argument name is null.");
-		}
+		Validate.notEmpty(argName, "The argument name cannot be null or empty.");
 		
 		_name = argName;
 		_required = mandatory;

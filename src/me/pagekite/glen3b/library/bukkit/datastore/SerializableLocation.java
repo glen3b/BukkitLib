@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.lang.Validate;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -23,7 +24,8 @@ public final class SerializableLocation implements Serializable, ConfigurationSe
      * @param loc The location to serialize.
      */
     public SerializableLocation(Location loc) {
-        x=loc.getX();
+        Validate.notNull(loc, "The wrapped location must not be null.");
+    	x=loc.getX();
         y=loc.getY();
         z=loc.getZ();
         world=loc.getWorld().getName();

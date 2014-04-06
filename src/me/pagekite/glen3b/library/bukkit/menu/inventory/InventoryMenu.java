@@ -1,4 +1,4 @@
-package me.pagekite.glen3b.library.bukkit.inventory.menu;
+package me.pagekite.glen3b.library.bukkit.menu.inventory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -6,14 +6,17 @@ import java.util.List;
 import me.pagekite.glen3b.library.bukkit.GBukkitLibraryPlugin;
 import me.pagekite.glen3b.library.bukkit.Utilities;
 
+import org.apache.commons.lang.Validate;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Event.Result;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemStack;
 
 /**
@@ -26,22 +29,33 @@ import org.bukkit.inventory.ItemStack;
  */
 public class InventoryMenu implements Listener {
 
-	private String name;
-	private int size;
+	protected String name;
+	protected int size;
 
-	private String[] optionNames;
-	private ItemStack[] optionIcons;
+	protected String[] optionNames;
+	protected ItemStack[] optionIcons;
 
-	private List<OptionClickEvent.Handler> _eventHandlers = new ArrayList<OptionClickEvent.Handler>();
+	/**
+	 * Gets the number of available option slots in this {@code InventoryMenu} instance.
+	 * @return The number of available option slots in this inventory menu instance. If there is an illegal internal state, this method will return {@code -1}.
+	 */
+	public int getSize(){
+		if(optionNames == null || optionIcons == null || optionNames.length != optionIcons.length){
+			// Illegal internal state
+			return -1;
+		}
+		
+		return optionNames.length;
+	}
+	
+	protected List<OptionClickEvent.Handler> _eventHandlers = new ArrayList<OptionClickEvent.Handler>();
 	
 	/**
 	 * Register an event handler to be invoked when an option is clicked.
 	 * @param handler An event handler that will be invoked upon option selection.
 	 */
 	public void registerOptionClickHandler(OptionClickEvent.Handler handler){
-		if(handler == null){
-			throw new IllegalArgumentException("The handler must not be null.");
-		}
+		Validate.notNull(handler, "The handler must not be null.");
 		
 		_eventHandlers.add(handler);
 	}
@@ -52,13 +66,8 @@ public class InventoryMenu implements Listener {
 	 * @param size The size of the inventory, which must be a multiple of 9.
 	 */
 	public InventoryMenu(String name, int size) {
-		if(name == null){
-			throw new IllegalArgumentException("The name must not be null.");
-		}
-		
-		if(size <= 0 || size % 9 != 0){
-			throw new IllegalArgumentException("The size of the inventory must be a multiple of 9.");
-		}
+		Validate.notNull(name, "The name must not be null.");
+		Validate.isTrue(size > 0 && size % 9 == 0, "The size of the inventory must be a multiple of 9. Size: ", size);
 		
 		this.name = name;
 		this.size = size;
@@ -69,7 +78,7 @@ public class InventoryMenu implements Listener {
 
 	private GBukkitLibraryPlugin _plugin;
 	
-	private GBukkitLibraryPlugin getPlugin(){
+	protected GBukkitLibraryPlugin getPlugin(){
 		if(_plugin == null || !_plugin.isEnabled()){
 			_plugin = (GBukkitLibraryPlugin)Bukkit.getServer().getPluginManager().getPlugin("GBukkitLib");
 		}
@@ -83,9 +92,8 @@ public class InventoryMenu implements Listener {
 	 * @param position The zero-based index of the item.
 	 */
 	public void deleteOption(int position){
-		if(position < 0){
-			throw new IllegalArgumentException("The position must be a positive index.");
-		}
+		Validate.isTrue(position >= 0 && position < getSize(), "The position is not within the bounds of the menu. Position: ", position);
+		
 		optionNames[position] = null;
 		optionIcons[position] = null;
 	}
@@ -100,12 +108,10 @@ public class InventoryMenu implements Listener {
 	 */
 	public void setOption(int position, ItemStack icon, String name,
 			String... info) {
-		if(position < 0){
-			throw new IllegalArgumentException("The position must be a positive index.");
-		}
-		if(icon == null || info == null || name == null){
-			throw new IllegalArgumentException("All item information must not be null.");
-		}
+		Validate.isTrue(position >= 0 && position < getSize(), "The position is not within the bounds of the menu. Position: ", position);
+		Validate.notNull(icon, "The icon is null.");
+		Validate.notNull(name, "The item name is null.");
+		Validate.noNullElements(info, "Item information contains null values.");
 		
 		optionNames[position] = name;
 		optionIcons[position] = Utilities.setItemNameAndLore(icon, name, info);
@@ -114,11 +120,10 @@ public class InventoryMenu implements Listener {
 	/**
 	 * Opens this inventory menu for the specified player.
 	 * @param player The player for which to show the inventory.
+	 * @return The resulting inventory view.
 	 */
-	public void open(Player player) {
-		if(player == null){
-			throw new IllegalArgumentException("The player must not be null.");
-		}
+	public InventoryView open(Player player) {
+		Validate.notNull(player, "The player must not be null.");
 		
 		Inventory inventory = Bukkit.createInventory(player, size, name);
 		for (int i = 0; i < optionIcons.length; i++) {
@@ -126,7 +131,7 @@ public class InventoryMenu implements Listener {
 				inventory.setItem(i, optionIcons[i]);
 			}
 		}
-		player.openInventory(inventory);
+		return player.openInventory(inventory);
 	}
 
 	/**
@@ -140,12 +145,22 @@ public class InventoryMenu implements Listener {
 		_eventHandlers = null;
 	}
 
-	@EventHandler(priority = EventPriority.MONITOR)
-	void onInventoryClick(InventoryClickEvent event) {
-		if (event.getInventory().getTitle().equals(name)) {
+	/**
+	 * Event handler for inventory clicks.
+	 * @param event The event.
+	 */
+	@EventHandler(priority = EventPriority.HIGH)
+	protected void onInventoryClick(InventoryClickEvent event) {
+		if((event.getView().getBottomInventory() != null && event.getView().getBottomInventory().getTitle().equals(name)) || (event.getView().getTopInventory() != null && event.getView().getTopInventory().getTitle().equals(name))){
+			// Stop dupes
+			event.setCancelled(true);
+			event.setResult(Result.DENY);
+		}
+		
+		if (event.getInventory().getTitle().equals(name) && event.getWhoClicked() instanceof Player) {
 			event.setCancelled(true);
 			int slot = event.getRawSlot();
-			if (slot >= 0 && slot < size && optionNames[slot] != null) {
+			if (slot >= 0 && slot < getSize() && optionIcons[slot] != null) {
 				OptionClickEvent e = new OptionClickEvent(
 						(Player) event.getWhoClicked(), slot, optionNames[slot]);
 				for(OptionClickEvent.Handler handlr :_eventHandlers){

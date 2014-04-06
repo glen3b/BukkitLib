@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.commons.lang.Validate;
 import org.bukkit.Bukkit;
 import org.bukkit.Server;
 import org.bukkit.entity.Player;
@@ -34,8 +35,33 @@ import org.bukkit.inventory.meta.ItemMeta;
 public final class Utilities {
 
 	/**
+	 * Determine if str is an integer.
+	 * @param str The string to validate.
+	 * @return If str is a valid, parseable integer.
+	 */
+	public static boolean isInt(String str){
+		try{
+			Integer.parseInt(str);
+		}catch(Throwable thr){
+			return false;
+		}
+    	return true;
+    }
+	
+	/**
+	 * Sets the display name of the specified item. It also removes any lore.
+	 * The item that is passed in should not be assumed to be unmodified after the operation.
+	 * @param item The item to modify the data of.
+	 * @param name The new display name of the item.
+	 * @return The modified item.
+	 */
+	public static ItemStack setItemNameAndLore(ItemStack item, String name) {
+		return setItemNameAndLore(item, name, new String[0]);
+	}
+	
+	/**
 	 * Sets the display name and lore of the specified item.
-	 * The item that is passed in should not be assumed to be unmodified.
+	 * The item that is passed in should not be assumed to be unmodified after the operation.
 	 * @param item The item to modify the data of.
 	 * @param name The new display name of the item.
 	 * @param lore The new lore of the item.
@@ -43,13 +69,10 @@ public final class Utilities {
 	 */
 	public static ItemStack setItemNameAndLore(ItemStack item, String name,
 			String[] lore) {
-		if(item == null){
-			throw new IllegalArgumentException("The item is null.");
-		}
-		
-		if(name == null){
-			throw new IllegalArgumentException("The item name is null.");
-		}
+		Validate.notNull(item, "The item is null.");
+		Validate.notEmpty(name, "The name is null.");
+		Validate.notNull(lore, "The lore array is null.");
+		Validate.noNullElements(lore, "The lore array contains null elements.");
 		
 		ItemMeta im = item.getItemMeta();
 		im.setDisplayName(name);

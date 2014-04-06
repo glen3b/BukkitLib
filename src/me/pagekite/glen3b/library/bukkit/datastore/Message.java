@@ -20,6 +20,7 @@ package me.pagekite.glen3b.library.bukkit.datastore;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import org.apache.commons.lang.Validate;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.plugin.RegisteredServiceProvider;
@@ -37,13 +38,8 @@ public final class Message {
 	 * @param value The value of the message.
 	 */
 	public Message(String key, String value){
-		if(key == null){
-			throw new IllegalArgumentException("Key cannot be null.");
-		}
-		
-		if(value == null){
-			throw new IllegalArgumentException("Value cannot be null.");
-		}
+		Validate.notEmpty(key, "The key cannot be null or empty.");
+		Validate.notNull(value, "The message cannot be null.");
 		
 		_key = key;
 		_value = value;
@@ -79,12 +75,10 @@ public final class Message {
 	/**
 	 * Search all {@link MessageProvider}s registered via the {@link org.bukkit.plugin.ServicesManager}, sorting by priority, to find the specified message.
 	 * @param key The key of the message to retrieve.
-	 * @return The message associated with the specified key, or {@code null} if not found.
+	 * @return The color formatted message associated with the specified key, or {@code null} if not found.
 	 */
 	public static String get(String key) {
-		if(key == null){
-			throw new IllegalArgumentException("Key cannot be null.");
-		}
+		Validate.notEmpty(key, "The key cannot be null or empty.");
 		
 		//Prioritized lists
 		ArrayList<MessageProvider> highest = new ArrayList<MessageProvider>();
@@ -171,12 +165,8 @@ public final class Message {
 	 * @param value The value of the message to set.
 	 */
 	public static void setAll(String key, String value){
-		if(key == null){
-			throw new IllegalArgumentException("Key cannot be null.");
-		}
-		if(value == null){
-			throw new IllegalArgumentException("Value cannot be null.");
-		}
+		Validate.notEmpty(key, "The key cannot be null or empty.");
+		Validate.notNull(value, "The message cannot be null.");
 		
 		Collection<RegisteredServiceProvider<MessageProvider>> registeredMsgs = Bukkit.getServer().getServicesManager().getRegistrations(MessageProvider.class);
 		
@@ -194,12 +184,8 @@ public final class Message {
 	 * @return True if the set was successful; false otherwise.
 	 */
 	public static boolean set(String key, String value) {
-		if(key == null){
-			throw new IllegalArgumentException("Key cannot be null.");
-		}
-		if(value == null){
-			throw new IllegalArgumentException("Value cannot be null.");
-		}
+		Validate.notEmpty(key, "The key cannot be null or empty.");
+		Validate.notNull(value, "The message cannot be null.");
 		
 		//Prioritized lists
 		ArrayList<MessageProvider> highest = new ArrayList<MessageProvider>();

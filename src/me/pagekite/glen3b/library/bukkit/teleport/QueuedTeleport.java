@@ -54,4 +54,16 @@ public interface QueuedTeleport<D> {
 	 * @exception java.lang.IllegalStateException Thrown if the teleportation is cancelled when this method is called.
 	 */
 	public Player getEntity() throws IllegalStateException;
+	
+	/**
+	 * Registers code to run after a successful teleport.
+	 * @param delegate The code to run.
+	 */
+	public void registerOnTeleport(Runnable delegate);
+	
+	/**
+	 * Registers code to run if a teleport is cancelled.
+	 * @param delegate The code to run.
+	 */
+	public void registerOnTeleportCancel(Runnable delegate);
 }

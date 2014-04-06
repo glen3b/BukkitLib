@@ -1,4 +1,4 @@
-package me.pagekite.glen3b.library.bukkit.inventory.menu;
+package me.pagekite.glen3b.library.bukkit.menu.inventory;
 
 import org.bukkit.entity.Player;
 
@@ -56,7 +56,7 @@ public class OptionClickEvent {
 	}
 
 	/**
-	 * Gets the name of the item.
+	 * Gets the name of the item. It may be {@code null}.
 	 * @return The name of the clicked item.
 	 */
 	public String getName() {
