@@ -41,9 +41,7 @@ public final class SerializableLocation implements ConfigurationSerializable {
         World w = Bukkit.getWorld(world);
         if(w==null)
             return null;
-        Location toRet = new Location(w,x,y,z);
-        toRet.setPitch(pitch);
-        toRet.setYaw(yaw);
+        Location toRet = new Location(w,x,y,z,yaw,pitch);
         return toRet;
     }
     
