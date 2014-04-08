@@ -31,6 +31,25 @@ import org.bukkit.plugin.Plugin;
  */
 public final class AutoSaverScheduler {
 
+	private final class AutosavedConfig implements Runnable{
+		public File _file;
+		
+		public FileConfiguration _config;
+		public AutosavedConfig(File file, FileConfiguration cfg){
+			_file = file;
+			_config = cfg;
+		}
+		@Override
+		public void run() {
+			try {
+				_config.save(_file);
+				_plugin.getLogger().log(Level.FINE, "Autosaving configuration to " + _file.getName() + " in folder " + _file.getParent());
+			} catch (IOException e) {
+				_plugin.getLogger().log(Level.WARNING, "Autosaving configuration to " + _file.getName() + " in folder " + _file.getParent() + " FAILED!", e);
+			}
+		}
+	}
+	
 	private Plugin _plugin;
 	
 	/**
@@ -44,23 +63,14 @@ public final class AutoSaverScheduler {
 		_plugin = plugin;
 	}
 	
-	private final class AutosavedConfig implements Runnable{
-		public AutosavedConfig(File file, FileConfiguration cfg){
-			_file = file;
-			_config = cfg;
-		}
-		
-		public File _file;
-		public FileConfiguration _config;
-		@Override
-		public void run() {
-			try {
-				_config.save(_file);
-				_plugin.getLogger().log(Level.FINE, "Autosaving configuration to " + _file.getName() + " in folder " + _file.getParent());
-			} catch (IOException e) {
-				_plugin.getLogger().log(Level.WARNING, "Autosaving configuration to " + _file.getName() + " in folder " + _file.getParent() + " FAILED!", e);
-			}
-		}
+	/**
+	 * Gets the configuration path for the file name "config.yml" within a plugin's data directory.
+	 * @param plugin The plugin who's configuration file's path should be retrieved.
+	 * @return A new File instance which represents config.yml in the plugin. The name config.yml is hardcoded.
+	 * @see #getConfigurationPath(Plugin, String)
+	 */
+	public File getConfigurationPath(Plugin plugin){
+		return getConfigurationPath(plugin, "config.yml");
 	}
 	
 	/**
@@ -75,16 +85,6 @@ public final class AutoSaverScheduler {
 		Validate.notEmpty(fileName, "The file name must not be empty.");
 		
 		return new File(plugin.getDataFolder(), fileName);
-	}
-	
-	/**
-	 * Gets the configuration path for the file name "config.yml" within a plugin's data directory.
-	 * @param plugin The plugin who's configuration file's path should be retrieved.
-	 * @return A new File instance which represents config.yml in the plugin. The name config.yml is hardcoded.
-	 * @see #getConfigurationPath(Plugin, String)
-	 */
-	public File getConfigurationPath(Plugin plugin){
-		return getConfigurationPath(plugin, "config.yml");
 	}
 	
 	/**

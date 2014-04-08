@@ -16,23 +16,6 @@ public class Argument {
 	}
 	
 	/**
-	 * Gets the number of arguments this argument represents at maximum.
-	 * This method will return {@code -1} if it is an unbounded number of arguments.
-	 * @return The highest possible number of arguments that this {@code Argument} will occupy in an array.
-	 */
-	public int getMaximumArgumentCount(){
-		return 1;
-	}
-	
-	/**
-	 * Gets the number of arguments this argument represents at minimum.
-	 * @return The minimum number of arguments that this {@code Argument} will occupy in an array.
-	 */
-	public int getArgumentCount(){
-		return 1;
-	}
-	
-	/**
 	 * Creates an argument.
 	 * @param argName The name of the argument.
 	 * @param mandatory Whether the argument is mandatory.
@@ -45,6 +28,23 @@ public class Argument {
 	}
 	
 	/**
+	 * Gets the number of arguments this argument represents at minimum.
+	 * @return The minimum number of arguments that this {@code Argument} will occupy in an array.
+	 */
+	public int getArgumentCount(){
+		return 1;
+	}
+	
+	/**
+	 * Gets the number of arguments this argument represents at maximum.
+	 * This method will return {@code -1} if it is an unbounded number of arguments.
+	 * @return The highest possible number of arguments that this {@code Argument} will occupy in an array.
+	 */
+	public int getMaximumArgumentCount(){
+		return 1;
+	}
+	
+	/**
 	 * Gets the name of the argument.
 	 * @return The name of the command argument.
 	 */
@@ -53,18 +53,18 @@ public class Argument {
 	}
 	
 	/**
-	 * Determines if this is a required argument.
-	 * @return Whether this command argument is required.
-	 */
-	public boolean isRequired(){
-		return _required;
-	}
-	
-	/**
 	 * Gets a string showing usage of the argument.
 	 * @return A user-displayed formatted string representing argument usage.
 	 */
 	public String getUsageString(){
 		return String.format(isRequired() ? "<%s>" : "[%s]", getName().toLowerCase().trim());
+	}
+	
+	/**
+	 * Determines if this is a required argument.
+	 * @return Whether this command argument is required.
+	 */
+	public boolean isRequired(){
+		return _required;
 	}
 }

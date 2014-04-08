@@ -30,16 +30,7 @@ public final class BaseCommand implements TabExecutor {
 	private String _helpPageHeader = "Help (page %d):";
 	private ArrayList<SubCommand> _subCommands;
 	
-	/**
-	 * Register a base command as a command executor
-	 * @param cmd The command which this instance represents.
-	 */
-	public void register(PluginCommand cmd){
-		Validate.notNull(cmd, "The plugin command is null.");
-		
-		cmd.setExecutor(this);
-		cmd.setTabCompleter(this);
-	}
+	private GBukkitLibraryPlugin _plugin;
 	
 	/**
 	 * Create a base command. For this class to execute a command, {@code register(getCommand("commandNameInPluginYaml"))} must be called.
@@ -57,6 +48,30 @@ public final class BaseCommand implements TabExecutor {
 		_subCommands = Lists.newArrayList(commands);
 	}
 	
+	private List<SubCommand> getCommands(String label, boolean getExact){
+		ArrayList<SubCommand> retVal = new ArrayList<SubCommand>();
+		
+		for(SubCommand cmd : _subCommands){
+			for(String alias : cmd.getAliases()){
+				if(alias != null && (label.equalsIgnoreCase(alias) || (!getExact && alias.toLowerCase().startsWith(label.toLowerCase())))){
+					retVal.add(cmd);
+					//Break out of the alias loop
+					break;
+				}
+			}
+		}
+		
+		return retVal;
+	}
+	
+	private FileConfiguration getConfig(){
+		if(_plugin == null || !_plugin.isEnabled()){
+			_plugin = (GBukkitLibraryPlugin)Bukkit.getServer().getPluginManager().getPlugin("GBukkitLib");
+		}
+		
+		return _plugin.getConfig();
+	}
+	
 	/**
 	 * Get a list of subcommands executed by this BaseCommand instance.
 	 * @return A read only {@code Collection<SubCommand>} instance that can be manipulated via reference to change the subcommands executed by this base command.
@@ -65,22 +80,12 @@ public final class BaseCommand implements TabExecutor {
 		return Collections.unmodifiableList(_subCommands);
 	}
 	
-	private GBukkitLibraryPlugin _plugin;
-	
-	private FileConfiguration getConfig(){
-		if(_plugin == null || !_plugin.isEnabled()){
-			_plugin = (GBukkitLibraryPlugin)Bukkit.getServer().getPluginManager().getPlugin("GBukkitLib");
-		}
-		
-		return _plugin.getConfig();
-		
-	}
-	
 	/**
 	 * Executes the base command, attempting to parse arguments.
 	 * @see CommandExecutor
 	 * @see Command
 	 */
+	@SuppressWarnings("deprecation")
 	@Override
 	public boolean onCommand(CommandSender sender, Command command, String label,
 			String[] args) {
@@ -136,22 +141,6 @@ public final class BaseCommand implements TabExecutor {
 	}
 
 	
-	private List<SubCommand> getCommands(String label, boolean getExact){
-		ArrayList<SubCommand> retVal = new ArrayList<SubCommand>();
-		
-		for(SubCommand cmd : _subCommands){
-			for(String alias : cmd.getAliases()){
-				if(alias != null && (label.equalsIgnoreCase(alias) || (!getExact && alias.toLowerCase().startsWith(label.toLowerCase())))){
-					retVal.add(cmd);
-					//Break out of the alias loop
-					break;
-				}
-			}
-		}
-		
-		return retVal;
-	}
-	
 	/**
 	 * Tab completes the base command.
 	 * @see TabCompleter
@@ -179,6 +168,17 @@ public final class BaseCommand implements TabExecutor {
 		}
 		
 		return completions;
+	}
+	
+	/**
+	 * Register a base command as a command executor
+	 * @param cmd The command which this instance represents.
+	 */
+	public void register(PluginCommand cmd){
+		Validate.notNull(cmd, "The plugin command is null.");
+		
+		cmd.setExecutor(this);
+		cmd.setTabCompleter(this);
 	}
 
 }

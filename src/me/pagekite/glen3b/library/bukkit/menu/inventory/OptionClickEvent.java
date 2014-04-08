@@ -7,12 +7,6 @@ import org.bukkit.entity.Player;
  * @author Glen Husman
  */
 public class OptionClickEvent {
-	private int position;
-	private String name;
-	private boolean close;
-	private boolean destroy;
-	private Player player;
-	
 	/**
 	 * A handler of an option click event.
 	 * @author Glen Husman
@@ -24,6 +18,12 @@ public class OptionClickEvent {
 		 */
 		public void onOptionClick(OptionClickEvent event);
 	}
+	private int position;
+	private String name;
+	private boolean close;
+	private boolean destroy;
+	
+	private Player player;
 	
 	/**
 	 * Creates an instance of this event.
@@ -40,13 +40,21 @@ public class OptionClickEvent {
 	}
 
 	/**
+	 * Gets the name of the item. It may be {@code null}.
+	 * @return The name of the clicked item.
+	 */
+	public String getName() {
+		return name;
+	}
+	
+	/**
 	 * Get the player who clicked on the inventory.
 	 * @return The player who clicked on the inventory and triggered this event.
 	 */
 	public Player getPlayer(){
 		return player;
 	}
-	
+
 	/**
 	 * Gets the position of the item within the inventory menu.
 	 * @return The zero-based position within the inventory which was clicked.
@@ -56,11 +64,19 @@ public class OptionClickEvent {
 	}
 
 	/**
-	 * Gets the name of the item. It may be {@code null}.
-	 * @return The name of the clicked item.
+	 * Sets a boolean indicating if the inventory will be closed.
+	 * @param close Whether the inventory will be closed as a result of this click.
 	 */
-	public String getName() {
-		return name;
+	public void setWillClose(boolean close) {
+		this.close = close;
+	}
+	
+	/**
+	 * Sets a boolean indicating if the inventory will be destroyed.
+	 * @param destroy Whether the inventory menu instance will be destroyed as a result of this click.
+	 */
+	public void setWillDestroy(boolean destroy) {
+		this.destroy = destroy;
 	}
 
 	/**
@@ -70,28 +86,12 @@ public class OptionClickEvent {
 	public boolean willClose() {
 		return close;
 	}
-	
+
 	/**
 	 * Gets a boolean indicating if the inventory will be destroyed.
 	 * @return Whether the inventory menu instance will be destroyed as a result of this click.
 	 */
 	public boolean willDestroy() {
 		return destroy;
-	}
-
-	/**
-	 * Sets a boolean indicating if the inventory will be closed.
-	 * @param close Whether the inventory will be closed as a result of this click.
-	 */
-	public void setWillClose(boolean close) {
-		this.close = close;
-	}
-
-	/**
-	 * Sets a boolean indicating if the inventory will be destroyed.
-	 * @param destroy Whether the inventory menu instance will be destroyed as a result of this click.
-	 */
-	public void setWillDestroy(boolean destroy) {
-		this.destroy = destroy;
 	}
 }

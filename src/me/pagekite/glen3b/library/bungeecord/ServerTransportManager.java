@@ -13,6 +13,8 @@ import com.google.common.io.ByteStreams;
  */
 public final class ServerTransportManager {
 
+	private Plugin _plugin;
+	
 	/**
 	 * Internal constructor. <b>Should not be called except by the GBukkitLib plugin instance.</b>
 	 * @param plugin The GBukkitLib plugin instance.
@@ -22,8 +24,6 @@ public final class ServerTransportManager {
 
 		plugin.getServer().getMessenger().registerOutgoingPluginChannel(plugin, "BungeeCord");
 	}
-	
-	private Plugin _plugin;
 	
 	/**
 	 * Send the specified player to the specified other server.

@@ -10,28 +10,6 @@ import org.bukkit.inventory.ItemStack;
 public final class CyclingInventoryMenuFactory {
 
 	/**
-	 * The inventory menu as constructed so far.
-	 */
-	protected CyclingInventoryMenu _wrapped;
-	
-	/**
-	 * Gets the size of the inventory.
-	 * @return The size (in slots) of the underlying inventory menu.
-	 */
-	public int getSize(){
-		return _wrapped.getSize();
-	}
-	
-	/**
-	 * Creates an inventory menu with one row.
-	 * @param name The name of the inventory.
-	 * @return The new factory instance.
-	 */
-	public static CyclingInventoryMenuFactory createRow(String name){
-		return create(name, 1);
-	}
-	
-	/**
 	 * Creates an inventory menu.
 	 * @param name The name of the inventory.
 	 * @param rows The number of rows in the inventory.
@@ -60,11 +38,44 @@ public final class CyclingInventoryMenuFactory {
 	}
 	
 	/**
+	 * Creates an inventory menu with one row.
+	 * @param name The name of the inventory.
+	 * @return The new factory instance.
+	 */
+	public static CyclingInventoryMenuFactory createRow(String name){
+		return create(name, 1);
+	}
+	
+	/**
+	 * The inventory menu as constructed so far.
+	 */
+	protected CyclingInventoryMenu _wrapped;
+	
+	/**
+	 * Creates an inventory menu factory.
+	 * @param wrapped The inventory menu so far.
+	 */
+	public CyclingInventoryMenuFactory(CyclingInventoryMenu wrapped){
+		Validate.notNull(wrapped, "The wrapped inventory menu must not be null.");
+		Validate.isTrue(wrapped.getSize() > 0, "The wrapped inventory menu has an illegal internal state.");
+		
+		_wrapped = wrapped;
+	}
+	
+	/**
 	 * Builds the inventory menu.
 	 * @return A reference to the inventory menu created by this factory.
 	 */
 	public CyclingInventoryMenu build(){
 		return _wrapped;
+	}
+	
+	/**
+	 * Gets the size of the inventory.
+	 * @return The size (in slots) of the underlying inventory menu.
+	 */
+	public int getSize(){
+		return _wrapped.getSize();
 	}
 	
 	/**
@@ -91,20 +102,6 @@ public final class CyclingInventoryMenuFactory {
 	
 	/**
 	 * Sets the option at the specified position to the specified item.
-	 * The item will have the name and lore as they were when the array was passed in.
-	 * @param position The zero-based index of the item.
-	 * @param icons The items to use.
-	 * @param cycleDelay The delay between cycles of the item, in server ticks.
-	 * @return This instance.
-	 */
-	public CyclingInventoryMenuFactory setOption(int position, ItemStack[] icons, long cycleDelay){
-		_wrapped.setOption(position, icons, cycleDelay);
-		
-		return this;
-	}
-	
-	/**
-	 * Sets the option at the specified position to the specified item.
 	 * The item will have the specified name and lore. All strings must be color-formatted by the caller.
 	 * @param position The zero-based index of the item.
 	 * @param icon The item itself to use.
@@ -120,14 +117,17 @@ public final class CyclingInventoryMenuFactory {
 	}
 	
 	/**
-	 * Creates an inventory menu factory.
-	 * @param wrapped The inventory menu so far.
+	 * Sets the option at the specified position to the specified item.
+	 * The item will have the name and lore as they were when the array was passed in.
+	 * @param position The zero-based index of the item.
+	 * @param icons The items to use.
+	 * @param cycleDelay The delay between cycles of the item, in server ticks.
+	 * @return This instance.
 	 */
-	public CyclingInventoryMenuFactory(CyclingInventoryMenu wrapped){
-		Validate.notNull(wrapped, "The wrapped inventory menu must not be null.");
-		Validate.isTrue(wrapped.getSize() > 0, "The wrapped inventory menu has an illegal internal state.");
+	public CyclingInventoryMenuFactory setOption(int position, ItemStack[] icons, long cycleDelay){
+		_wrapped.setOption(position, icons, cycleDelay);
 		
-		_wrapped = wrapped;
+		return this;
 	}
 	
 }

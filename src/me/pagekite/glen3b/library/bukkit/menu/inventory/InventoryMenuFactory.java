@@ -13,28 +13,6 @@ import com.google.common.base.Function;
 public final class InventoryMenuFactory {
 
 	/**
-	 * The inventory menu as constructed so far.
-	 */
-	protected InventoryMenu _wrapped;
-	
-	/**
-	 * Gets the size of the inventory.
-	 * @return The size (in slots) of the underlying inventory menu.
-	 */
-	public int getSize(){
-		return _wrapped.getSize();
-	}
-	
-	/**
-	 * Creates an inventory menu with one row.
-	 * @param name The name of the inventory.
-	 * @return The new factory instance.
-	 */
-	public static InventoryMenuFactory createRow(String name){
-		return create(name, 1);
-	}
-	
-	/**
 	 * Creates an inventory menu.
 	 * @param name The name of the inventory.
 	 * @param rows The number of rows in the inventory.
@@ -63,11 +41,44 @@ public final class InventoryMenuFactory {
 	}
 	
 	/**
+	 * Creates an inventory menu with one row.
+	 * @param name The name of the inventory.
+	 * @return The new factory instance.
+	 */
+	public static InventoryMenuFactory createRow(String name){
+		return create(name, 1);
+	}
+	
+	/**
+	 * The inventory menu as constructed so far.
+	 */
+	protected InventoryMenu _wrapped;
+	
+	/**
+	 * Creates an inventory menu factory.
+	 * @param wrapped The inventory menu so far.
+	 */
+	public InventoryMenuFactory(InventoryMenu wrapped){
+		Validate.notNull(wrapped, "The wrapped inventory menu must not be null.");
+		Validate.isTrue(wrapped.getSize() > 0, "The wrapped inventory menu has an illegal internal state.");
+		
+		_wrapped = wrapped;
+	}
+	
+	/**
 	 * Builds the inventory menu.
 	 * @return A reference to the inventory menu created by this factory.
 	 */
 	public InventoryMenu build(){
 		return _wrapped;
+	}
+	
+	/**
+	 * Gets the size of the inventory.
+	 * @return The size (in slots) of the underlying inventory menu.
+	 */
+	public int getSize(){
+		return _wrapped.getSize();
 	}
 	
 	/**
@@ -130,17 +141,6 @@ public final class InventoryMenuFactory {
 		_wrapped.setOption(position, icon, name, info == null ? new String[0] : info);
 		
 		return this;
-	}
-	
-	/**
-	 * Creates an inventory menu factory.
-	 * @param wrapped The inventory menu so far.
-	 */
-	public InventoryMenuFactory(InventoryMenu wrapped){
-		Validate.notNull(wrapped, "The wrapped inventory menu must not be null.");
-		Validate.isTrue(wrapped.getSize() > 0, "The wrapped inventory menu has an illegal internal state.");
-		
-		_wrapped = wrapped;
 	}
 	
 }
