@@ -34,13 +34,22 @@ public final class SerializableLocation implements ConfigurationSerializable {
     }
     
     /**
+     * Gets the {@link World} instance corresponding to the world name in the serialized form of this location.
+     * @return The {@link World} instance that this location belongs in, or {@code null} if it is invalid.
+     */
+    public World getWorld() {
+        return Bukkit.getWorld(world);
+    }
+    
+    /**
      * Gets the deserialized location.
      * @return A new Location instance representing this serialized state, or {@code null} if the serialized form was invalid.
      */
     public Location getLocation() {
-        World w = Bukkit.getWorld(world);
+        World w = getWorld();
         if(w==null)
             return null;
+        
         Location toRet = new Location(w,x,y,z,yaw,pitch);
         return toRet;
     }
