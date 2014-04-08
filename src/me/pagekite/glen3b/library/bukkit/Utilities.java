@@ -21,8 +21,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import me.pagekite.glen3b.library.bukkit.teleport.QueuedTeleport;
+
 import org.apache.commons.lang.Validate;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.Server;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -60,6 +63,33 @@ public final class Utilities {
 		}
 		
 		return players;
+	}
+	
+	/**
+	 * Run the specified tasks after the completion of the specified teleport. This method is intended to wrap calls to {@link TeleportationManager} methods which may return a {@code null} {@link QueuedTeleport}. If the method returns {@code null} and that value is passed into this method, the tasks will run instantly after the teleport, as was intended, without an additional {@code null} check in client code.
+	 * @param teleport The teleport to scedule tasks for. If this is {@code null} or cancelled, the tasks will be run instantly.
+	 * @param tasks The tasks to run.
+	 * @return Whether the tasks were queued. The return value will be {@code false} if they ran instantly during the execution of this method and {@code true} if they were queued for execution and consequently have not yet run.
+	 * @see TeleportationManager#teleportPlayer(Player player, Location targetLoc)
+	 */
+	public static <T> boolean runAfterTeleport(QueuedTeleport<T> teleport, Runnable... tasks){
+		Validate.noNullElements(tasks, "There must not be any null tasks.");
+		
+		if(teleport == null || teleport.isCancelled()){
+			// Instant execution
+			for(Runnable task : tasks){
+				task.run();
+			}
+			
+			return false;
+		}else{
+			// Queue execution
+			for(Runnable task : tasks){
+				teleport.registerOnTeleport(task);
+			}
+			
+			return true;
+		}
 	}
 	
 	/**
