@@ -71,10 +71,18 @@ public final class SerializableLocation implements ConfigurationSerializable {
   		// If that is the case, we must still be able to deserialize them
   		// Hence, we need to check for new keys and assume defaults if they don't exist
   		if(serialized.containsKey("yaw"))
-  			yaw = (Float)serialized.get("yaw");
+  			try{
+  				yaw = (Float)serialized.get("yaw");
+  			}catch(ClassCastException e){
+  				yaw = Float.parseFloat(serialized.get("yaw").toString());
+  			}
   		
   		if(serialized.containsKey("pitch"))
-  			pitch = (Float)serialized.get("pitch");
+  			try{
+  				pitch = (Float)serialized.get("pitch");
+  			}catch(ClassCastException e){
+  				pitch = Float.parseFloat(serialized.get("pitch").toString());
+  			}
   	}
     
   	/**
