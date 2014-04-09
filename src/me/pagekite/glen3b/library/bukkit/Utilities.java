@@ -137,7 +137,7 @@ public final class Utilities {
 	 * @return The ID of the scheduled task.
 	 * @see org.bukkit.scheduler.BukkitScheduler#scheduleSyncDelayedTask(Plugin plugin, Runnable task, long delay)
 	 */
-	public static int schedule(Plugin host, Runnable task){
+	public static int scheduleTickTask(Plugin host, Runnable task){
 		Validate.notNull(task, "The task must not be null.");
 		
 		return Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(host == null ? Bukkit.getServer().getPluginManager().getPlugin("GBukkitLib") : host, task, 1L);
