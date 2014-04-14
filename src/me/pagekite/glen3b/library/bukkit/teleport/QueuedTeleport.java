@@ -33,13 +33,13 @@ public interface QueuedTeleport<D> {
 	
 	/**
 	 * Gets the target of this teleportation.
-	 * @return The {@link D} instance representing the destination of this teleport.
+	 * @return An instance representing the destination of this teleport.
 	 */
 	public D getDestination();
 	
 	/**
-	 * Gets the {@link org.bukkit.entity.Player} which is to be teleported. 
-	 * @return The {@link org.bukkit.entity.Player} which is to be teleported after the delay.
+	 * Gets the {@link org.bukkit.entity.Player} who is to be teleported. 
+	 * @return The {@code Player} who is to be teleported after the delay.
 	 * @exception java.lang.IllegalStateException Thrown if the teleportation is cancelled when this method is called.
 	 */
 	public Player getEntity() throws IllegalStateException;
