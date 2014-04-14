@@ -19,7 +19,9 @@ package me.pagekite.glen3b.library.bukkit;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 import org.apache.commons.lang.Validate;
 import org.bukkit.Bukkit;
@@ -47,8 +49,33 @@ public final class Utilities {
 	public static final long TICKS_PER_MINUTE = TICKS_PER_SECOND * 60;
 	
 	/**
-	 * Gets a list of the names of all online players.
-	 * @return A list of all of the <b>usernames</b> of all of the players currently online on the {@code Bukkit} server.
+	 * Gets a list of the {@link UUID}s of all currently online players.
+	 * <p>
+	 * This will be a list of Mojang UUIDs unless both of the following are not true:
+	 * <ol>
+	 * <li>The server is in offline mode.</li>
+	 * <li>The server does not have a properly configured proxy which supports IP and UUID forwarding when used in conjunction with this Bukkit implementation.</li>
+	 * </ol>
+	 * 
+	 * If not all of these are true, the UUID will be calculated based on a hash of the username.
+	 * </p>
+	 * @return A mutable list of all of the <b>unique identifiers</b> of all of the players currently online on the {@code Bukkit} server.
+	 * @see Server#getOnlinePlayers()
+	 * @see Player
+	 */
+	public static List<UUID> getOnlinePlayerIDs(){
+		ArrayList<UUID> players = new ArrayList<UUID>();
+		
+		for(Player player : Bukkit.getServer().getOnlinePlayers()){
+			players.add(player.getUniqueId());
+		}
+		
+		return players;
+	}
+	
+	/**
+	 * Gets a list of the names of all currently online players. Keep in mind that names are no longer safe as persistent cross-session unique identifiers.
+	 * @return A mutable list of all of the <b>usernames</b> of all of the players currently online on the {@code Bukkit} server.
 	 * @see Server#getOnlinePlayers()
 	 * @see Player
 	 */
@@ -66,6 +93,7 @@ public final class Utilities {
 	 * Attempt to parse {@code str} as an integer.
 	 * @param str The string to attempt to parse.
 	 * @return A {@code boolean} indicating if the parsing of the string was successful.
+	 * @deprecated Use {@link Utilities#parseInt(String, int)} instead, it does not require a double parse to obtain the value.
 	 */
 	@Deprecated
 	public static boolean isInt(String str){
