@@ -61,7 +61,7 @@ public final class Utilities {
 	/**
 	 * Gets a list of the {@link UUID}s of all currently online players.
 	 * <p>
-	 * This will be a list of Mojang-provided UUIDs unless both of the following are not true:
+	 * This will be a list of Mojang-provided UUIDs unless all of the following are not true:
 	 * <ol>
 	 * <li>The server is in offline mode.</li>
 	 * <li>The server does not have a properly configured proxy which supports IP and UUID forwarding when used in conjunction with this Bukkit implementation.</li>
@@ -72,7 +72,7 @@ public final class Utilities {
 	 * 
 	 * If all of the above are true, the UUIDs returned by this method should be equivalent to those that would be returned from the <a href="https://github.com/Mojang/AccountsClient">Mojang account client utility</a>.
 	 * 
-	 * @return A mutable list of all of the <b>unique identifiers</b> of all of the players currently online on the {@code Bukkit} server.
+	 * @return A mutable list of all of the unique identifiers of all of the players currently online on the {@code Bukkit} server.
 	 * @see Server#getOnlinePlayers()
 	 * @see Player#getUniqueId()
 	 */
@@ -88,7 +88,7 @@ public final class Utilities {
 	
 	/**
 	 * Gets a list of the names of all currently online players. Keep in mind that names are no longer safe as persistent cross-session unique identifiers.
-	 * @return A mutable list of all of the <b>usernames</b> of all of the players currently online on the {@code Bukkit} server.
+	 * @return A mutable list of all of the usernames of all of the players currently online on the {@code Bukkit} server.
 	 * @see Server#getOnlinePlayers()
 	 * @see Player
 	 */
@@ -104,6 +104,7 @@ public final class Utilities {
 	
 	/**
 	 * Run the specified tasks after the completion of the specified teleport. This method is intended to wrap calls to {@link TeleportationManager} methods which may return a {@code null} {@link QueuedTeleport}. If the method returns {@code null} and that value is passed into this method, the tasks will run instantly after the teleport, as was intended, without an additional {@code null} check in client code.
+	 * @param <T> The type of the destination of the teleport.
 	 * @param teleport The teleport to scedule tasks for. If this is {@code null} or cancelled, the tasks will be run instantly.
 	 * @param tasks The tasks to run.
 	 * @return Whether the tasks were queued. The return value will be {@code false} if they ran instantly during the execution of this method and {@code true} if they were queued for execution and consequently have not yet run.
@@ -172,8 +173,8 @@ public final class Utilities {
 	 * Schedules a task to execute on the main server thread under the brand of the GBukkitLib plugin after one tick.
 	 * @param task The task to execute on the main server thread after one server tick. It must not be {@code null}.
 	 * @return The ID of the scheduled task.
-	 * @see org.bukkit.scheduler.BukkitScheduler#scheduleSyncDelayedTask(Plugin plugin, Runnable task, long delay)
 	 * @deprecated Please use {@link Utilities#scheduleTickTask(Plugin, Runnable)} whilst passing in your own plugin instance.
+	 * @see Utilities#scheduleTickTask(Plugin, Runnable, boolean)
 	 */
 	@Deprecated
 	public static int scheduleTickTask(Runnable task){
