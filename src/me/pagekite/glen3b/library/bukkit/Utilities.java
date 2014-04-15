@@ -417,7 +417,9 @@ public final class Utilities {
 			Validate.notEmpty(name, "The name is null.");
 			// Lore array may be null, we just assume the user wants no lore
 			// Validate.notNull(lore, "The lore array is null.");
-			Validate.noNullElements(lore, "The lore array contains null elements.");
+			if(lore != null){
+				Validate.noNullElements(lore, "The lore array contains null elements.");
+			}
 			
 			ItemMeta im = item.getItemMeta();
 			im.setDisplayName(name);
