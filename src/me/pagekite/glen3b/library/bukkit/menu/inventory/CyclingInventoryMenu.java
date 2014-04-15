@@ -250,7 +250,7 @@ public class CyclingInventoryMenu extends InventoryMenu {
 	 */
 	public void setOption(int position, ItemStack icon, String name,
 			String... info) {
-		setOption(position, new ItemStack[] { Utilities.setItemNameAndLore(
+		setOption(position, new ItemStack[] { Utilities.Items.setItemNameAndLore(
 				icon, name, info) }, name, 0L);
 	}
 

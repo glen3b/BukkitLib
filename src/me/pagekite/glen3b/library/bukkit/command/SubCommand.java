@@ -98,7 +98,7 @@ public abstract class SubCommand {
 	 */
 	public List<String> tabComplete(CommandSender sender, String[] arguments){
 		// Get all online players
-		List<String> players = Utilities.getOnlinePlayerNames();
+		List<String> players = Utilities.Players.getOnlinePlayerNames();
 		
 		String argSoFar = arguments.length >= 2 ? arguments[1] : null;
 		

@@ -114,7 +114,7 @@ public final class GBukkitLibraryPlugin extends JavaPlugin {
 			private ScheduledDecrementRunner(final Player player, final int initialDelay, final Location target){
 				_remDelay = initialDelay;
 				_playerName = player.getName().toLowerCase().trim();
-				_ownTask = Bukkit.getServer().getScheduler().runTaskTimer(GBukkitLibraryPlugin.this, this, Utilities.TICKS_PER_SECOND, Utilities.TICKS_PER_SECOND);
+				_ownTask = Bukkit.getServer().getScheduler().runTaskTimer(GBukkitLibraryPlugin.this, this, Constants.TICKS_PER_SECOND, Constants.TICKS_PER_SECOND);
 				Bukkit.getServer().getPluginManager().registerEvents(this, GBukkitLibraryPlugin.this);
 				_target = target;
 

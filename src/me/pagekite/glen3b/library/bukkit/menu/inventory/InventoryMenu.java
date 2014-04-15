@@ -179,7 +179,7 @@ public class InventoryMenu implements Listener {
 		Validate.noNullElements(info, "Item information contains null values.");
 		
 		optionNames[position] = name;
-		optionIcons[position] = Utilities.setItemNameAndLore(icon, name, info);
+		optionIcons[position] = Utilities.Items.setItemNameAndLore(icon, name, info);
 	}
 
 }

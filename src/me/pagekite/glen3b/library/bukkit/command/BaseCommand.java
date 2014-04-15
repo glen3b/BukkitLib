@@ -85,11 +85,10 @@ public final class BaseCommand implements TabExecutor {
 	 * @see CommandExecutor
 	 * @see Command
 	 */
-	@SuppressWarnings("deprecation")
 	@Override
 	public boolean onCommand(CommandSender sender, Command command, String label,
 			String[] args) {
-		if(args.length == 0 || (args.length == 2 && Utilities.isInt(args[1]) && (args[0].equalsIgnoreCase("help") || args[0].equalsIgnoreCase("?"))) || (args.length == 1 && (Utilities.isInt(args[0]) || args[0].equalsIgnoreCase("help") || args[0].equalsIgnoreCase("?")))){
+		if(args.length == 0 || (args.length == 2 && Utilities.Arguments.parseInt(args[1], -1) > 0 && (args[0].equalsIgnoreCase("help") || args[0].equalsIgnoreCase("?"))) || (args.length == 1 && (Utilities.Arguments.parseInt(args[0], -1) > 0 || args[0].equalsIgnoreCase("help") || args[0].equalsIgnoreCase("?")))){
     		//Show help manual and quit
     		int page = 0;
     		if(args.length == 2){

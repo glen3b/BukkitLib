@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import me.pagekite.glen3b.library.bukkit.Utilities;
+import me.pagekite.glen3b.library.bukkit.Constants;
 import me.pagekite.glen3b.library.bukkit.datastore.Message;
 import me.pagekite.glen3b.library.bukkit.teleport.QueuedTeleport;
 import me.pagekite.glen3b.library.bukkit.teleport.ServerTeleportationManager;
@@ -45,7 +45,7 @@ public final class DefaultServerTeleportationManager implements
 		private ScheduledDecrementRunner(final Player player, final int initialDelay, final String target){
 			_remDelay = initialDelay;
 			_playerName = player.getName().toLowerCase().trim();
-			_ownTask = Bukkit.getServer().getScheduler().runTaskTimer(_instance, this, Utilities.TICKS_PER_SECOND, Utilities.TICKS_PER_SECOND);
+			_ownTask = Bukkit.getServer().getScheduler().runTaskTimer(_instance, this, Constants.TICKS_PER_SECOND, Constants.TICKS_PER_SECOND);
 			Bukkit.getServer().getPluginManager().registerEvents(this, _instance);
 			_target = target;
 

@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-import me.pagekite.glen3b.library.bukkit.Utilities;
+import me.pagekite.glen3b.library.bukkit.Constants;
 
 import org.apache.commons.lang.Validate;
 import org.bukkit.Bukkit;
@@ -136,7 +136,7 @@ public final class ServerTransportManager implements PluginMessageListener {
 			task.runTask(Bukkit.getServer().getOnlinePlayers()[_randomProvider.nextInt(onlineCount)]);
 		}else{
 			// Wait until sign-on
-			new PlayerSignonWaiter(task).runTaskTimer(_plugin, Utilities.TICKS_PER_SECOND, Utilities.TICKS_PER_SECOND / 2);
+			new PlayerSignonWaiter(task).runTaskTimer(_plugin, Constants.TICKS_PER_SECOND, Constants.TICKS_PER_SECOND / 2);
 		}
 	}
 	
