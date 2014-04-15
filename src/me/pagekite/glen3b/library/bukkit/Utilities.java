@@ -34,6 +34,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.scheduler.BukkitTask;
 
 /**
  * A static class housing common methods and constants.
@@ -160,16 +161,43 @@ public final class Utilities {
     }
 	
 	/**
-	 * Schedules a task to execute on the main server thread after one tick.
-	 * @param host The plugin under which to schedule this task. If this parameter is {@code null}, the GBukkitLib plugin instance as retrieved by the {@code PluginManager} will be used for scheduling. Using this method with a {@code null} plugin argument is deprecated.
+	 * Schedules a task to execute on the main server thread under the brand of the GBukkitLib plugin after one tick.
 	 * @param task The task to execute on the main server thread after one server tick. It must not be {@code null}.
 	 * @return The ID of the scheduled task.
 	 * @see org.bukkit.scheduler.BukkitScheduler#scheduleSyncDelayedTask(Plugin plugin, Runnable task, long delay)
+	 * @deprecated Please use {@link Utilities#scheduleTickTask(Plugin, Runnable)} whilst passing in your own plugin instance.
 	 */
-	public static int scheduleTickTask(Plugin host, Runnable task){
+	@Deprecated
+	public static int scheduleTickTask(Runnable task){
+		return scheduleTickTask(null, task);
+	}
+	
+	/**
+	 * Schedules a task to execute after one tick.
+	 * @param host The plugin under which to schedule this task. If this parameter is {@code null}, the GBukkitLib plugin instance as retrieved by the {@code PluginManager} will be used for scheduling. <b>Using this method with a {@code null} plugin argument is deprecated, and this functionality will be removed in a future release.</b>
+	 * @param task The task to execute on the main server thread after one server tick. It must not be {@code null}.
+	 * @param Whether to run this task asynchronously. If this is true, the task will be executed on a separate thread from the main server thread. Asynchronous tasks should <b>never</b> access any Bukkit API other than the scheduler, which can be used to schedule a synchronous task. Synchronous tasks block the main server thread, but have the liberty of full Bukkit API access.
+	 * @return The scheduled task as returned by the bukkit scheduler.
+	 * @see org.bukkit.scheduler.BukkitScheduler#runTaskLater(Plugin plugin, Runnable task, long delay)
+	 * @see org.bukkit.scheduler.BukkitScheduler#runTaskLaterAsynchronously(Plugin, Runnable, long)
+	 */
+	public static BukkitTask scheduleTickTask(Plugin host, Runnable task, boolean async){
 		Validate.notNull(task, "The task must not be null.");
 		
-		return Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(host == null ? Bukkit.getServer().getPluginManager().getPlugin("GBukkitLib") : host, task, 1L);
+		Plugin hostPl = host == null ? Bukkit.getServer().getPluginManager().getPlugin("GBukkitLib") : host;
+		
+		return async ? Bukkit.getScheduler().runTaskLater(hostPl, task, 1L) : Bukkit.getScheduler().runTaskLaterAsynchronously(hostPl, task, 1L);
+	}
+	
+	/**
+	 * Schedules a task to execute on the main server thread after one tick.
+	 * @param host The plugin under which to schedule this task. If this parameter is {@code null}, the GBukkitLib plugin instance as retrieved by the {@code PluginManager} will be used for scheduling. <b>Using this method with a {@code null} plugin argument is deprecated, and this functionality will be removed in a future release.</b>
+	 * @param task The task to execute on the main server thread after one server tick. It must not be {@code null}.
+	 * @return The ID of the scheduled task.
+	 * @see Utilities#scheduleTickTask(Plugin, Runnable, boolean)
+	 */
+	public static int scheduleTickTask(Plugin host, Runnable task){
+		return scheduleTickTask(host, task, false).getTaskId();
 	}
 	
 	/**
@@ -204,7 +232,7 @@ public final class Utilities {
 	 * The item that is passed in should not be assumed to be unmodified after the operation.
 	 * @param item The item to modify the data of.
 	 * @param name The new display name of the item.
-	 * @param lore The new lore of the item.
+	 * @param lore The new lore of the item. If this parameter is null, the lore will be set to an empty, unmodifiable list. Otherwise, it will be converted to an {@link ArrayList} and then set as the item lore.
 	 * @return The modified item.
 	 */
 	public static ItemStack setItemNameAndLore(ItemStack item, String name,
