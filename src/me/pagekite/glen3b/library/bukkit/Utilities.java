@@ -37,7 +37,12 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitTask;
 
 /**
- * A static class housing common methods and constants.
+ * A static class housing common Bukkit methods and constants.
+ * <p>
+ * <b>This class will be refactored into child classes in a future update.</b> When this happens, all method overloads will reroute to the refactored versions, and will lose documentation and become deprecated.
+ * The documentation will be a link to the new version, which will contain the true method documentation.
+ * </p>
+ * 
  * @author Glen Husman
  */
 public final class Utilities {
@@ -56,7 +61,7 @@ public final class Utilities {
 	/**
 	 * Gets a list of the {@link UUID}s of all currently online players.
 	 * <p>
-	 * This will be a list of Mojang UUIDs unless both of the following are not true:
+	 * This will be a list of Mojang-provided UUIDs unless both of the following are not true:
 	 * <ol>
 	 * <li>The server is in offline mode.</li>
 	 * <li>The server does not have a properly configured proxy which supports IP and UUID forwarding when used in conjunction with this Bukkit implementation.</li>
@@ -64,9 +69,12 @@ public final class Utilities {
 	 * 
 	 * If not all of these are true, the UUID will be calculated based on a hash of the username.
 	 * </p>
+	 * 
+	 * If all of the above are true, the UUIDs returned by this method should be equivalent to those that would be returned from the <a href="https://github.com/Mojang/AccountsClient">Mojang account client utility</a>.
+	 * 
 	 * @return A mutable list of all of the <b>unique identifiers</b> of all of the players currently online on the {@code Bukkit} server.
 	 * @see Server#getOnlinePlayers()
-	 * @see Player
+	 * @see Player#getUniqueId()
 	 */
 	public static List<UUID> getOnlinePlayerIDs(){
 		ArrayList<UUID> players = new ArrayList<UUID>();
