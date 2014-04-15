@@ -30,6 +30,8 @@ import org.apache.commons.lang.Validate;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Server;
+import org.bukkit.World;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.inventory.ItemStack;
@@ -67,6 +69,90 @@ public final class Utilities {
 	 */
 	@Deprecated
 	public static final long TICKS_PER_MINUTE = Constants.TICKS_PER_MINUTE;
+	
+	/**
+	 * Utility methods involving entities.
+	 * @author Glen Husman
+	 */
+	public static final class Entities {
+		private Entities(){
+			//No instance should be created
+		}
+		
+		/**
+		 * Gets the entity with the specified UUID of the specified type. This method will search the specified world and will return the first entity with the specified UUID.
+		 * @param <T> The type of the entity.
+		 * @param clazz The type of the entity.
+		 * @param id The persistent universally unique identifier of the entity.
+		 * @param world The world to search.
+		 * @return The first known entity with the specified identifier, or {@code null} if not found.
+		 */
+		public static <T extends Entity> T getEntity(UUID id, World world, Class<T> clazz){
+			Validate.notNull(id, "The ID cannot be null.");
+			Validate.notNull(world, "The world cannot be null.");
+			Validate.notNull(clazz, "The entity class must not be null.");
+			
+			for(T e : world.getEntitiesByClass(clazz)){
+				if(e != null && e.isValid() && e.getUniqueId().equals(id)){
+					return e;
+				}
+			}
+			
+			return null;
+		}
+		
+		/**
+		 * Gets the entity with the specified UUID of the specified type. This method will search all worlds registered with the Bukkit API, and will return the first entity with the specified UUID.
+		 * @param <T> The type of the entity.
+		 * @param id The persistent universally unique identifier of the entity.
+		 * @return The first known entity with the specified identifier, or {@code null} if not found.
+		 */
+		public static <T extends Entity> T getEntity(UUID id, Class<T> clazz){
+			for(World world : Bukkit.getServer().getWorlds()){
+				T entity = getEntity(id, world, clazz);
+				if(entity != null){
+					return entity;
+				}
+			}
+			
+			return null;
+		}
+		
+		/**
+		 * Gets the entity with the specified UUID. This method will search the specified world and will return the first entity with the specified UUID.
+		 * @param id The persistent universally unique identifier of the entity.
+		 * @param world The world to search.
+		 * @return The first known entity with the specified identifier, or {@code null} if not found.
+		 */
+		public static Entity getEntity(UUID id, World world){
+			Validate.notNull(id, "The ID cannot be null.");
+			Validate.notNull(world, "The world cannot be null.");
+			
+			for(Entity e : world.getEntities()){
+				if(e != null && e.isValid() && e.getUniqueId().equals(id)){
+					return e;
+				}
+			}
+			
+			return null;
+		}
+		
+		/**
+		 * Gets the entity with the specified UUID. This method will search all worlds registered with the Bukkit API, and will return the first entity with the specified UUID.
+		 * @param id The persistent universally unique identifier of the entity.
+		 * @return The first known entity with the specified identifier, or {@code null} if not found.
+		 */
+		public static Entity getEntity(UUID id){
+			for(World world : Bukkit.getServer().getWorlds()){
+				Entity entity = getEntity(id, world);
+				if(entity != null){
+					return entity;
+				}
+			}
+			
+			return null;
+		}
+	}
 	
 	/**
 	 * Utility methods involving players.
