@@ -141,6 +141,15 @@ public class InventoryMenu implements Listener {
 	 * @param player The player for which to show the inventory.
 	 * @return The resulting inventory view.
 	 */
+	public final InventoryView show(Player player) {
+		return open(player);
+	}
+	
+	/**
+	 * Opens this inventory menu for the specified player.
+	 * @param player The player for which to show the inventory.
+	 * @return The resulting inventory view.
+	 */
 	public InventoryView open(Player player) {
 		Validate.notNull(player, "The player must not be null.");
 		
