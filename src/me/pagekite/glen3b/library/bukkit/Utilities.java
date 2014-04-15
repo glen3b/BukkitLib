@@ -19,10 +19,12 @@ package me.pagekite.glen3b.library.bukkit;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
 import me.pagekite.glen3b.library.bukkit.teleport.QueuedTeleport;
+import me.pagekite.glen3b.library.bukkit.teleport.TeleportationManager;
 
 import org.apache.commons.lang.Validate;
 import org.bukkit.Bukkit;
@@ -171,15 +173,31 @@ public final class Utilities {
 	}
 	
 	/**
-	 * Sets the display name of the specified item. It also removes any lore.
+	 * Sets the display name of the specified item. <b>It also removes any existing lore.</b>
 	 * The item that is passed in should not be assumed to be unmodified after the operation.
 	 * @param item The item to modify the data of.
 	 * @param name The new display name of the item.
 	 * @return The modified item.
 	 */
+	public static ItemStack setItemName(ItemStack item, String name) {
+		return setItemNameAndLore(item, name, null);
+	}
+	
+	/**
+	 * Sets the display name of the specified item. It also removes any lore.
+	 * The item that is passed in should not be assumed to be unmodified after the operation.
+	 * @param item The item to modify the data of.
+	 * @param name The new display name of the item.
+	 * @return The modified item.
+	 * @deprecated Use {@link Utilities#setItemName(ItemStack, String)}, it has a less misleading name.
+	 */
+	@Deprecated
 	public static ItemStack setItemNameAndLore(ItemStack item, String name) {
 		return setItemNameAndLore(item, name, new String[0]);
 	}
+	
+	// TODO: Is this safe? Is there a better way? I want to avoid creating too many instances.
+	private static List<String> emptyList = Collections.unmodifiableList(new ArrayList<String>(0));
 	
 	/**
 	 * Sets the display name and lore of the specified item.
@@ -193,12 +211,13 @@ public final class Utilities {
 			String[] lore) {
 		Validate.notNull(item, "The item is null.");
 		Validate.notEmpty(name, "The name is null.");
-		Validate.notNull(lore, "The lore array is null.");
+		// Lore array may be null, we just assume the user wants no lore
+		// Validate.notNull(lore, "The lore array is null.");
 		Validate.noNullElements(lore, "The lore array contains null elements.");
 		
 		ItemMeta im = item.getItemMeta();
 		im.setDisplayName(name);
-		im.setLore(lore == null ? new ArrayList<String>() : Arrays.asList(lore));
+		im.setLore(lore == null ? emptyList : Arrays.asList(lore));
 		item.setItemMeta(im);
 		return item;
 	}
