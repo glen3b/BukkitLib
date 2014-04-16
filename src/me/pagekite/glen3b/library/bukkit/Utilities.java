@@ -39,6 +39,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitTask;
 
 /**
@@ -393,6 +394,37 @@ public final class Utilities {
 	 */
 	public static final class Items{
 		private Items(){}
+		
+		/**
+		 * Utility methods involving potions and potion effects.
+		 * @author Glen Husman
+		 */
+		public static final class Potions{
+			private Potions(){}
+			
+			private static final List<PotionEffectType> _negativeEffects = Arrays.asList(
+					PotionEffectType.BLINDNESS,
+					PotionEffectType.CONFUSION,
+					PotionEffectType.HARM,
+					PotionEffectType.HUNGER,
+					PotionEffectType.POISON,
+					PotionEffectType.SLOW,
+					PotionEffectType.SLOW_DIGGING,
+					PotionEffectType.WEAKNESS,
+					PotionEffectType.WITHER
+				);
+			
+			/**
+			 * Determines if a potion effect is a negative effect.
+			 * @param effect The effect to check.
+			 * @return Whether the effect is a negative or "bad" effect.
+			 */
+			public static boolean isNegative(PotionEffectType effect){
+				Validate.notNull(effect, "The potion effect is null.");
+				
+				return _negativeEffects.contains(effect);
+			}
+		}
 		
 		/**
 		 * Sets the display name of the specified item. <b>It also removes any existing lore.</b>
