@@ -28,6 +28,7 @@ import me.pagekite.glen3b.library.bukkit.teleport.TeleportationManager;
 
 import org.apache.commons.lang.Validate;
 import org.bukkit.Bukkit;
+import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.Server;
 import org.bukkit.World;
@@ -36,6 +37,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.LeatherArmorMeta;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitTask;
 
@@ -401,6 +403,24 @@ public final class Utilities {
 		 */
 		public static ItemStack setItemName(ItemStack item, String name) {
 			return setItemNameAndLore(item, name, null);
+		}
+		
+		/**
+		 * Sets the color of leather armor.
+		 * The item that is passed in should not be assumed to be unmodified after the operation.
+		 * @param item The item to modify the data of. If it does not have the appropriate metadata for the operation, this will throw an exception.
+		 * @param color The new color of the item.
+		 * @return The modified item.
+		 */
+		public static ItemStack setArmorColor(ItemStack item, Color color) {
+			Validate.notNull(item, "The item is null.");
+			Validate.notNull(color, "The color is null.");
+			Validate.isTrue(item.hasItemMeta() && item.getItemMeta() instanceof LeatherArmorMeta, "The item does not have leather armor meta information.");
+
+			LeatherArmorMeta im = (LeatherArmorMeta)item.getItemMeta();
+			im.setColor(color);
+			item.setItemMeta(im);
+			return item;
 		}
 		
 		/**
