@@ -1,6 +1,7 @@
 package me.pagekite.glen3b.library.bukkit.command;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -19,19 +20,18 @@ public abstract class SubCommand {
 
 	/**
 	 * Returns all values in {@code possibilities} that start with or equal (ignoring case) the string {@code argument}.
-	 * This method eliminates possiblities that do not start with the argument.
+	 * This method eliminates possiblities that do not start with the argument as typed so far (disregarding case). The collection of CharSequence objects will have each element converted to a string using {@link CharSequence.toString()} before adding to the returned list.
 	 * @param argument The argument in the command as typed so far. May be null.
 	 * @param possibilities All possiblities for the argument, not accounting for the argument so far.
 	 * @return All possiblities for the argument, accounting for the argument as typed so far.
 	 */
-	public static List<String> getTabCompletions(String argument, List<String> possibilities){
-		if(possibilities == null){
-			throw new IllegalArgumentException("Possibilities is null.");
-		}
+	public static List<String> getTabCompletions(String argument, Collection<? extends CharSequence> possibilities){
+		Validate.noNullElements(possibilities, "There must not be a null tab completion argument.");
 		
 		String arg = argument == null ? "" : argument.trim().toLowerCase();
 		ArrayList<String> retVal = new ArrayList<String>();
-		for(String str : possibilities){
+		for(CharSequence strSeq : possibilities){
+			String str = strSeq.toString();
 			if(str != null && (str.toLowerCase().startsWith(arg) || str.equalsIgnoreCase(arg))){
 				retVal.add(str);
 			}
