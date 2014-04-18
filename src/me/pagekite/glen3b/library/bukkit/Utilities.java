@@ -32,6 +32,7 @@ import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.Server;
 import org.bukkit.World;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
@@ -428,7 +429,7 @@ public final class Utilities {
 		
 		/**
 		 * Sets the display name of the specified item. <b>It also removes any existing lore.</b>
-		 * The item that is passed in should not be assumed to be unmodified after the operation.
+		 * The item that is passed will be unmodified after the operation.
 		 * @param item The item to modify the data of.
 		 * @param name The new display name of the item.
 		 * @return The modified item.
@@ -438,8 +439,27 @@ public final class Utilities {
 		}
 		
 		/**
-		 * Sets the color of leather armor.
-		 * The item that is passed in should not be assumed to be unmodified after the operation.
+		 * Enchants the specified item, ignoring restrictions on level.
+		 * The item that is passed will be unmodified after the operation.
+		 * @param item The item to modify the data of.
+		 * @param enchant The enchantment to apply.
+		 * @param level The level at which to apply the enchant.
+		 * @return The modified item.
+		 */
+		public static ItemStack enchant(ItemStack item, Enchantment enchant, int level){
+			Validate.notNull(item, "The item is null.");
+			Validate.notNull(enchant, "The color is null.");
+			Validate.isTrue(level >= 0, "The enchantment level is invalid.");
+
+			ItemMeta im = item.getItemMeta();
+			im.addEnchant(enchant, level, true);
+			ItemStack nItem = item.clone();
+			nItem.setItemMeta(im);
+			return nItem;
+		}
+		
+		/**
+		 * Sets the color of leather armor. The item that is passed will be unmodified after the operation.
 		 * @param item The item to modify the data of. If it does not have the appropriate metadata for the operation, this will throw an exception.
 		 * @param color The new color of the item.
 		 * @return The modified item.
@@ -451,13 +471,13 @@ public final class Utilities {
 
 			LeatherArmorMeta im = (LeatherArmorMeta)item.getItemMeta();
 			im.setColor(color);
-			item.setItemMeta(im);
-			return item;
+			ItemStack nItem = item.clone();
+			nItem.setItemMeta(im);
+			return nItem;
 		}
 		
 		/**
-		 * Sets the display name and lore of the specified item.
-		 * The item that is passed in should not be assumed to be unmodified after the operation.
+		 * Sets the display name and lore of the specified item. The item that is passed will be unmodified after the operation.
 		 * @param item The item to modify the data of.
 		 * @param name The new display name of the item.
 		 * @param lore The new lore of the item. If this parameter is null, the lore will be set to an empty, unmodifiable list. Otherwise, it will be converted to an {@link ArrayList} and then set as the item lore.
@@ -476,8 +496,9 @@ public final class Utilities {
 			ItemMeta im = item.getItemMeta();
 			im.setDisplayName(name);
 			im.setLore(lore == null ? emptyList : Arrays.asList(lore));
-			item.setItemMeta(im);
-			return item;
+			ItemStack nItem = item.clone();
+			nItem.setItemMeta(im);
+			return nItem;
 		}
 	}
 	
@@ -491,7 +512,6 @@ public final class Utilities {
 	
 	/**
 	 * Sets the display name of the specified item. It also removes any lore.
-	 * The item that is passed in should not be assumed to be unmodified after the operation.
 	 * @param item The item to modify the data of.
 	 * @param name The new display name of the item.
 	 * @return The modified item.
@@ -502,8 +522,8 @@ public final class Utilities {
 		return setItemNameAndLore(item, name, new String[0]);
 	}
 	
-	// TODO: Is this safe? Is there a better way? I want to avoid creating too many instances.
-	private static List<String> emptyList = Collections.unmodifiableList(new ArrayList<String>(0));
+	// TODO: Is this safe? Is there a better way? It's immutable, is that bad?
+	private static List<String> emptyList = Collections.emptyList();
 	
 	/**
 	 * @deprecated Use {@link Items#setItemNameAndLore(ItemStack, String, String[])}.
