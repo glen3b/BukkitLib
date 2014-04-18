@@ -26,7 +26,7 @@ public abstract class SubCommand implements PermissionConstrainedCommand {
 	 * @param possibilities All possiblities for the argument, not accounting for the argument so far.
 	 * @return All possiblities for the argument, accounting for the argument as typed so far. It may or may not be mutable.
 	 */
-	public static List<String> getTabCompletions(CommandSender sender, String argument, Collection<PermissionConstrainedCommand> possibilities){
+	public static List<String> getTabCompletions(CommandSender sender, String argument, Collection<? extends PermissionConstrainedCommand> possibilities){
 		Validate.noNullElements(possibilities, "There must not be a null tab completion argument.");
 		Validate.notNull(sender, "The command sender must not be null.");
 		
