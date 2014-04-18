@@ -26,6 +26,19 @@ public class CustomConfiguration {
 	/**
 	 * Creates a new custom configuration instance.
 	 * @param backingStore The plugin which contains this configuration.
+	 * @param name The file representing the configuration file.
+	 */
+	public CustomConfiguration(Plugin backingStore, File file){
+		Validate.notNull(file, "The file must not be null.");
+		Validate.notNull(backingStore, "The plugin is null.");
+		
+		_backend = backingStore;
+		_file = file;
+	}
+	
+	/**
+	 * Creates a new custom configuration instance.
+	 * @param backingStore The plugin which contains this configuration.
 	 * @param name The filename of the configuration file.
 	 */
 	public CustomConfiguration(Plugin backingStore, String name){
@@ -63,10 +76,7 @@ public class CustomConfiguration {
 	 * Reloads the configuration file.
 	 */
     public void reloadConfig() {
-        if (_file == null) {
-        	_file = new File(_backend.getDataFolder(), _fileName);
-        }
-        _cfg = YamlConfiguration.loadConfiguration(_file);
+        _cfg = YamlConfiguration.loadConfiguration(getPath());
      
         // Look for defaults in the jar
         InputStream defConfigStream = _backend.getResource("customConfig.yml");

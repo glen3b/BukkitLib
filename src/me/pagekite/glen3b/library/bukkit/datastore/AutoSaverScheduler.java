@@ -19,9 +19,12 @@ package me.pagekite.glen3b.library.bukkit.datastore;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Level;
 
 import org.apache.commons.lang.Validate;
+import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.Plugin;
 
@@ -100,7 +103,21 @@ public final class AutoSaverScheduler {
 		Validate.isTrue(saveInterval > 0, "The save interval must be at least one tick. Value: ", saveInterval);
 		
 		//Schedule the task
-		_plugin.getServer().getScheduler().runTaskTimer(_plugin, new AutosavedConfig(path, config), saveInterval, saveInterval);
+		AutosavedConfig exec = new AutosavedConfig(path, config);
+		// TODO: Use async task?
+		_taskIdsToExecutors.put(_plugin.getServer().getScheduler().runTaskTimer(_plugin, exec, saveInterval, saveInterval).getTaskId(), exec);
+	}
+
+	private Map<Integer, AutosavedConfig> _taskIdsToExecutors = new HashMap<Integer, AutosavedConfig>();
+	
+	/**
+	 * Internally used method to save everything upon disabling. Should not be called except by the GBukkitLib plugin instance.
+	 */
+	public void onDisable() {
+		for(Map.Entry<Integer, AutosavedConfig> task : _taskIdsToExecutors.entrySet()){
+			Bukkit.getScheduler().cancelTask(task.getKey());
+			task.getValue().run();
+		}
 	}
 	
 }

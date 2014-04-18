@@ -284,6 +284,7 @@ public final class GBukkitLibraryPlugin extends JavaPlugin {
 	
 	@Override
 	public void onDisable(){
+		this.getServer().getServicesManager().getRegistration(AutoSaverScheduler.class).getProvider().onDisable();
 		this.getServer().getServicesManager().unregisterAll(this);
 	}
 	
