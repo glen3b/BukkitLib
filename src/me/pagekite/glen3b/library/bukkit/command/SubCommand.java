@@ -16,17 +16,49 @@ import com.google.common.collect.Lists;
  * Represents a command that can be used via a base command.
  * TODO: TSender type argument (validates sender instance, such as players only command) and an Argument class and list.
  */
-public abstract class SubCommand {
+public abstract class SubCommand implements PermissionConstrainedCommand {
 
+	/**
+	 * Returns all values in {@code possibilities} that have names which start with or equal (ignoring case) the string {@code argument}.
+	 * This method eliminates possiblities that do not start with the argument as typed so far (disregarding case), as well as arguments which are not permitted to be used by the sender.
+	 * @param sender The sender of this tab completion request.
+	 * @param argument The argument in the command as typed so far. May be null.
+	 * @param possibilities All possiblities for the argument, not accounting for the argument so far.
+	 * @return All possiblities for the argument, accounting for the argument as typed so far. It may or may not be mutable.
+	 */
+	public static List<String> getTabCompletions(CommandSender sender, String argument, Collection<PermissionConstrainedCommand> possibilities){
+		Validate.noNullElements(possibilities, "There must not be a null tab completion argument.");
+		Validate.notNull(sender, "The command sender must not be null.");
+		
+		if(possibilities.size() == 0){
+			return Collections.emptyList();
+		}
+		
+		String arg = argument == null ? "" : argument.trim().toLowerCase();
+		ArrayList<String> retVal = new ArrayList<String>();
+		for(PermissionConstrainedCommand strSeq : possibilities){
+			String str = strSeq.getName();
+			if(str != null && (str.toLowerCase().startsWith(arg) || str.equalsIgnoreCase(arg)) && strSeq.hasAccess(sender)){
+				retVal.add(str);
+			}
+		}
+		
+		return retVal;
+	}
+	
 	/**
 	 * Returns all values in {@code possibilities} that start with or equal (ignoring case) the string {@code argument}.
 	 * This method eliminates possiblities that do not start with the argument as typed so far (disregarding case). The collection of CharSequence objects will have each element converted to a string using {@link CharSequence.toString()} before adding to the returned list.
 	 * @param argument The argument in the command as typed so far. May be null.
 	 * @param possibilities All possiblities for the argument, not accounting for the argument so far.
-	 * @return All possiblities for the argument, accounting for the argument as typed so far.
+	 * @return All possiblities for the argument, accounting for the argument as typed so far. It may or may not be mutable.
 	 */
 	public static List<String> getTabCompletions(String argument, Collection<? extends CharSequence> possibilities){
 		Validate.noNullElements(possibilities, "There must not be a null tab completion argument.");
+		
+		if(possibilities.size() == 0){
+			return Collections.emptyList();
+		}
 		
 		String arg = argument == null ? "" : argument.trim().toLowerCase();
 		ArrayList<String> retVal = new ArrayList<String>();
