@@ -39,7 +39,7 @@ public final class BaseCommand implements TabExecutor {
 	 */
 	public BaseCommand(String helpHeader, SubCommand... commands){
 		Validate.notEmpty(commands, "At least one subcommand is required.");
-		Validate.noNullElements(commands, "Null subcommand are not allowed.");
+		Validate.noNullElements(commands, "Null subcommands are not allowed.");
 		
 		if(helpHeader != null){
 			_helpPageHeader = helpHeader;
@@ -66,6 +66,7 @@ public final class BaseCommand implements TabExecutor {
 	
 	private FileConfiguration getConfig(){
 		if(_plugin == null || !_plugin.isEnabled()){
+			// TODO: BaseCommand should not directly depend upon GBukkitLib, maybe global variable (not just message) service?
 			_plugin = (GBukkitLibraryPlugin)Bukkit.getServer().getPluginManager().getPlugin("GBukkitLib");
 		}
 		
@@ -74,7 +75,7 @@ public final class BaseCommand implements TabExecutor {
 	
 	/**
 	 * Get a list of subcommands executed by this BaseCommand instance.
-	 * @return A read only {@code Collection<SubCommand>} instance that can be manipulated via reference to change the subcommands executed by this base command.
+	 * @return A read only {@code Collection<SubCommand>} instance that can <b>not</b> be manipulated via reference to change the subcommands executed by this base command.
 	 */
 	public List<SubCommand> getSubCommands(){
 		return Collections.unmodifiableList(_subCommands);
@@ -130,7 +131,11 @@ public final class BaseCommand implements TabExecutor {
     		List<SubCommand> cmd = getCommands(args[0], true);
     		
     		if(cmd.size() == 1){
-    			cmd.get(0).execute(sender, args);
+    			if(!cmd.get(0).hasAccess(sender)){
+    				sender.sendMessage(Message.get("cmdNoPermission"));
+    			}else{
+    				cmd.get(0).execute(sender, args);
+    			}
     			return true;
     		}
     		

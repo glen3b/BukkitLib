@@ -42,3 +42,5 @@ messages:
   cmdHelpEntry: "&6/%basecommand% %usage% &7- &e%desc%"
   # Message to display when a user invokes an unknown subcommand
   cmdUnknown: "&cUnknown command."
+  # Message to display when a user invokes a subcommand they can't use
+  cmdNoPermission: "&cYou do not have access to that command."
