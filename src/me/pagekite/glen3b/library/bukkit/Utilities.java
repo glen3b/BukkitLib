@@ -30,6 +30,7 @@ import org.apache.commons.lang.Validate;
 import org.bukkit.Bukkit;
 import org.bukkit.Color;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.Server;
 import org.bukkit.World;
 import org.bukkit.enchantments.Enchantment;
@@ -467,9 +468,9 @@ public final class Utilities {
 		public static ItemStack setArmorColor(ItemStack item, Color color) {
 			Validate.notNull(item, "The item is null.");
 			Validate.notNull(color, "The color is null.");
-			Validate.isTrue(item.hasItemMeta() && item.getItemMeta() instanceof LeatherArmorMeta, "The item does not have leather armor meta information.");
+			Validate.isTrue(item.getType() == Material.LEATHER_HELMET || item.getType() == Material.LEATHER_CHESTPLATE || item.getType() == Material.LEATHER_LEGGINGS || item.getType() == Material.LEATHER_BOOTS, "The item does not have leather armor meta information.");
 
-			LeatherArmorMeta im = (LeatherArmorMeta)item.getItemMeta();
+			LeatherArmorMeta im = (LeatherArmorMeta) (item.hasItemMeta() ? item.getItemMeta() : Bukkit.getItemFactory().getItemMeta(Material.LEATHER_CHESTPLATE));
 			im.setColor(color);
 			ItemStack nItem = item.clone();
 			nItem.setItemMeta(im);
