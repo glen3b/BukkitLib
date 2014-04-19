@@ -7,6 +7,7 @@ import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.commons.lang.ClassUtils;
 import org.apache.commons.lang.Validate;
 import org.bukkit.Bukkit;
 import org.bukkit.Server;
@@ -79,14 +80,14 @@ public final class ReflectionUtilities {
 				continue;
 			}
 			
-			if(m.isVarArgs()){
+			if(m.isVarArgs() && m.getGenericParameterTypes().length <= args.length){
 				possibleMethods.add(m);
 			}else if(m.getGenericParameterTypes().length == args.length){
 				Type[] argTypes = m.getGenericParameterTypes();
 				boolean isAcceptableOverload = true;
 				for(int i = 0; i < args.length; i++){
 					if(argTypes[i] instanceof Class){
-						isAcceptableOverload = ((Class<?>)argTypes[i]).isAssignableFrom(args[i].getClass());
+						isAcceptableOverload = ClassUtils.isAssignable((Class<?>)argTypes[i], args[i].getClass());
 					}else{
 						// TODO: Support more types
 						isAcceptableOverload = false;
@@ -157,7 +158,7 @@ public final class ReflectionUtilities {
 	 * @author Glen Husman
 	 */
 	public static String getPackageVersionString() {
-		return Bukkit.getServer().getClass().getPackage().getName().replace(".", ",").split(",")[3];
+		return Bukkit.getServer().getClass().getPackage().getName().replace(ClassUtils.PACKAGE_SEPARATOR, ",").split(",")[3];
 	}
 
 	/**
