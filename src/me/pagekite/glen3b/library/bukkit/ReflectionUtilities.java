@@ -73,6 +73,23 @@ public final class ReflectionUtilities {
 		Validate.notNull(object, "The object instance must not be null.");
 		Validate.notEmpty(method, "The method name must be defined.");
 
+		if(args == null){
+			// Sanity check
+			args = new Object[]{null};
+		}
+		
+		try{
+			Class<?>[] params = new Class[args.length];
+			for(int i = 0; i < args.length; i++){
+				params[i] = args[i] == null ? Void.TYPE : args[i].getClass();
+			}
+			Method m = object.getClass().getMethod(method, params);
+			m.setAccessible(true);
+			return m.invoke(object, args);
+		}catch(NoSuchMethodError er){
+			// TODO: Recursively search for method based on superclass of parameters, or use implementation below?
+		}
+		
 		List<Method> possibleMethods = Lists.newArrayListWithExpectedSize(2); // Assume 2 method overloads as a default, but the list will resize
 
 		for(Method m : object.getClass().getMethods()){
@@ -87,7 +104,7 @@ public final class ReflectionUtilities {
 				boolean isAcceptableOverload = true;
 				for(int i = 0; i < args.length; i++){
 					if(argTypes[i] instanceof Class){
-						isAcceptableOverload = ClassUtils.isAssignable((Class<?>)argTypes[i], args[i].getClass());
+						isAcceptableOverload = ClassUtils.isAssignable((Class<?>)argTypes[i], args[i] == null ? Void.TYPE : args[i].getClass());
 					}else{
 						// TODO: Support more types
 						isAcceptableOverload = false;
@@ -105,6 +122,7 @@ public final class ReflectionUtilities {
 		}
 
 		for (Method m : possibleMethods){
+			m.setAccessible(true);
 			try{
 				return m.invoke(object, args);
 			}catch(IllegalArgumentException err){
