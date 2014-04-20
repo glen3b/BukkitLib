@@ -92,15 +92,24 @@ public final class Utilities {
 		 * @param world The world to search.
 		 * @return The first known entity with the specified identifier, or {@code null} if not found.
 		 */
+		@SuppressWarnings("unchecked")
 		public static <T extends Entity> T getEntity(UUID id, World world, Class<T> clazz){
 			Validate.notNull(id, "The ID cannot be null.");
 			Validate.notNull(world, "The world cannot be null.");
 			Validate.notNull(clazz, "The entity class must not be null.");
 			
+			if(Player.class.isAssignableFrom(clazz)){
+				for(Player e : world.getPlayers()){
+					if(e != null && e.isValid() && e.getUniqueId().equals(id)){
+						return (T)e;
+					}
+				}
+			}else{
 			for(T e : world.getEntitiesByClass(clazz)){
 				if(e != null && e.isValid() && e.getUniqueId().equals(id)){
 					return e;
 				}
+			}
 			}
 			
 			return null;
