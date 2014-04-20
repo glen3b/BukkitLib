@@ -62,7 +62,7 @@ public final class ReflectionUtilities {
 	 * </p>
 	 * @param object The object upon which to invoke the method.
 	 * @param method The name of the method to invoke.
-	 * @param args The arguments to pass to the method.
+	 * @param args The arguments to pass to the method. If this array is {@code null}, it will be treated as an empty array.
 	 * @return The result of the invoked method.
 	 * @author Glen Husman
 	 * @see Class#getMethod(String, Class...)
@@ -72,10 +72,10 @@ public final class ReflectionUtilities {
 	public static Object invokeMethod(Object object, String method, Object... args) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
 		Validate.notNull(object, "The object instance must not be null.");
 		Validate.notEmpty(method, "The method name must be defined.");
-
+		
 		if(args == null){
 			// Sanity check
-			args = new Object[]{null};
+			args = new Object[]{};
 		}
 		
 		try{
@@ -86,7 +86,7 @@ public final class ReflectionUtilities {
 			Method m = object.getClass().getMethod(method, params);
 			m.setAccessible(true);
 			return m.invoke(object, args);
-		}catch(NoSuchMethodError er){
+		}catch(NoSuchMethodException er){
 			// TODO: Recursively search for method based on superclass of parameters, or use implementation below?
 		}
 		
@@ -136,6 +136,7 @@ public final class ReflectionUtilities {
 
 					@Override
 					public String[] apply(List<Method> paramF) {
+						// Convert method list to method signature String[]
 						String[] value = new String[paramF.size()];
 						for(int i = 0; i < paramF.size(); i++){
 							value[i] = paramF.get(i).toGenericString();
