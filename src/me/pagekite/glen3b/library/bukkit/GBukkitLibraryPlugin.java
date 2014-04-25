@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 import me.pagekite.glen3b.library.bukkit.datastore.AutoSaverScheduler;
 import me.pagekite.glen3b.library.bukkit.datastore.Message;
@@ -102,7 +103,7 @@ public final class GBukkitLibraryPlugin extends JavaPlugin {
 		final class ScheduledDecrementRunner implements Runnable, Listener, QueuedTeleport<Location> {
 			
 			private int _remDelay;
-			private String _playerName;
+			private UUID _playerId;
 			private BukkitTask _ownTask;
 			private Location _target;
 			private boolean _isValid = true;
@@ -113,7 +114,7 @@ public final class GBukkitLibraryPlugin extends JavaPlugin {
 			
 			private ScheduledDecrementRunner(final Player player, final int initialDelay, final Location target){
 				_remDelay = initialDelay;
-				_playerName = player.getName().toLowerCase().trim();
+				_playerId = player.getUniqueId();
 				_ownTask = Bukkit.getServer().getScheduler().runTaskTimer(GBukkitLibraryPlugin.this, this, Constants.TICKS_PER_SECOND, Constants.TICKS_PER_SECOND);
 				Bukkit.getServer().getPluginManager().registerEvents(this, GBukkitLibraryPlugin.this);
 				_target = target;
@@ -127,12 +128,13 @@ public final class GBukkitLibraryPlugin extends JavaPlugin {
 					cleanup(false);
 				}
 			}
+			
 			public void cleanup(boolean notifyPlayer){
 				_isValid = false;
 				_ownTask.cancel();
 				
-				if(notifyPlayer && Bukkit.getPlayer(_playerName) != null){
-					Bukkit.getPlayer(_playerName).sendMessage(Message.get("teleportCancelled"));
+				if(notifyPlayer && Bukkit.getPlayer(_playerId) != null){
+					Bukkit.getPlayer(_playerId).sendMessage(Message.get("teleportCancelled"));
 					for(Runnable r : _onTPCancel){
 						r.run();
 					}
@@ -154,7 +156,7 @@ public final class GBukkitLibraryPlugin extends JavaPlugin {
 					throw new IllegalStateException("This method cannot be called on a cancelled queued teleport.");
 				}
 				
-				return Bukkit.getPlayer(_playerName);
+				return Bukkit.getPlayer(_playerId);
 			}
 
 			@Override
@@ -173,7 +175,7 @@ public final class GBukkitLibraryPlugin extends JavaPlugin {
 					return;
 				}
 				
-				if(event.getEntity() instanceof Player && ((Player)event.getEntity()).getName().trim().equalsIgnoreCase(_playerName)){
+				if(event.getEntity() instanceof Player && event.getEntity().getUniqueId().equals(_playerId)){
 					cleanup(true);
 				}
 			}
@@ -189,7 +191,7 @@ public final class GBukkitLibraryPlugin extends JavaPlugin {
 					return;
 				}
 				
-				if(event.getPlayer().getName().trim().equalsIgnoreCase(_playerName)){
+				if(event.getPlayer().getUniqueId().equals(_playerId)){
 					//Bad boy, our player moved
 					cleanup(true);
 				}
@@ -211,7 +213,7 @@ public final class GBukkitLibraryPlugin extends JavaPlugin {
 
 			@Override
 			public void run() {
-				_isValid = !isCancelled() && Bukkit.getPlayer(_playerName) != null;
+				_isValid = !isCancelled() && Bukkit.getPlayer(_playerId) != null;
 				
 				if(!_isValid){
 					cleanup(false);
@@ -220,7 +222,7 @@ public final class GBukkitLibraryPlugin extends JavaPlugin {
 				
 				_remDelay--;
 				
-				Player affected = Bukkit.getPlayer(_playerName);
+				Player affected = Bukkit.getPlayer(_playerId);
 				
 				if(_remDelay <= 0){
 					//Teleport to location
