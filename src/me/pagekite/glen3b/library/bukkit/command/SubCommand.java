@@ -37,7 +37,7 @@ public abstract class SubCommand implements PermissionConstrainedCommand {
 		ArrayList<String> retVal = Lists.newArrayListWithExpectedSize(possibilities.size());
 		for(PermissionConstrainedCommand strSeq : possibilities){
 			String str = strSeq.getName();
-			if(str != null && (str.toLowerCase().startsWith(arg) || str.equalsIgnoreCase(arg)) && (sender == null || strSeq.hasAccess(sender))){
+			if(str != null && (str.toLowerCase().startsWith(arg)) && (sender == null || strSeq.hasAccess(sender))){
 				retVal.add(str);
 			}
 		}
@@ -63,7 +63,7 @@ public abstract class SubCommand implements PermissionConstrainedCommand {
 		ArrayList<String> retVal = Lists.newArrayListWithExpectedSize(possibilities.size());
 		for(CharSequence strSeq : possibilities){
 			String str = strSeq.toString();
-			if(str != null && (str.toLowerCase().startsWith(arg) || str.equalsIgnoreCase(arg))){
+			if(str != null && (str.toLowerCase().startsWith(arg))){
 				retVal.add(str);
 			}
 		}
