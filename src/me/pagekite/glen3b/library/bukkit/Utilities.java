@@ -206,19 +206,29 @@ public final class Utilities {
 		}
 		
 		/**
+		 * Gets a list of the names of the specified players. Keep in mind that names are no longer safe as persistent cross-session unique identifiers.
+		 * @param players The {@code Player}s for which to retrieve the names.
+		 * @return A mutable list of all of the usernames of the {@code Player} objects passed in.
+		 * @see Player#getName()
+		 */
+		public static List<String> getPlayerNames(Player... players){
+			ArrayList<String> playerNames = new ArrayList<String>();
+			
+			for(Player player : players){
+				playerNames.add(player.getName());
+			}
+			
+			return playerNames;
+		}
+		
+		/**
 		 * Gets a list of the names of all currently online players. Keep in mind that names are no longer safe as persistent cross-session unique identifiers.
 		 * @return A mutable list of all of the usernames of all of the players currently online on the {@code Bukkit} server.
 		 * @see Server#getOnlinePlayers()
-		 * @see Player
+		 * @see Player#getName()
 		 */
 		public static List<String> getOnlinePlayerNames(){
-			ArrayList<String> players = new ArrayList<String>();
-			
-			for(Player player : Bukkit.getServer().getOnlinePlayers()){
-				players.add(player.getName());
-			}
-			
-			return players;
+			return getPlayerNames(Bukkit.getOnlinePlayers());
 		}
 	}
 	
