@@ -21,14 +21,13 @@ public abstract class SubCommand implements PermissionConstrainedCommand {
 	/**
 	 * Returns all values in {@code possibilities} that have names which start with or equal (ignoring case) the string {@code argument}, and which {@code sender} has access to as determined by the interface method requirement.
 	 * This method eliminates possibilities that do not start with the argument as typed so far (disregarding case), as well as arguments which are not permitted to be used by the sender.
-	 * @param sender The sender of this tab completion request.
+	 * @param sender The sender of this tab completion request. If this argument is {@code null}, no permission checks will be performed on elements of {@code possibilities} before adding them to the returned list.
 	 * @param argument The argument in the command as typed so far. May be {@code null}.
 	 * @param possibilities All possibilities for the argument, not accounting for the argument so far.
 	 * @return All possibilities for the argument, accounting for the argument as typed so far. The returned list is guaranteed to be modifiable.
 	 */
 	public static List<String> getTabCompletions(CommandSender sender, String argument, Collection<? extends PermissionConstrainedCommand> possibilities){
 		Validate.noNullElements(possibilities, "There must not be a null tab completion argument.");
-		Validate.notNull(sender, "The command sender must not be null.");
 		
 		if(possibilities.size() == 0){
 			return Lists.newArrayListWithCapacity(0);
@@ -38,7 +37,7 @@ public abstract class SubCommand implements PermissionConstrainedCommand {
 		ArrayList<String> retVal = Lists.newArrayListWithExpectedSize(possibilities.size());
 		for(PermissionConstrainedCommand strSeq : possibilities){
 			String str = strSeq.getName();
-			if(str != null && (str.toLowerCase().startsWith(arg) || str.equalsIgnoreCase(arg)) && strSeq.hasAccess(sender)){
+			if(str != null && (str.toLowerCase().startsWith(arg) || str.equalsIgnoreCase(arg)) && (sender == null || strSeq.hasAccess(sender))){
 				retVal.add(str);
 			}
 		}
