@@ -20,22 +20,22 @@ public abstract class SubCommand implements PermissionConstrainedCommand {
 
 	/**
 	 * Returns all values in {@code possibilities} that have names which start with or equal (ignoring case) the string {@code argument}, and which {@code sender} has access to as determined by the interface method requirement.
-	 * This method eliminates possiblities that do not start with the argument as typed so far (disregarding case), as well as arguments which are not permitted to be used by the sender.
+	 * This method eliminates possibilities that do not start with the argument as typed so far (disregarding case), as well as arguments which are not permitted to be used by the sender.
 	 * @param sender The sender of this tab completion request.
-	 * @param argument The argument in the command as typed so far. May be null.
-	 * @param possibilities All possiblities for the argument, not accounting for the argument so far.
-	 * @return All possiblities for the argument, accounting for the argument as typed so far. It may or may not be mutable.
+	 * @param argument The argument in the command as typed so far. May be {@code null}.
+	 * @param possibilities All possibilities for the argument, not accounting for the argument so far.
+	 * @return All possibilities for the argument, accounting for the argument as typed so far. The returned list is guaranteed to be modifiable.
 	 */
 	public static List<String> getTabCompletions(CommandSender sender, String argument, Collection<? extends PermissionConstrainedCommand> possibilities){
 		Validate.noNullElements(possibilities, "There must not be a null tab completion argument.");
 		Validate.notNull(sender, "The command sender must not be null.");
 		
 		if(possibilities.size() == 0){
-			return Collections.emptyList();
+			return Lists.newArrayListWithCapacity(0);
 		}
 		
 		String arg = argument == null ? "" : argument.trim().toLowerCase();
-		ArrayList<String> retVal = new ArrayList<String>();
+		ArrayList<String> retVal = Lists.newArrayListWithExpectedSize(possibilities.size());
 		for(PermissionConstrainedCommand strSeq : possibilities){
 			String str = strSeq.getName();
 			if(str != null && (str.toLowerCase().startsWith(arg) || str.equalsIgnoreCase(arg)) && strSeq.hasAccess(sender)){
@@ -48,20 +48,20 @@ public abstract class SubCommand implements PermissionConstrainedCommand {
 	
 	/**
 	 * Returns all values in {@code possibilities} that start with or equal (ignoring case) the string {@code argument}.
-	 * This method eliminates possiblities that do not start with the argument as typed so far (disregarding case). The collection of CharSequence objects will have each element converted to a string using {@link CharSequence.toString()} before adding to the returned list.
-	 * @param argument The argument in the command as typed so far. May be null.
-	 * @param possibilities All possiblities for the argument, not accounting for the argument so far.
-	 * @return All possiblities for the argument, accounting for the argument as typed so far. It may or may not be mutable.
+	 * This method eliminates possibilities that do not start with the argument as typed so far (disregarding case). The collection of CharSequence objects will have each element converted to a string using {@link CharSequence.toString()} before adding to the returned list.
+	 * @param argument The argument in the command as typed so far. May be {@code null}.
+	 * @param possibilities All possibilities for the argument, not accounting for the argument so far.
+	 * @return All possibilities for the argument, accounting for the argument as typed so far. The returned list is guaranteed to be modifiable.
 	 */
 	public static List<String> getTabCompletions(String argument, Collection<? extends CharSequence> possibilities){
 		Validate.noNullElements(possibilities, "There must not be a null tab completion argument.");
 		
 		if(possibilities.size() == 0){
-			return Collections.emptyList();
+			return Lists.newArrayListWithCapacity(0);
 		}
 		
 		String arg = argument == null ? "" : argument.trim().toLowerCase();
-		ArrayList<String> retVal = new ArrayList<String>();
+		ArrayList<String> retVal = Lists.newArrayListWithExpectedSize(possibilities.size());
 		for(CharSequence strSeq : possibilities){
 			String str = strSeq.toString();
 			if(str != null && (str.toLowerCase().startsWith(arg) || str.equalsIgnoreCase(arg))){
