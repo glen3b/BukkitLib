@@ -5,11 +5,10 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import me.pagekite.glen3b.library.bukkit.Utilities;
-
 import org.apache.commons.lang.Validate;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 
 import com.google.common.collect.Lists;
 
@@ -129,13 +128,18 @@ public abstract class SubCommand implements PermissionConstrainedCommand {
 	 * @see SubCommand#getTabCompletions(List)
 	 */
 	public List<String> tabComplete(CommandSender sender, String[] arguments){
-		// Get all online players
-		// TODO: Can we do a fuzzy get from Bukkit API? For all players with names that start with X?
-		List<String> players = Utilities.Players.getOnlinePlayerNames();
+		// Get all online players, and return them as the list
+		String argSoFar = arguments.length >= 2 ? arguments[1].trim().toLowerCase() : "";
+		Player[] onlinePlayers = Bukkit.getOnlinePlayers();
 		
-		String argSoFar = arguments.length >= 2 ? arguments[1] : null;
+		ArrayList<String> retVal = Lists.newArrayListWithExpectedSize(onlinePlayers.length / (argSoFar == null || argSoFar.length() == 0 ? 1 : (argSoFar.length() * 2) / 3)); // TODO: Check function performance, maybe make function less "magic"?
+		for(Player playr : onlinePlayers){
+			if(argSoFar == null || playr.getName().toLowerCase().startsWith(argSoFar)){
+				retVal.add(playr.getName());
+			}
+		}
 		
-		return SubCommand.getTabCompletions(argSoFar, players);
+		return retVal;
 	}
 	
 }
