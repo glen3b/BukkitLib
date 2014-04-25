@@ -8,6 +8,7 @@ import java.util.List;
 import me.pagekite.glen3b.library.bukkit.Utilities;
 
 import org.apache.commons.lang.Validate;
+import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 
 import com.google.common.collect.Lists;
@@ -129,6 +130,7 @@ public abstract class SubCommand implements PermissionConstrainedCommand {
 	 */
 	public List<String> tabComplete(CommandSender sender, String[] arguments){
 		// Get all online players
+		// TODO: Can we do a fuzzy get from Bukkit API? For all players with names that start with X?
 		List<String> players = Utilities.Players.getOnlinePlayerNames();
 		
 		String argSoFar = arguments.length >= 2 ? arguments[1] : null;
