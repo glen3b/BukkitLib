@@ -19,7 +19,7 @@ import com.google.common.collect.Lists;
 public abstract class SubCommand implements PermissionConstrainedCommand {
 
 	/**
-	 * Returns all values in {@code possibilities} that have names which start with or equal (ignoring case) the string {@code argument}.
+	 * Returns all values in {@code possibilities} that have names which start with or equal (ignoring case) the string {@code argument}, and which {@code sender} has access to as determined by the interface method requirement.
 	 * This method eliminates possiblities that do not start with the argument as typed so far (disregarding case), as well as arguments which are not permitted to be used by the sender.
 	 * @param sender The sender of this tab completion request.
 	 * @param argument The argument in the command as typed so far. May be null.
