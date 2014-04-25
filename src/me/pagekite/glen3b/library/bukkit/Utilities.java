@@ -45,11 +45,7 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitTask;
 
 /**
- * A static class housing common Bukkit methods and constants.
- * <p>
- * <b>This class will be refactored into child classes in a future update.</b> When this happens, all method overloads will reroute to the refactored versions, and will lose documentation and become deprecated.
- * The documentation will be a link to the new version, which will contain the true method documentation.
- * </p>
+ * A static class housing common methods, constants, and utility functions.
  * 
  * @author Glen Husman
  */
