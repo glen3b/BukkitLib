@@ -510,11 +510,11 @@ public final class Utilities {
 				return _negativeEffects.contains(effect);
 			}
 		}
-
+		
 		/**
 		 * <p>
-		 * Removes glow from an {@link ItemStack}. This is accomplished by sending packets to the client
-		 * that contain an enchantments NBT list that is empty. A custom NBT tag is used to accomplish this.
+		 * Adds or removes glow to an {@link ItemStack}. This is accomplished by sending packets to the client
+		 * that contain an enchantments NBT list that is empty. A "magic enchant" stored on the server as a constant is used to accomplish this.
 		 * </p>
 		 * <p>
 		 * For this operation to succeed, ProtocolLib is required on the server.
@@ -522,63 +522,25 @@ public final class Utilities {
 		 * {@link ProtocolOperationResult#PROCOTOLLIB_NOT_AVAILABLE}.
 		 * </p>
 		 * <p>
-		 * If this operation succeeds and no unexpected errors occur, the return value will be {@link ProtocolOperationResult#SUCCESS_QUEUED}. The reason for this is that this method merely removes an NBT tag. Protocol operations will display the item as not glowing <b>when the appropriate packets are sent</b>. Therefore, the rendering of the (lack of the) glow (if it was previously present) is not instant, and will occur in the future, hence the indication of queued behavior.
-		 * </p>
-		 * @param stack The {@link ItemStack} to render using normal vanilla enchantment rendering mechanics.
-		 * @return A non-null indicator of the success of this operation.
-		 */
-		public static ProtocolOperationResult removeItemGlow(ItemStack stack){
-			Validate.notNull(stack, "The item to modify must not be null.");
-			
-			if(_protocolLib == null){
-				return ProtocolOperationResult.PROCOTOLLIB_NOT_AVAILABLE;
-			}
-			
-			return _protocolLib.setGlowing(stack, false);
-			
-		}
-		
-		/**
-		 * <p>
-		 * Adds glow to an {@link ItemStack}. This is accomplished by sending packets to the client
-		 * that contain an enchantments NBT list that is empty. A custom NBT tag is used to accomplish this.
+		 * If this operation succeeds and no unexpected errors occur, the return value will be {@link ProtocolOperationResult#SUCCESS_QUEUED}. The reason for this is that this method merely sets an enchantment which will be parsed by packet interceptors. Protocol operations will display the item as glowing <b>when the appropriate packets are sent</b>. Therefore, the rendering of the glow is not instant, and will occur in the future, hence the indication of queued behavior.
 		 * </p>
 		 * <p>
-		 * For this operation to succeed, ProtocolLib is required on the server.
-		 * A lack of this plugin will be indicated with a return value of
-		 * {@link ProtocolOperationResult#PROCOTOLLIB_NOT_AVAILABLE}.
+		 * If the {@code ItemStack} is not a {@code CraftItemStack}, the code will not function.
+		 * <br/>
+		 * This method will return {@link ProtocolOperationResult#FAILURE} if the {@code ItemStack} already has enchantments, as conflicts would be ultimately inevitable. In addition, if it has enchantments, it already glows.
 		 * </p>
-		 * <p>
-		 * If this operation succeeds and no unexpected errors occur, the return value will be {@link ProtocolOperationResult#SUCCESS_QUEUED}. The reason for this is that this method merely sets an NBT tag. Protocol operations will display the item as glowing <b>when the appropriate packets are sent</b>. Therefore, the rendering of the glow is not instant, and will occur in the future, hence the indication of queued behavior.
-		 * </p>
-		 * @param stack The {@link ItemStack} to render as having enchantments without actually having any.
-		 * @return A non-null indicator of the success of this operation.
-		 */
-		public static ProtocolOperationResult addItemGlow(ItemStack stack){
-			Validate.notNull(stack, "The item to modify must not be null.");
-			
-			if(_protocolLib == null){
-				return ProtocolOperationResult.PROCOTOLLIB_NOT_AVAILABLE;
-			}
-			
-			return _protocolLib.setGlowing(stack, true);
-			
-		}
-		
-		/**
-		 * Adds or removes the appropriate properties to make the specified {@code ItemStack} "glow" without having enchantments.
-		 * @param stack The {@link ItemStack} to render as having enchantments without actually having any.
+		 * @param stack The {@link ItemStack} to render as having no enchantments but having the effect.
 		 * @param isGlowing Whether to make the {@code ItemStack} artificially glow.
 		 * @return A non-null indicator of the success of this operation.
-		 * @see Items#addItemGlow(ItemStack)
-		 * @see Items#removeItemGlow(ItemStack)
 		 */
 		public static ProtocolOperationResult setItemGlowing(ItemStack stack, boolean isGlowing){
-			if(isGlowing){
-				return addItemGlow(stack);
-			}else{
-				return removeItemGlow(stack);
+Validate.notNull(stack, "The item to modify must not be null.");
+			
+			if(_protocolLib == null){
+				return ProtocolOperationResult.PROCOTOLLIB_NOT_AVAILABLE;
 			}
+			
+			return _protocolLib.setGlowing(stack, isGlowing);
 		}
 		
 		/**
@@ -597,12 +559,12 @@ public final class Utilities {
 		 * The item that is passed will be unmodified after the operation.
 		 * @param item The item to modify the data of.
 		 * @param enchant The enchantment to apply.
-		 * @param level The level at which to apply the enchant.
+		 * @param level The one-based level at which to apply the enchant. A value of 1 indicates an enchantment level of 1 (exactly what is displayed to the user).
 		 * @return The modified item.
 		 */
 		public static ItemStack enchant(ItemStack item, Enchantment enchant, int level){
 			Validate.notNull(item, "The item is null.");
-			Validate.notNull(enchant, "The color is null.");
+			Validate.notNull(enchant, "The enchantment is null.");
 			Validate.isTrue(level >= 0, "The enchantment level is invalid.");
 
 			ItemMeta im = item.getItemMeta();

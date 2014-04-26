@@ -2,7 +2,9 @@ package me.pagekite.glen3b.library.bukkit;
 
 import me.pagekite.glen3b.library.bukkit.protocol.ProtocolOperationResult;
 
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.Plugin;
 
 import com.comphenix.protocol.PacketType;
@@ -63,8 +65,8 @@ final class ProtocolUtilities {
 				});
 	}
 
-	private static final String NBT_INDICATOR_KEY = "GBukkitLib-ItemGlow";
-	private static final byte NBT_INDICATOR_GLOW_VALUE = Byte.MAX_VALUE;
+	private static final Enchantment GLOW_ENCHANT_INDICATOR = Enchantment.LURE;
+	private static final int GLOW_ENCHANT_LEVEL = 31762;
 
 
 	public ItemStack assureCraftItemStack(ItemStack stack){
@@ -84,20 +86,20 @@ final class ProtocolUtilities {
 	public ProtocolOperationResult setGlowing(ItemStack stack, boolean glowing) {
 
 		try{
-			NbtCompound compound = (NbtCompound) NbtFactory.fromItemTag(stack);
+			ItemMeta m = stack.getItemMeta();
 			if(glowing){	
-				if(compound.containsKey(NBT_INDICATOR_KEY) && compound.getByte(NBT_INDICATOR_KEY) == NBT_INDICATOR_GLOW_VALUE){
-					return ProtocolOperationResult.NOT_NEEDED;
+				if(m.hasEnchants()){
+					return ProtocolOperationResult.FAILURE;
 				}
-				compound.put(NbtFactory.of(NBT_INDICATOR_KEY, NBT_INDICATOR_GLOW_VALUE));
+				m.addEnchant(GLOW_ENCHANT_INDICATOR, GLOW_ENCHANT_LEVEL, true);
 			}else{
-				if(compound.containsKey(NBT_INDICATOR_KEY)){
-					compound.remove(NBT_INDICATOR_KEY);
+				if(stack.containsEnchantment(GLOW_ENCHANT_INDICATOR) && stack.getEnchantmentLevel(GLOW_ENCHANT_INDICATOR) == GLOW_ENCHANT_LEVEL){
+					m.removeEnchant(GLOW_ENCHANT_INDICATOR);
 				}else{
 					return ProtocolOperationResult.NOT_NEEDED;
 				}
 			}
-			NbtFactory.setItemTag(stack, compound);
+			stack.setItemMeta(m);
 			return ProtocolOperationResult.SUCCESS_QUEUED;
 		}catch(Exception ex){
 			ex.printStackTrace();
@@ -107,10 +109,10 @@ final class ProtocolUtilities {
 
 	private void addGlow(ItemStack[] stacks) {
 		for (ItemStack stack : stacks) {
-			if (stack != null) {
-				NbtCompound compound = (NbtCompound) NbtFactory.fromItemTag(stack);
-				if(compound.containsKey(NBT_INDICATOR_KEY) && compound.getByte(NBT_INDICATOR_KEY) == NBT_INDICATOR_GLOW_VALUE){
-					// If our custom NBT key exists and is set to the appropriate value, overwrite enchantment glow so it will render as glow w/o enchants
+			if (stack != null && stack.hasItemMeta()) {
+				if(stack.containsEnchantment(GLOW_ENCHANT_INDICATOR) && stack.getEnchantmentLevel(GLOW_ENCHANT_INDICATOR) == GLOW_ENCHANT_LEVEL){
+					// If our custom enchant exists and is set to the appropriate value, overwrite enchantment glow so it will render as glow w/o enchants
+					NbtCompound compound = (NbtCompound) NbtFactory.fromItemTag(stack);
 					compound.put(NbtFactory.ofList("ench"));
 					NbtFactory.setItemTag(stack, compound);
 				}
