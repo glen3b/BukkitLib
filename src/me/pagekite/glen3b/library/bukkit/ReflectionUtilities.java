@@ -201,6 +201,28 @@ public final class ReflectionUtilities {
 	}
 
 	/**
+	 * Get an array of {@code Method} objects that have the specified name. If a method object is found, {@code setAccessible(true} will be called upon it.
+	 * @param declaredClass The {@code Class} which will be searched for methods.
+	 * @param name The name of the method to retrieve.
+	 * @return A non-null array of {@code Method}s which are the member overloads of the specified method.
+	 */
+	public static Method[] getMethodsByName(Class<?> declaredClass, String name){
+		Validate.notNull(declaredClass, "The class which contains the methods must not be null.");
+		Validate.notEmpty(name, "You must provide a method name.");
+		
+		List<Method> retval = Lists.newArrayListWithCapacity(1);
+		
+		for(Method m : declaredClass.getMethods()){
+			if(m.getName().trim().equalsIgnoreCase(name.trim())){
+				m.setAccessible(true);
+				retval.add(m);
+			}
+		}
+		
+		return retval.toArray(new Method[0]);
+	}
+	
+	/**
 	 * Gets the component of the package name of NMS and OBC classes which represents the minecraft server version.
 	 * Determines this value by using the fully qualified class and package name of the CraftBukkit implementation class of {@link Server}.
 	 * @return The version component of the NMS package running on this server.
