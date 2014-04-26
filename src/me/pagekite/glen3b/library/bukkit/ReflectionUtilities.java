@@ -11,6 +11,7 @@ import org.apache.commons.lang.ClassUtils;
 import org.apache.commons.lang.Validate;
 import org.bukkit.Bukkit;
 import org.bukkit.Server;
+import org.bukkit.inventory.ItemStack;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
@@ -151,6 +152,35 @@ public final class ReflectionUtilities {
 		//return handleMethod.invoke(object, args);
 	}
 
+	/**
+	 * Returns a {@code CraftItemStack} instance representing the specified instance.
+	 * <p>
+	 * The return of this method will be {@code null} if any of the following are true:
+	 * <ul>
+	 * <li>ProtocolLib (and its bundled reflection utilities) are not available on this server.</li>
+	 * <li>The instance is already a {@code CraftItemStack}.</li>
+	 * <li>An unexpected error occurs.</li>
+	 * </ul>
+	 * </p>
+	 * @param instance The {@link ItemStack} instance to convert.
+	 * @return A {@code CraftItemStack} instance, which can hold NBT and NMS data.
+	 */
+	public static ItemStack getCraftStack(ItemStack instance){
+		try{
+		if(Utilities._protocolLib == null){
+			return null;
+		}
+		return Utilities._protocolLib.assureCraftItemStack(instance);
+		}catch(Exception except){
+			// Unexpected error
+			// For the purposes of reflection, we don't want client code to have to deal with a reflection error
+			// The client just needs to know the item can't be converted
+			except.printStackTrace();
+			
+		}
+		return null;
+	}
+	
 	/**
 	 * Gets the NMS handle for the specified bukkit object (NOT the CraftBukkit class). Should be compatible across versions as it uses reflection.
 	 * @param entity The bukkit object instance for which to retrieve the handle using the {@code getHandle()} method.

@@ -11,6 +11,7 @@ import com.comphenix.protocol.events.ListenerPriority;
 import com.comphenix.protocol.events.PacketAdapter;
 import com.comphenix.protocol.events.PacketContainer;
 import com.comphenix.protocol.events.PacketEvent;
+import com.comphenix.protocol.utility.MinecraftReflection;
 import com.comphenix.protocol.wrappers.nbt.NbtCompound;
 import com.comphenix.protocol.wrappers.nbt.NbtFactory;
 
@@ -47,7 +48,7 @@ final class ProtocolUtilities {
 					public void onPacketSending(PacketEvent event) {
 						// TODO: Can this be done more efficiently?
 						PacketContainer cloned = event.getPacket().deepClone();
-						
+
 						if (event.getPacketType().equals(PacketType.Play.Server.SET_SLOT)) {
 							ItemStack[] toMod = new ItemStack[] { cloned.getItemModifier().read(0) };
 							addGlow(toMod);
@@ -64,6 +65,14 @@ final class ProtocolUtilities {
 
 	private static final String NBT_INDICATOR_KEY = "GBukkitLib-ItemGlow";
 	private static final byte NBT_INDICATOR_GLOW_VALUE = Byte.MAX_VALUE;
+
+
+	public ItemStack assureCraftItemStack(ItemStack stack){
+		if(!MinecraftReflection.isCraftItemStack(stack)){
+			return MinecraftReflection.getBukkitItemStack(stack);
+		}
+		return null;
+	}
 
 
 	/**

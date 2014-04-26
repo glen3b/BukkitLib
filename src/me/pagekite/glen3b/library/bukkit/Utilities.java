@@ -62,7 +62,10 @@ public final class Utilities {
 		// TODO Use it!
 	}
 
-	private static ProtocolUtilities _protocolLib;
+	/**
+	 * Internal reference to ProtocolLib utils.
+	 */
+	static ProtocolUtilities _protocolLib;
 	
 	/**
 	 * Initializes the utilities class with event registrations and such. Internal method, not meant to be called by user code.
