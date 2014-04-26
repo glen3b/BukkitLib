@@ -44,6 +44,7 @@ import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.ServicePriority;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
@@ -300,6 +301,8 @@ public final class GBukkitLibraryPlugin extends JavaPlugin {
 		// Register DefaultServerTeleportationManager AFTER registering ServerTransportManager
 		this.getServer().getServicesManager().register(ServerTeleportationManager.class, new DefaultServerTeleportationManager(this), this, ServicePriority.Highest);
 		ConfigurationSerialization.registerClass(SerializableLocation.class);
+		Plugin protocol = getServer().getPluginManager().getPlugin("ProtocolLib");
+		Utilities.initialize(this, protocol == null || !protocol.isEnabled() ? null : new ProtocolUtilities());
 		saveDefaultConfig();
 	}
 	

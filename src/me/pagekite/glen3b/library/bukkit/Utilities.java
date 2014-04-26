@@ -23,6 +23,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
+import javax.annotation.Nullable;
+
+import me.pagekite.glen3b.library.bukkit.protocol.ProtocolOperationResult;
 import me.pagekite.glen3b.library.bukkit.teleport.QueuedTeleport;
 import me.pagekite.glen3b.library.bukkit.teleport.TeleportationManager;
 
@@ -59,6 +62,21 @@ public final class Utilities {
 		// TODO Use it!
 	}
 
+	private static ProtocolUtilities _protocolLib;
+	
+	/**
+	 * Initializes the utilities class with event registrations and such. Internal method, not meant to be called by user code.
+	 * @param hostPlugin The GBukkitLib plugin instance.
+	 * @param protocolLib ProtocolLib utility wrapper, or {@code null} if it does not exist.
+	 */
+	static void initialize(GBukkitLibraryPlugin hostPlugin, @Nullable ProtocolUtilities protocolLib){
+		if(protocolLib != null){
+			protocolLib.init(hostPlugin);
+		}
+		
+		_protocolLib = protocolLib;
+	}
+	
 	/**
 	 * Assure that a value is between two other values.
 	 * @param value The value to clamp.
@@ -253,6 +271,8 @@ public final class Utilities {
 		 * @see Player#getName()
 		 */
 		public static List<String> getPlayerNames(Player... players){
+			Validate.noNullElements(players, "There must not be null players!");
+			
 			ArrayList<String> playerNames = new ArrayList<String>();
 
 			for(Player player : players){
@@ -333,7 +353,7 @@ public final class Utilities {
 		 * @return Whether the tasks were queued. The return value will be {@code false} if they ran instantly during the execution of this method and {@code true} if they were queued for execution and consequently have not yet run.
 		 * @see TeleportationManager#teleportPlayer(Player player, Location targetLoc)
 		 */
-		public static <T> boolean runAfterTeleport(QueuedTeleport<T> teleport, Runnable... tasks){
+		public static <T> boolean runAfterTeleport(@Nullable QueuedTeleport<T> teleport, Runnable... tasks){
 			Validate.noNullElements(tasks, "There must not be any null tasks.");
 
 			if(teleport == null || teleport.isCancelled()){
@@ -429,7 +449,7 @@ public final class Utilities {
 	 * @deprecated Use {@link Scheduler#scheduleTickTask(Plugin, Runnable, boolean)}. The new method disallows {@code null} plugin arguments.
 	 */
 	@Deprecated
-	public static BukkitTask scheduleTickTask(Plugin host, Runnable task, boolean async){
+	public static BukkitTask scheduleTickTask(@Nullable Plugin host, Runnable task, boolean async){
 		Validate.notNull(task, "The task must not be null.");
 
 		Plugin hostPl = host == null ? Bukkit.getServer().getPluginManager().getPlugin("GBukkitLib") : host;
@@ -446,7 +466,7 @@ public final class Utilities {
 	 * @deprecated Use {@link Scheduler#scheduleTickTask(Plugin, Runnable)}. The new method disallows {@code null} plugin arguments.
 	 */
 	@Deprecated
-	public static int scheduleTickTask(Plugin host, Runnable task){
+	public static int scheduleTickTask(@Nullable Plugin host, Runnable task){
 		return scheduleTickTask(host, task, false).getTaskId();
 	}
 
@@ -476,6 +496,60 @@ public final class Utilities {
 					PotionEffectType.WITHER
 					);
 
+			/**
+			 * <p>
+			 * Removes glow from an {@link ItemStack}. This is accomplished by sending packets to the client
+			 * that contain an enchantments NBT list that is empty. A custom NBT tag is used to accomplish this.
+			 * </p>
+			 * <p>
+			 * For this operation to succeed, ProtocolLib is required on the server.
+			 * A lack of this plugin will be indicated with a return value of
+			 * {@link ProtocolOperationResult#PROCOTOLLIB_NOT_AVAILABLE}.
+			 * </p>
+			 * <p>
+			 * If this operation succeeds and no unexpected errors occur, the return value will be {@link ProtocolOperationResult#SUCCESS_QUEUED}. The reason for this is that this method merely removes an NBT tag. Protocol operations will display the item as not glowing <b>when the appropriate packets are sent</b>. Therefore, the rendering of the (lack of the) glow (if it was previously present) is not instant, and will occur in the future, hence the indication of queued behavior.
+			 * </p>
+			 * @param stack The {@link ItemStack} to render using normal vanilla enchantment rendering mechanics.
+			 * @return A non-null indicator of the success of this operation.
+			 */
+			public static ProtocolOperationResult removeItemGlow(ItemStack stack){
+				Validate.notNull(stack, "The item to modify must not be null.");
+				
+				if(_protocolLib == null){
+					return ProtocolOperationResult.PROCOTOLLIB_NOT_AVAILABLE;
+				}
+				
+				return _protocolLib.setGlowing(stack, false);
+				
+			}
+			
+			/**
+			 * <p>
+			 * Adds glow to an {@link ItemStack}. This is accomplished by sending packets to the client
+			 * that contain an enchantments NBT list that is empty. A custom NBT tag is used to accomplish this.
+			 * </p>
+			 * <p>
+			 * For this operation to succeed, ProtocolLib is required on the server.
+			 * A lack of this plugin will be indicated with a return value of
+			 * {@link ProtocolOperationResult#PROCOTOLLIB_NOT_AVAILABLE}.
+			 * </p>
+			 * <p>
+			 * If this operation succeeds and no unexpected errors occur, the return value will be {@link ProtocolOperationResult#SUCCESS_QUEUED}. The reason for this is that this method merely sets an NBT tag. Protocol operations will display the item as glowing <b>when the appropriate packets are sent</b>. Therefore, the rendering of the glow is not instant, and will occur in the future, hence the indication of queued behavior.
+			 * </p>
+			 * @param stack The {@link ItemStack} to render as having enchantments without actually having any.
+			 * @return A non-null indicator of the success of this operation.
+			 */
+			public static ProtocolOperationResult addItemGlow(ItemStack stack){
+				Validate.notNull(stack, "The item to modify must not be null.");
+				
+				if(_protocolLib == null){
+					return ProtocolOperationResult.PROCOTOLLIB_NOT_AVAILABLE;
+				}
+				
+				return _protocolLib.setGlowing(stack, true);
+				
+			}
+			
 			/**
 			 * Determines if a potion effect is a negative effect.
 			 * @param effect The effect to check.
@@ -541,11 +615,11 @@ public final class Utilities {
 		 * Sets the display name and lore of the specified item. The item that is passed will be unmodified after the operation.
 		 * @param item The item to modify the data of.
 		 * @param name The new display name of the item.
-		 * @param lore The new lore of the item. If this parameter is null, the lore will be set to an empty, unmodifiable list. Otherwise, it will be converted to an {@link ArrayList} and then set as the item lore.
+		 * @param lore The new lore of the item. If this parameter is {@code null}, the lore will be set to an empty, unmodifiable list. Otherwise, it will be converted to an {@link ArrayList} and then set as the item lore.
 		 * @return The modified item.
 		 */
 		public static ItemStack setItemNameAndLore(ItemStack item, String name,
-				String[] lore) {
+				@Nullable String[] lore) {
 			Validate.notNull(item, "The item is null.");
 			Validate.notEmpty(name, "The name is null.");
 			// Lore array may be null, we just assume the user wants no lore

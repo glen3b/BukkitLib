@@ -2,6 +2,7 @@
  version: 1.0.0a
  description: This plugin is a library allowing uniform access to functions used by multiple plugins.
  author: glen3b
+ softdepend: [ProtocolLib]
  
  main: me.pagekite.glen3b.library.bukkit.GBukkitLibraryPlugin
  
