@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -51,6 +52,8 @@ import org.bukkit.inventory.meta.LeatherArmorMeta;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitTask;
+
+import com.google.common.collect.ImmutableSet;
 
 /**
  * A static class housing common methods, constants, and utility functions.
@@ -597,30 +600,76 @@ public final class Utilities {
 
 		/**
 		 * Utility methods involving potions and potion effects.
+		 * This class assumes that if an effect is not negative, it must be positive, and that all effects are either positive or negative.
 		 * @author Glen Husman
 		 */
 		public static final class Potions{
 			private Potions(){}
-
-			private static final List<PotionEffectType> _negativeEffects = Arrays.asList(
-					PotionEffectType.BLINDNESS,
-					PotionEffectType.CONFUSION,
-					PotionEffectType.HARM,
-					PotionEffectType.HUNGER,
-					PotionEffectType.POISON,
-					PotionEffectType.SLOW,
-					PotionEffectType.SLOW_DIGGING,
-					PotionEffectType.WEAKNESS,
-					PotionEffectType.WITHER
-					);
-
+			
+			private static final ImmutableSet<PotionEffectType> _negativeEffects;
+			private static final ImmutableSet<PotionEffectType> _positiveEffects;
+			
+			static{
+				// Build immutable sets
+				_negativeEffects = ImmutableSet.of(
+						PotionEffectType.BLINDNESS,
+						PotionEffectType.CONFUSION,
+						PotionEffectType.HARM,
+						PotionEffectType.HUNGER,
+						PotionEffectType.POISON,
+						PotionEffectType.SLOW,
+						PotionEffectType.SLOW_DIGGING,
+						PotionEffectType.WEAKNESS,
+						PotionEffectType.WITHER
+						);
+				
+				ImmutableSet.Builder<PotionEffectType> positiveBuilder = ImmutableSet.builder();
+				for(PotionEffectType type : PotionEffectType.values()){
+					if(!_negativeEffects.contains(type)){
+						positiveBuilder.add(type);
+					}
+				}
+				_positiveEffects = positiveBuilder.build();
+			}
+			
+			/**
+			 * Determines if a potion effect is a positive effect.
+			 * @param effect The effect to check.
+			 * @return Whether the effect is a positive or "good" effect. If {@code effect} is {@code null}, the return value will be {@code false}.
+			 */
+			public static boolean isPositive(@Nullable PotionEffectType effect){
+				if(effect == null){
+					return false;
+				}
+				
+				return _positiveEffects.contains(effect);
+			}
+			
+			/**
+			 * Gets all positive potion effects known to this plugin.
+			 * @return An immutable set of all known positive potion effects.
+			 */
+			public static Set<PotionEffectType> getPositiveEffects(){
+				return _positiveEffects;
+			}
+			
+			/**
+			 * Gets all negative potion effects known to this plugin.
+			 * @return An immutable set of all known negative potion effects.
+			 */
+			public static Set<PotionEffectType> getNegativeEffects(){
+				return _negativeEffects;
+			}
+			
 			/**
 			 * Determines if a potion effect is a negative effect.
 			 * @param effect The effect to check.
-			 * @return Whether the effect is a negative or "bad" effect.
+			 * @return Whether the effect is a negative or "bad" effect. If {@code effect} is {@code null}, the return value will be {@code false}.
 			 */
-			public static boolean isNegative(PotionEffectType effect){
-				Validate.notNull(effect, "The potion effect is null.");
+			public static boolean isNegative(@Nullable PotionEffectType effect){
+				if(effect == null){
+					return false;
+				}
 
 				return _negativeEffects.contains(effect);
 			}
