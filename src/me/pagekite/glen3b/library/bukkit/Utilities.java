@@ -17,6 +17,8 @@
 
 package me.pagekite.glen3b.library.bukkit;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -85,7 +87,7 @@ public final class Utilities {
 		}
 
 		_protocolLib = protocolLib;
-
+		
 		Utilities.Effects.resetCache();
 	}
 
@@ -493,42 +495,105 @@ public final class Utilities {
 		 * Reset internal cache.
 		 */
 		static void resetCache(){
-			// Currently does nothing
+			synchronized(methodHandleSynclock){
+				world_getHandle = null;
+				nms_world_broadcastEntityEffect = null;
+				firework_getHandle = null;
+			}
 		}
 
+		// internal references, performance improvements
+		private static Method world_getHandle = null;
+		private static Method nms_world_broadcastEntityEffect = null;
+		private static Method firework_getHandle = null;
+
+		// used for thread safety
+		private static Object methodHandleSynclock = new Object();
 
 		/**
 		 * <p>
-		 * This method provides a version independent way to instantly explode {@code FireworkEffect}s at a given location.
-		 * This implementation should be thread safe, but no tests have been made against it. Please file a bug on the GBukkitLib project if you experience a concurrency issue.
+		 * This method provides a reasonably version independent way to instantly explode {@code FireworkEffect}s at a given location.
+		 * It uses reflection to accomplish this. This implementation should be thread safe, but no tests have been made against it. Please file a bug on the GBukkitLib project if you experience a concurrency issue.
+		 * </p>
+		 * <p>
+		 * With this method, some fireworks will not explode and generate the effect. The cause of this is currently unknown.
+		 * </p>
+		 * <p>
+		 * <h5><u>Licensing</u></h5>
+		 * You are welcome to use, redistribute, modify and destroy your own copies of this source with the following conditions:
+		 * <ol>
+		 * <li>No warranty is given or implied.</li>
+		 * <li>All damage is your own responsibility.</li>
+		 * <li>You provide credit publicly to the original source should you release the plugin.</li>
+		 * </ol>
 		 * </p>
 		 * @param location The location at which to display the firework effects.
 		 * @param effects The firework effects to render.
-		 * @author Glen Husman
-		 * @see Firework#detonate()
+		 * @author codename_B
 		 */
 		public static void playFirework(Location location, FireworkEffect... effects) {
 			Validate.notNull(location, "The location of the effect must not be null.");
 			Validate.notNull(location.getWorld(), "The location must not have a null world.");
 			Validate.noNullElements(effects, "Null firework effects are not allowed.");
 
-			// Bukkit load (spawn a CraftFirework)
-			World world = location.getWorld();
-			Firework fw = world.spawn(location, Firework.class);
+			try {
+				// Bukkity load (CraftFirework)
+				World world = location.getWorld();
+				Firework fw = world.spawn(location, Firework.class);
+				// the net.minecraft.server.World
+				Object nms_world = null;
+				Object nms_firework = null;
 
-			FireworkMeta data = fw.getFireworkMeta();
-			// clear existing
-			data.clearEffects();
-			// power of zero
-			data.setPower(0);
-			// add the effects
-			data.addEffects(effects);
-			// set the meta
-			fw.setFireworkMeta(data);
-			// explode it
-			fw.detonate();
-			// remove from the game
-			fw.remove();
+				// Wait on synclock so no two threads attempt to retrieve Method objects at the same time
+				synchronized(methodHandleSynclock){
+					/*
+					 * The reflection part, this gives us access to funky ways of messing around with things
+					 */
+					if(world_getHandle == null || firework_getHandle == null) {
+						// get the methods of the CraftBukkit objects and make them accessible
+						// Use getClass() not Whatever.class because we need the CraftWhatever class instance, not Whatever's class instance
+						world_getHandle = ReflectionUtilities.getMethodsByName(world.getClass(), "getHandle")[0];
+						firework_getHandle = ReflectionUtilities.getMethodsByName(fw.getClass(), "getHandle")[0];
+					}
+					// invoke with no arguments
+
+					nms_world = world_getHandle.invoke(world);
+
+					// null checks are fast, so having this separate is OK
+					if(nms_world_broadcastEntityEffect == null) {
+						// get the method of the nms_world
+						nms_world_broadcastEntityEffect = ReflectionUtilities.getMethodsByName(nms_world.getClass(), "broadcastEntityEffect")[0];
+					}
+				}
+
+				nms_firework = firework_getHandle.invoke(fw);
+
+				/*
+				 * Now we mess with the metadata, allowing nice clean spawning of a pretty firework (look, pretty lights!)
+				 */
+				// metadata load
+				FireworkMeta data = fw.getFireworkMeta();
+				// clear existing
+				data.clearEffects();
+				// power of zero - according to CB source this is allowed
+				data.setPower(0);
+				// add the effects
+				data.addEffects(effects);
+				// set the meta
+				fw.setFireworkMeta(data);
+				/*
+				 * Finally, we broadcast the entity effect then kill our fireworks object
+				 */
+
+				// invoke with arguments
+				nms_world_broadcastEntityEffect.invoke(nms_world, new Object[] {nms_firework, (byte) 17});
+				// remove from the game
+				fw.remove();
+			} catch (IllegalAccessException | IllegalArgumentException
+					| InvocationTargetException e) {
+				// Reflection error, rethrow exception
+				throw new RuntimeException("The reflective operations required for this method's functionality failed.", e);
+			}
 		}
 
 	}
@@ -547,10 +612,10 @@ public final class Utilities {
 		 */
 		public static final class Potions{
 			private Potions(){}
-
+			
 			private static final ImmutableSet<PotionEffectType> _negativeEffects;
 			private static final ImmutableSet<PotionEffectType> _positiveEffects;
-
+			
 			static{
 				// Build immutable sets
 				_negativeEffects = ImmutableSet.of(
@@ -564,7 +629,7 @@ public final class Utilities {
 						PotionEffectType.WEAKNESS,
 						PotionEffectType.WITHER
 						);
-
+				
 				ImmutableSet.Builder<PotionEffectType> positiveBuilder = ImmutableSet.builder();
 				for(PotionEffectType type : PotionEffectType.values()){
 					if(!_negativeEffects.contains(type)){
@@ -573,7 +638,7 @@ public final class Utilities {
 				}
 				_positiveEffects = positiveBuilder.build();
 			}
-
+			
 			/**
 			 * Determines if a potion effect is a positive effect.
 			 * @param effect The effect to check.
@@ -583,10 +648,10 @@ public final class Utilities {
 				if(effect == null){
 					return false;
 				}
-
+				
 				return _positiveEffects.contains(effect);
 			}
-
+			
 			/**
 			 * Gets all positive potion effects known to this plugin.
 			 * @return An immutable set of all known positive potion effects.
@@ -594,7 +659,7 @@ public final class Utilities {
 			public static Set<PotionEffectType> getPositiveEffects(){
 				return _positiveEffects;
 			}
-
+			
 			/**
 			 * Gets all negative potion effects known to this plugin.
 			 * @return An immutable set of all known negative potion effects.
@@ -602,7 +667,7 @@ public final class Utilities {
 			public static Set<PotionEffectType> getNegativeEffects(){
 				return _negativeEffects;
 			}
-
+			
 			/**
 			 * Determines if a potion effect is a negative effect.
 			 * @param effect The effect to check.
