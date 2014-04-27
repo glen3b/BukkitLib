@@ -42,13 +42,9 @@ public final class ProtocolLibUtilImplementation implements ProtocolUtilities {
 					@Override
 					public void onPacketSending(PacketEvent event) {
 						if (event.getPacketType().equals(PacketType.Play.Server.SET_SLOT)) {
-							ItemStack[] toMod = new ItemStack[] { event.getPacket().getItemModifier().read(0) };
-							addGlow(toMod);
-							event.getPacket().getItemModifier().write(0, toMod[0]);
+							addGlow(new ItemStack[] { event.getPacket().getItemModifier().read(0) });
 						} else {
-							ItemStack[] toMod = event.getPacket().getItemArrayModifier().read(0);
-							addGlow(toMod);
-							event.getPacket().getItemArrayModifier().write(0, toMod);
+							addGlow(event.getPacket().getItemArrayModifier().read(0));
 						}
 					}
 				});
