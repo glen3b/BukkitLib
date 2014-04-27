@@ -31,6 +31,11 @@ public final class Constants {
 	public static final long ITEM_ENTITY_LIFE = TICKS_PER_MINUTE * 5;
 	
 	/**
+	 * The default maximum food level of a {@link org.bukkit.entity.Player}, representing a full hunger bar.
+	 */
+	public static final int MAXIMUM_FOOD_LEVEL = 20;
+	
+	/**
 	 * Gets the number of ticks within the specified number of seconds, rounded to the nearest whole number.
 	 * @param seconds The amount of seconds.
 	 * @return The amount of seconds expressed in server ticks.
