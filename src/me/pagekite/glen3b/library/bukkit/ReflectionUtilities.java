@@ -5,7 +5,10 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.lang.ClassUtils;
 import org.apache.commons.lang.Validate;
@@ -22,6 +25,8 @@ import com.google.common.collect.Lists;
  * @author <a href="https://forums.bukkit.org/members/microgeek.90705652/">microgeek</a>
  */
 public final class ReflectionUtilities {
+
+	private static final Map<Class<?>, Method> _getHandleMethods = Collections.synchronizedMap(new HashMap<Class<?>, Method>());
 
 	/**
 	 * Sets the value of a field on an {@link Object} instance via reflection.
@@ -194,9 +199,23 @@ public final class ReflectionUtilities {
 	public static Object getNMSHandle(Object entity) throws NoSuchMethodException, SecurityException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
 		Validate.notNull(entity, "The object instance must not be null.");
 
-		Method handleMethod = entity.getClass().getMethod("getHandle");
-		handleMethod.setAccessible(true);
-		return handleMethod.invoke(entity);
+		if(_getHandleMethods.containsKey(entity.getClass())){
+			Method hMethod = _getHandleMethods.get(entity.getClass());
+			if(hMethod == null){
+				throw new NoSuchMethodException("The specified object does not have a getHandle method.");
+			}
+			return hMethod.invoke(entity);
+		}
+
+		try{
+			Method handleMethod = entity.getClass().getMethod("getHandle");
+			handleMethod.setAccessible(true);
+			_getHandleMethods.put(entity.getClass(), handleMethod);
+			return handleMethod.invoke(entity);
+		}catch(NoSuchMethodException err){
+			_getHandleMethods.put(entity.getClass(), null);
+			throw (NoSuchMethodException)new NoSuchMethodException("The specified object does not have a getHandle method.").initCause(err);
+		}
 	}
 
 	/**
