@@ -45,7 +45,6 @@ import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Firework;
 import org.bukkit.entity.Player;
-import org.bukkit.event.Listener;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.FireworkMeta;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -54,6 +53,7 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitTask;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 
 /**
@@ -63,13 +63,8 @@ import com.google.common.collect.ImmutableSet;
  */
 public final class Utilities {
 
-	/**
-	 * Internally used class. Registered internally to allow for certain utility methods to function.
-	 * @author Glen Husman
-	 */
-	static final class EventRegistrar implements Listener{
-		// TODO Use it!
-	}
+	// used for thread safety in initialize and cleanup
+	private static Object initializationSynclock = new Object();
 
 	/**
 	 * Internal reference to ProtocolLib utils.
@@ -82,13 +77,31 @@ public final class Utilities {
 	 * @param protocolLib ProtocolLib utility wrapper, or {@code null} if it does not exist.
 	 */
 	static void initialize(GBukkitLibraryPlugin hostPlugin, @Nullable ProtocolUtilities protocolLib){
-		if(protocolLib != null){
-			protocolLib.init(hostPlugin);
-		}
+		synchronized(initializationSynclock){
+			Preconditions.checkState(_protocolLib == null, "Utilities has not been cleaned up since last initialization! Call cleanup(Plugin) to clean up internal fields before you reinitialize it.");
 
-		_protocolLib = protocolLib;
-		
-		Utilities.Effects.resetCache();
+			if(protocolLib != null){
+				protocolLib.init(hostPlugin);
+			}
+
+			_protocolLib = protocolLib;
+
+			Utilities.Effects.resetCache();
+		}
+	}
+
+	/**
+	 * Clean up the mess.
+	 * @param hostPlugin The plugin creating the mess.
+	 */
+	static void cleanup(GBukkitLibraryPlugin hostPlugin){
+		synchronized(initializationSynclock){
+			if(_protocolLib != null){
+				_protocolLib.cleanup(hostPlugin);
+			}
+
+			_protocolLib = null;
+		}
 	}
 
 	/**
@@ -612,10 +625,10 @@ public final class Utilities {
 		 */
 		public static final class Potions{
 			private Potions(){}
-			
+
 			private static final ImmutableSet<PotionEffectType> _negativeEffects;
 			private static final ImmutableSet<PotionEffectType> _positiveEffects;
-			
+
 			static{
 				// Build immutable sets
 				_negativeEffects = ImmutableSet.of(
@@ -629,7 +642,7 @@ public final class Utilities {
 						PotionEffectType.WEAKNESS,
 						PotionEffectType.WITHER
 						);
-				
+
 				ImmutableSet.Builder<PotionEffectType> positiveBuilder = ImmutableSet.builder();
 				for(PotionEffectType type : PotionEffectType.values()){
 					if(!_negativeEffects.contains(type)){
@@ -638,7 +651,7 @@ public final class Utilities {
 				}
 				_positiveEffects = positiveBuilder.build();
 			}
-			
+
 			/**
 			 * Determines if a potion effect is a positive effect.
 			 * @param effect The effect to check.
@@ -648,10 +661,10 @@ public final class Utilities {
 				if(effect == null){
 					return false;
 				}
-				
+
 				return _positiveEffects.contains(effect);
 			}
-			
+
 			/**
 			 * Gets all positive potion effects known to this plugin.
 			 * @return An immutable set of all known positive potion effects.
@@ -659,7 +672,7 @@ public final class Utilities {
 			public static Set<PotionEffectType> getPositiveEffects(){
 				return _positiveEffects;
 			}
-			
+
 			/**
 			 * Gets all negative potion effects known to this plugin.
 			 * @return An immutable set of all known negative potion effects.
@@ -667,7 +680,7 @@ public final class Utilities {
 			public static Set<PotionEffectType> getNegativeEffects(){
 				return _negativeEffects;
 			}
-			
+
 			/**
 			 * Determines if a potion effect is a negative effect.
 			 * @param effect The effect to check.
@@ -690,7 +703,7 @@ public final class Utilities {
 		 * <p>
 		 * For this operation to succeed, ProtocolLib is required on the server.
 		 * A lack of this plugin will be indicated with a return value of
-		 * {@link ProtocolOperationResult#PROCOTOLLIB_NOT_AVAILABLE}.
+		 * {@link ProtocolOperationResult#LIBRARY_NOT_AVAILABLE}.
 		 * </p>
 		 * <p>
 		 * If this operation succeeds and no unexpected errors occur, the return value will be {@link ProtocolOperationResult#SUCCESS_QUEUED}. The reason for this is that this method merely sets an enchantment which will be parsed by packet interceptors. Protocol operations will display the item as glowing <b>when the appropriate packets are sent</b>. Therefore, the rendering of the glow is not instant, and will occur in the future, hence the indication of queued behavior.
@@ -708,7 +721,7 @@ public final class Utilities {
 			Validate.notNull(stack, "The item to modify must not be null.");
 
 			if(_protocolLib == null){
-				return ProtocolOperationResult.PROCOTOLLIB_NOT_AVAILABLE;
+				return ProtocolOperationResult.LIBRARY_NOT_AVAILABLE;
 			}
 
 			return _protocolLib.setGlowing(stack, isGlowing);

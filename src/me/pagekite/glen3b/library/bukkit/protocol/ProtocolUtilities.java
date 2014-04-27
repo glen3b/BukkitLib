@@ -2,37 +2,28 @@ package me.pagekite.glen3b.library.bukkit.protocol;
 
 import me.pagekite.glen3b.library.bukkit.Utilities;
 
-import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.Plugin;
-
-import com.comphenix.protocol.PacketType;
-import com.comphenix.protocol.ProtocolLibrary;
-import com.comphenix.protocol.events.ListenerPriority;
-import com.comphenix.protocol.events.PacketAdapter;
-import com.comphenix.protocol.events.PacketContainer;
-import com.comphenix.protocol.events.PacketEvent;
-import com.comphenix.protocol.utility.MinecraftReflection;
-import com.comphenix.protocol.wrappers.nbt.NbtCompound;
-import com.comphenix.protocol.wrappers.nbt.NbtFactory;
 
 /**
  * Utilities involving modifications to packets sent to and from the client.
- * This internal class uses ProtocolLib to perform certain functions hard or
- * impossible with the Bukkit API. Instances of this class are expected to be
- * {@code null} if and only if ProtocolLib is not available. This class contains
- * implementations of many protocol utility methods in the {@link Utilities}
- * class.
+ * This internally-used interfaces implementations use a packet-processing
+ * library to perform certain functions hard or impossible with the Bukkit API.
+ * Instances of this class are expected to be {@code null} if and only if that
+ * spracket processor is not available. This interface specifies implementations
+ * of all protocol utility methods in the {@link Utilities} class.
  * 
  * <p>
- * <b>This is an internally used class which should not be instantiated or called directly by client code.</b>
- * Wrappers in the {@code Utilities} class call this type for you.
+ * This is an internally used type which should not be instantiated,
+ * implemented, or called directly by client code. Wrappers in the
+ * {@code Utilities} class call this type for you. If you need support for a
+ * protocol library not included wiht GBukkitLib, please file an issue ticket or
+ * a pull request so we can take care of implementing it.
  * </p>
  * 
  * @author Glen Husman
  */
-public final class ProtocolUtilities {
+public interface ProtocolUtilities {
 
 	/**
 	 * Initialize protocol utilities.
@@ -41,78 +32,35 @@ public final class ProtocolUtilities {
 	 *            The plugin for which events will be subscribed, and will
 	 *            handle packet reception.
 	 */
-	public void init(Plugin plugin) {
-		// Prevents ghost step sounds and particles (testing needs to be done)
-		ProtocolLibrary.getProtocolManager().addPacketListener(
-				new PacketAdapter(PacketAdapter
-						.params(plugin, PacketType.Play.Server.SET_SLOT,
-								PacketType.Play.Server.WINDOW_ITEMS)
-								.serverSide().listenerPriority(ListenerPriority.HIGH)) {
+	public abstract void init(Plugin plugin);
 
-					@Override
-					public void onPacketSending(PacketEvent event) {
-						// TODO: Can this be done more efficiently?
-						PacketContainer cloned = event.getPacket().deepClone();
+	/**
+	 * Assure that the specified {@link ItemStack} is a {@code CraftItemStack}.
+	 * 
+	 * @param stack
+	 *            The {@link ItemStack}.
+	 * @return {@code stack} represented as a {@code CraftItemStack}.
+	 */
+	public abstract ItemStack assureCraftItemStack(ItemStack stack);
 
-						if (event.getPacketType().equals(PacketType.Play.Server.SET_SLOT)) {
-							ItemStack[] toMod = new ItemStack[] { cloned.getItemModifier().read(0) };
-							addGlow(toMod);
-							cloned.getItemModifier().write(0, toMod[0]);
-						} else {
-							ItemStack[] toMod = cloned.getItemArrayModifier().read(0);
-							addGlow(toMod);
-							cloned.getItemArrayModifier().write(0, toMod);
-						}
-						event.setPacket(cloned);
-					}
-				});
-	}
+	/**
+	 * Make a {@code CraftItemStack} "glow."
+	 * 
+	 * @param stack
+	 *            The {@code CraftItemStack} to make glow.
+	 * @param glowing
+	 *            Whether it should glow.
+	 * @return The result of the protocol operation.
+	 */
+	public abstract ProtocolOperationResult setGlowing(ItemStack stack,
+			boolean glowing);
 
-	private static final Enchantment GLOW_ENCHANT_INDICATOR = Enchantment.LURE;
-	private static final int GLOW_ENCHANT_LEVEL = 31762;
+	/**
+	 * Perform disable-time cleanup of events and such.
+	 * 
+	 * @param plugin
+	 *            The plugin to use for housekeeping.
+	 */
+	public abstract void cleanup(Plugin plugin);
 
-
-	public ItemStack assureCraftItemStack(ItemStack stack){
-		if(!MinecraftReflection.isCraftItemStack(stack)){
-			return MinecraftReflection.getBukkitItemStack(stack);
-		}
-		return stack;
-	}
-
-	public ProtocolOperationResult setGlowing(ItemStack stack, boolean glowing) {
-
-		try{
-			ItemMeta m = stack.getItemMeta();
-			if(glowing){	
-				if(m.hasEnchants()){
-					return ProtocolOperationResult.FAILURE;
-				}
-				m.addEnchant(GLOW_ENCHANT_INDICATOR, GLOW_ENCHANT_LEVEL, true);
-			}else{
-				if(stack.containsEnchantment(GLOW_ENCHANT_INDICATOR) && stack.getEnchantmentLevel(GLOW_ENCHANT_INDICATOR) == GLOW_ENCHANT_LEVEL){
-					m.removeEnchant(GLOW_ENCHANT_INDICATOR);
-				}else{
-					return ProtocolOperationResult.NOT_NEEDED;
-				}
-			}
-			stack.setItemMeta(m);
-			return ProtocolOperationResult.SUCCESS_QUEUED;
-		}catch(Exception ex){
-			ex.printStackTrace();
-			return ProtocolOperationResult.FAILURE;
-		}
-	}
-
-	public void addGlow(ItemStack[] stacks) {
-		for (ItemStack stack : stacks) {
-			if (stack != null && stack.hasItemMeta()) {
-				if(stack.containsEnchantment(GLOW_ENCHANT_INDICATOR) && stack.getEnchantmentLevel(GLOW_ENCHANT_INDICATOR) == GLOW_ENCHANT_LEVEL){
-					// If our custom enchant exists and is set to the appropriate value, overwrite enchantment glow so it will render as glow w/o enchants
-					NbtCompound compound = (NbtCompound) NbtFactory.fromItemTag(stack);
-					compound.put(NbtFactory.ofList("ench"));
-					NbtFactory.setItemTag(stack, compound);
-				}
-			}
-		}
-	}
 }

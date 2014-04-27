@@ -27,7 +27,7 @@ import me.pagekite.glen3b.library.bukkit.datastore.AutoSaverScheduler;
 import me.pagekite.glen3b.library.bukkit.datastore.Message;
 import me.pagekite.glen3b.library.bukkit.datastore.MessageProvider;
 import me.pagekite.glen3b.library.bukkit.datastore.SerializableLocation;
-import me.pagekite.glen3b.library.bukkit.protocol.ProtocolUtilities;
+import me.pagekite.glen3b.library.bukkit.protocol.ProtocolLibUtilImplementation;
 import me.pagekite.glen3b.library.bukkit.teleport.QueuedTeleport;
 import me.pagekite.glen3b.library.bukkit.teleport.ServerTeleportationManager;
 import me.pagekite.glen3b.library.bukkit.teleport.TeleportationManager;
@@ -290,6 +290,7 @@ public final class GBukkitLibraryPlugin extends JavaPlugin {
 	public void onDisable(){
 		this.getServer().getServicesManager().getRegistration(AutoSaverScheduler.class).getProvider().onDisable();
 		this.getServer().getServicesManager().unregisterAll(this);
+		Utilities.cleanup(this);
 	}
 	
 	@Override
@@ -303,7 +304,7 @@ public final class GBukkitLibraryPlugin extends JavaPlugin {
 		this.getServer().getServicesManager().register(ServerTeleportationManager.class, new DefaultServerTeleportationManager(this), this, ServicePriority.Highest);
 		ConfigurationSerialization.registerClass(SerializableLocation.class);
 		Plugin protocol = getServer().getPluginManager().getPlugin("ProtocolLib");
-		Utilities.initialize(this, protocol == null || !protocol.isEnabled() ? null : new ProtocolUtilities());
+		Utilities.initialize(this, protocol == null || !protocol.isEnabled() ? null : new ProtocolLibUtilImplementation());
 		saveDefaultConfig();
 	}
 	
