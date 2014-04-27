@@ -1,5 +1,7 @@
 package me.pagekite.glen3b.library.bukkit;
 
+import org.apache.commons.lang.Validate;
+
 /**
  * Represents known minecraft server constants.
  * @author Glen Husman
@@ -22,5 +24,21 @@ public final class Constants {
 	 * @see Constants#TICKS_PER_SECOND
 	 */
 	public static final long TICKS_PER_MINUTE = TICKS_PER_SECOND * 60;
+
+	/**
+	 * The number of server ticks for which an untouched {@link org.bukkit.entity.Item} will survive before being removed.
+	 */
+	public static final long ITEM_ENTITY_LIFE = TICKS_PER_MINUTE * 5;
+	
+	/**
+	 * Gets the number of ticks within the specified number of seconds, rounded to the nearest whole number.
+	 * @param seconds The amount of seconds.
+	 * @return The amount of seconds expressed in server ticks.
+	 */
+	public static long getTicks(double seconds){
+		Validate.isTrue(!Double.isInfinite(seconds) && !Double.isNaN(seconds), "The specified value is an invalid number.");
+		
+		return Math.round(seconds * TICKS_PER_SECOND);
+	}
 	
 }
