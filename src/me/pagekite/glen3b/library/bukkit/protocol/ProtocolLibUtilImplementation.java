@@ -9,7 +9,6 @@ import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.ProtocolLibrary;
 import com.comphenix.protocol.events.ListenerPriority;
 import com.comphenix.protocol.events.PacketAdapter;
-import com.comphenix.protocol.events.PacketContainer;
 import com.comphenix.protocol.events.PacketEvent;
 import com.comphenix.protocol.utility.MinecraftReflection;
 import com.comphenix.protocol.wrappers.nbt.NbtCompound;
@@ -42,19 +41,15 @@ public final class ProtocolLibUtilImplementation implements ProtocolUtilities {
 
 					@Override
 					public void onPacketSending(PacketEvent event) {
-						// TODO: Can this be done more efficiently?
-						PacketContainer cloned = event.getPacket().deepClone();
-
 						if (event.getPacketType().equals(PacketType.Play.Server.SET_SLOT)) {
-							ItemStack[] toMod = new ItemStack[] { cloned.getItemModifier().read(0) };
+							ItemStack[] toMod = new ItemStack[] { event.getPacket().getItemModifier().read(0) };
 							addGlow(toMod);
-							cloned.getItemModifier().write(0, toMod[0]);
+							event.getPacket().getItemModifier().write(0, toMod[0]);
 						} else {
-							ItemStack[] toMod = cloned.getItemArrayModifier().read(0);
+							ItemStack[] toMod = event.getPacket().getItemArrayModifier().read(0);
 							addGlow(toMod);
-							cloned.getItemArrayModifier().write(0, toMod);
+							event.getPacket().getItemArrayModifier().write(0, toMod);
 						}
-						event.setPacket(cloned);
 					}
 				});
 	}
