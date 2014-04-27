@@ -47,7 +47,7 @@ public final class ProtocolUtilities {
 		if(!MinecraftReflection.isCraftItemStack(stack)){
 			return MinecraftReflection.getBukkitItemStack(stack);
 		}
-		return null;
+		return stack;
 	}
 
 	public ProtocolOperationResult setGlowing(ItemStack stack, boolean glowing) {

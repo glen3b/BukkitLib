@@ -73,12 +73,12 @@ public final class ReflectionUtilities {
 	public static Object invokeMethod(Object object, String method, Object... args) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
 		Validate.notNull(object, "The object instance must not be null.");
 		Validate.notEmpty(method, "The method name must be defined.");
-		
+
 		if(args == null){
 			// Sanity check
 			args = new Object[]{};
 		}
-		
+
 		try{
 			Class<?>[] params = new Class[args.length];
 			for(int i = 0; i < args.length; i++){
@@ -90,14 +90,14 @@ public final class ReflectionUtilities {
 		}catch(NoSuchMethodException er){
 			// TODO: Recursively search for method based on superclass of parameters, or use implementation below?
 		}
-		
+
 		List<Method> possibleMethods = Lists.newArrayListWithExpectedSize(2); // Assume 2 method overloads as a default, but the list will resize
 
 		for(Method m : object.getClass().getMethods()){
 			if(!m.getName().equals(method)){
 				continue;
 			}
-			
+
 			if(m.isVarArgs() && m.getGenericParameterTypes().length <= args.length){
 				possibleMethods.add(m);
 			}else if(m.getGenericParameterTypes().length == args.length){
@@ -153,12 +153,11 @@ public final class ReflectionUtilities {
 	}
 
 	/**
-	 * Returns a {@code CraftItemStack} instance representing the specified instance.
+	 * Returns a {@code CraftItemStack} instance representing the specified instance. If reflective NBT operations are to be performed on this stack, it is recommended to wrap the constructor in this call. If the {@code ItemStack} instance is already a {@code CraftItemStack}, that instance will be returned.
 	 * <p>
 	 * The return of this method will be {@code null} if any of the following are true:
 	 * <ul>
-	 * <li>ProtocolLib (and its bundled reflection utilities) are not available on this server.</li>
-	 * <li>The instance is already a {@code CraftItemStack}.</li>
+	 * <li>ProtocolLib (and its bundled minecraft reflection utilities) are not available on this server.</li>
 	 * <li>An unexpected error occurs.</li>
 	 * </ul>
 	 * </p>
@@ -167,20 +166,20 @@ public final class ReflectionUtilities {
 	 */
 	public static ItemStack getCraftStack(ItemStack instance){
 		try{
-		if(Utilities._protocolLib == null){
-			return null;
-		}
-		return Utilities._protocolLib.assureCraftItemStack(instance);
+			if(Utilities._protocolLib == null){
+				return null;
+			}
+			return Utilities._protocolLib.assureCraftItemStack(instance);
 		}catch(Exception except){
 			// Unexpected error
 			// For the purposes of reflection, we don't want client code to have to deal with a reflection error
 			// The client just needs to know the item can't be converted
 			except.printStackTrace();
-			
+
 		}
 		return null;
 	}
-	
+
 	/**
 	 * Gets the NMS handle for the specified bukkit object (NOT the CraftBukkit class). Should be compatible across versions as it uses reflection.
 	 * @param entity The bukkit object instance for which to retrieve the handle using the {@code getHandle()} method.
@@ -209,19 +208,19 @@ public final class ReflectionUtilities {
 	public static Method[] getMethodsByName(Class<?> declaredClass, String name){
 		Validate.notNull(declaredClass, "The class which contains the methods must not be null.");
 		Validate.notEmpty(name, "You must provide a method name.");
-		
+
 		List<Method> retval = Lists.newArrayListWithCapacity(1);
-		
+
 		for(Method m : declaredClass.getMethods()){
 			if(m.getName().trim().equalsIgnoreCase(name.trim())){
 				m.setAccessible(true);
 				retval.add(m);
 			}
 		}
-		
+
 		return retval.toArray(new Method[0]);
 	}
-	
+
 	/**
 	 * Gets the component of the package name of NMS and OBC classes which represents the minecraft server version.
 	 * Determines this value by using the fully qualified class and package name of the CraftBukkit implementation class of {@link Server}.
