@@ -1,6 +1,6 @@
-package me.pagekite.glen3b.library.bukkit;
+package me.pagekite.glen3b.library.bukkit.protocol;
 
-import me.pagekite.glen3b.library.bukkit.protocol.ProtocolOperationResult;
+import me.pagekite.glen3b.library.bukkit.Utilities;
 
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
@@ -25,11 +25,14 @@ import com.comphenix.protocol.wrappers.nbt.NbtFactory;
  * implementations of many protocol utility methods in the {@link Utilities}
  * class.
  * 
- * This class is not in the {@link me.pagekite.glen3b.library.bukkit.protocol} package because it is internally used, and restrictions with access modifiers are not possible in that package.
+ * <p>
+ * <b>This is an internally used class which should not be instantiated or called directly by client code.</b>
+ * Wrappers in the {@code Utilities} class call this type for you.
+ * </p>
  * 
  * @author Glen Husman
  */
-final class ProtocolUtilities {
+public final class ProtocolUtilities {
 
 	/**
 	 * Initialize protocol utilities.
@@ -76,13 +79,6 @@ final class ProtocolUtilities {
 		return null;
 	}
 
-
-	/**
-	 * Set the glowing status of an item stack.
-	 *
-	 * @param stack the item stack to modify
-	 * @param glowing true to make the item glow, false to stop it glowing
-	 */
 	public ProtocolOperationResult setGlowing(ItemStack stack, boolean glowing) {
 
 		try{
@@ -107,7 +103,7 @@ final class ProtocolUtilities {
 		}
 	}
 
-	private void addGlow(ItemStack[] stacks) {
+	public void addGlow(ItemStack[] stacks) {
 		for (ItemStack stack : stacks) {
 			if (stack != null && stack.hasItemMeta()) {
 				if(stack.containsEnchantment(GLOW_ENCHANT_INDICATOR) && stack.getEnchantmentLevel(GLOW_ENCHANT_INDICATOR) == GLOW_ENCHANT_LEVEL){
