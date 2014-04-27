@@ -7,12 +7,6 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.Plugin;
 
-import com.comphenix.protocol.PacketType;
-import com.comphenix.protocol.ProtocolLibrary;
-import com.comphenix.protocol.events.ListenerPriority;
-import com.comphenix.protocol.events.PacketAdapter;
-import com.comphenix.protocol.events.PacketContainer;
-import com.comphenix.protocol.events.PacketEvent;
 import com.comphenix.protocol.utility.MinecraftReflection;
 import com.comphenix.protocol.wrappers.nbt.NbtCompound;
 import com.comphenix.protocol.wrappers.nbt.NbtFactory;
@@ -42,30 +36,7 @@ public final class ProtocolUtilities {
 	 *            handle packet reception.
 	 */
 	public void init(Plugin plugin) {
-		// Prevents ghost step sounds and particles (testing needs to be done)
-		ProtocolLibrary.getProtocolManager().addPacketListener(
-				new PacketAdapter(PacketAdapter
-						.params(plugin, PacketType.Play.Server.SET_SLOT,
-								PacketType.Play.Server.WINDOW_ITEMS)
-								.serverSide().listenerPriority(ListenerPriority.HIGH)) {
 
-					@Override
-					public void onPacketSending(PacketEvent event) {
-						// TODO: Can this be done more efficiently?
-						PacketContainer cloned = event.getPacket().deepClone();
-
-						if (event.getPacketType().equals(PacketType.Play.Server.SET_SLOT)) {
-							ItemStack[] toMod = new ItemStack[] { cloned.getItemModifier().read(0) };
-							addGlow(toMod);
-							cloned.getItemModifier().write(0, toMod[0]);
-						} else {
-							ItemStack[] toMod = cloned.getItemArrayModifier().read(0);
-							addGlow(toMod);
-							cloned.getItemArrayModifier().write(0, toMod);
-						}
-						event.setPacket(cloned);
-					}
-				});
 	}
 
 	private static final Enchantment GLOW_ENCHANT_INDICATOR = Enchantment.LURE;
@@ -87,16 +58,25 @@ public final class ProtocolUtilities {
 				if(m.hasEnchants()){
 					return ProtocolOperationResult.FAILURE;
 				}
-				m.addEnchant(GLOW_ENCHANT_INDICATOR, GLOW_ENCHANT_LEVEL, true);
+					if (stack != null && stack.hasItemMeta()) {
+						if(stack.containsEnchantment(GLOW_ENCHANT_INDICATOR) && stack.getEnchantmentLevel(GLOW_ENCHANT_INDICATOR) == GLOW_ENCHANT_LEVEL){
+							// If our custom enchant exists and is set to the appropriate value, overwrite enchantment glow so it will render as glow w/o enchants
+							NbtCompound compound = (NbtCompound) NbtFactory.fromItemTag(stack);
+							compound.put(NbtFactory.ofList("ench"));
+							NbtFactory.setItemTag(stack, compound);
+						}
+					
+				}
 			}else{
-				if(stack.containsEnchantment(GLOW_ENCHANT_INDICATOR) && stack.getEnchantmentLevel(GLOW_ENCHANT_INDICATOR) == GLOW_ENCHANT_LEVEL){
-					m.removeEnchant(GLOW_ENCHANT_INDICATOR);
-				}else{
-					return ProtocolOperationResult.NOT_NEEDED;
+					if (stack != null && stack.hasItemMeta()) {
+							// If our custom enchant exists and is set to the appropriate value, overwrite enchantment glow so it will render as glow w/o enchants
+							NbtCompound compound = (NbtCompound) NbtFactory.fromItemTag(stack);
+							compound.remove("ench");
+							NbtFactory.setItemTag(stack, compound);
 				}
 			}
 			stack.setItemMeta(m);
-			return ProtocolOperationResult.SUCCESS_QUEUED;
+			return ProtocolOperationResult.SUCCESS;
 		}catch(Exception ex){
 			ex.printStackTrace();
 			return ProtocolOperationResult.FAILURE;
@@ -104,15 +84,6 @@ public final class ProtocolUtilities {
 	}
 
 	public void addGlow(ItemStack[] stacks) {
-		for (ItemStack stack : stacks) {
-			if (stack != null && stack.hasItemMeta()) {
-				if(stack.containsEnchantment(GLOW_ENCHANT_INDICATOR) && stack.getEnchantmentLevel(GLOW_ENCHANT_INDICATOR) == GLOW_ENCHANT_LEVEL){
-					// If our custom enchant exists and is set to the appropriate value, overwrite enchantment glow so it will render as glow w/o enchants
-					NbtCompound compound = (NbtCompound) NbtFactory.fromItemTag(stack);
-					compound.put(NbtFactory.ofList("ench"));
-					NbtFactory.setItemTag(stack, compound);
-				}
-			}
-		}
+		
 	}
 }
