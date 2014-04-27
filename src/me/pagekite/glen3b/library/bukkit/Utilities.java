@@ -699,14 +699,15 @@ public final class Utilities {
 		 * <p>
 		 * Adds or removes glow to an {@link ItemStack}. This is accomplished by sending packets to the client
 		 * that contain an enchantments NBT list that is empty. A "magic enchant" stored on the server as a constant is used to accomplish this.
+		 * As with any packet-modifying operation, glitches may occur. Found bugs should be filed on the GBukkitLib project.
 		 * </p>
 		 * <p>
-		 * For this operation to succeed, ProtocolLib is required on the server.
-		 * A lack of this plugin will be indicated with a return value of
+		 * For this operation to succeed, a protocol library is required on the server.
+		 * A lack of one will be indicated with a return value of
 		 * {@link ProtocolOperationResult#LIBRARY_NOT_AVAILABLE}.
 		 * </p>
 		 * <p>
-		 * If this operation succeeds and no unexpected errors occur, the return value will be {@link ProtocolOperationResult#SUCCESS_QUEUED}. The reason for this is that this method merely sets an enchantment which will be parsed by packet interceptors. Protocol operations will display the item as glowing <b>when the appropriate packets are sent</b>. Therefore, the rendering of the glow is not instant, and will occur in the future, hence the indication of queued behavior.
+		 * If this operation succeeds and no unexpected errors occur, the return value will be {@link ProtocolOperationResult#SUCCESS_QUEUED}. The reason for this is that this method merely sets an enchantment which will be parsed by packet interceptors. Protocol operations will display the item as glowing <i>when the appropriate packets are sent</i>. Therefore, the rendering of the glow is not instant, and will occur in the future, hence the indication of queued behavior.
 		 * </p>
 		 * <p>
 		 * If the {@code ItemStack} is not a {@code CraftItemStack}, the code will not function.
@@ -715,7 +716,7 @@ public final class Utilities {
 		 * </p>
 		 * @param stack The {@link ItemStack} to render as having no enchantments but having the effect.
 		 * @param isGlowing Whether to make the {@code ItemStack} artificially glow.
-		 * @return A non-null indicator of the success of this operation.
+		 * @return A non-null indicator of the success of this operation, as known by the server.
 		 */
 		public static ProtocolOperationResult setItemGlowing(ItemStack stack, boolean isGlowing){
 			Validate.notNull(stack, "The item to modify must not be null.");
