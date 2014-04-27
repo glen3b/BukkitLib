@@ -511,9 +511,15 @@ public final class Utilities {
 		private static Object methodHandleSynclock = new Object();
 
 		/**
+		 * <p>
 		 * This method provides a reasonably version independent way to instantly explode {@code FireworkEffect}s at a given location.
 		 * It uses reflection to accomplish this. This implementation should be thread safe, but no tests have been made against it. Please file a bug on the GBukkitLib project if you experience a concurrency issue.
+		 * </p>
 		 * <p>
+		 * With this method, some fireworks will not explode and generate the effect. The cause of this is currently unknown.
+		 * </p>
+		 * <p>
+		 * <h5><u>Licensing</u></h5>
 		 * You are welcome to use, redistribute, modify and destroy your own copies of this source with the following conditions:
 		 * <ol>
 		 * <li>No warranty is given or implied.</li>
@@ -569,8 +575,8 @@ public final class Utilities {
 				FireworkMeta data = fw.getFireworkMeta();
 				// clear existing
 				data.clearEffects();
-				// power of one
-				data.setPower(1);
+				// power of zero - according to CB source this is allowed
+				data.setPower(0);
 				// add the effects
 				data.addEffects(effects);
 				// set the meta
