@@ -529,7 +529,7 @@ public final class Utilities {
 		 * It uses reflection to accomplish this. This implementation should be thread safe, but no tests have been made against it. Please file a bug on the GBukkitLib project if you experience a concurrency issue.
 		 * </p>
 		 * <p>
-		 * With this method, some fireworks will not explode and generate the effect. The cause of this is currently unknown.
+		 * With this method, some fireworks will not explode and generate the effect. The cause of this is currently unknown. It is suspected that it is a client-side issue.
 		 * </p>
 		 * <p>
 		 * <h5><u>Licensing</u></h5>
@@ -537,12 +537,12 @@ public final class Utilities {
 		 * <ol>
 		 * <li>No warranty is given or implied.</li>
 		 * <li>All damage is your own responsibility.</li>
-		 * <li>You provide credit publicly to the original source should you release the plugin.</li>
+		 * <li>You provide credit publicly to the <a href="https://forums.bukkit.org/threads/util-fireworkeffectplayer-v1-0.119424/">original source</a> should you release the plugin.</li>
 		 * </ol>
 		 * </p>
 		 * @param location The location at which to display the firework effects.
 		 * @param effects The firework effects to render.
-		 * @author codename_B
+		 * @author <a href="http://dev.bukkit.org/profiles/codename_B/">codename_B</a>
 		 */
 		public static void playFirework(Location location, FireworkEffect... effects) {
 			Validate.notNull(location, "The location of the effect must not be null.");
