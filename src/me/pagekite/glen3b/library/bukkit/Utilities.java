@@ -17,8 +17,8 @@
 
 package me.pagekite.glen3b.library.bukkit;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -509,16 +509,13 @@ public final class Utilities {
 		 */
 		static void resetCache(){
 			synchronized(methodHandleSynclock){
-				world_getHandle = null;
-				nms_world_broadcastEntityEffect = null;
-				firework_getHandle = null;
+				firework_ticksFlown = null;
 			}
 		}
 
 		// internal references, performance improvements
-		private static Method world_getHandle = null;
-		private static Method nms_world_broadcastEntityEffect = null;
-		private static Method firework_getHandle = null;
+		private static Field firework_ticksFlown = null;
+		// Do not need to store getHandle Method because ReflectionUtilities caches it
 
 		// used for thread safety
 		private static Object methodHandleSynclock = new Object();
@@ -529,20 +526,19 @@ public final class Utilities {
 		 * It uses reflection to accomplish this. This implementation should be thread safe, but no tests have been made against it. Please file a bug on the GBukkitLib project if you experience a concurrency issue.
 		 * </p>
 		 * <p>
-		 * With this method, some fireworks will not explode and generate the effect. The cause of this is currently unknown. It is suspected that it is a client-side issue.
-		 * </p>
-		 * <p>
 		 * <h5><u>Licensing</u></h5>
 		 * You are welcome to use, redistribute, modify and destroy your own copies of this source with the following conditions:
 		 * <ol>
 		 * <li>No warranty is given or implied.</li>
 		 * <li>All damage is your own responsibility.</li>
-		 * <li>You provide credit publicly to the <a href="https://forums.bukkit.org/threads/util-fireworkeffectplayer-v1-0.119424/">original source</a> should you release the plugin.</li>
+		 * <li>You provide credit publicly to the original source should you release the plugin.</li>
 		 * </ol>
 		 * </p>
 		 * @param location The location at which to display the firework effects.
 		 * @param effects The firework effects to render.
-		 * @author <a href="http://dev.bukkit.org/profiles/codename_B/">codename_B</a>
+		 * @author <a href="https://forums.bukkit.org/members/codename_b.39980/">codename_B</a> (<a href="https://forums.bukkit.org/threads/util-fireworkeffectplayer-v1-0.119424/">original code</a>)
+		 * @author <a href="https://forums.bukkit.org/members/bob7.90613106/">bob7</a> (<a href="https://forums.bukkit.org/threads/util-fireworkeffectplayer-v1-0.119424/page-5#post-2144535">modified code</a>)
+		 * @author Glen Husman (modifications, synchronization, documentation)
 		 */
 		public static void playFirework(Location location, FireworkEffect... effects) {
 			Validate.notNull(location, "The location of the effect must not be null.");
@@ -554,7 +550,6 @@ public final class Utilities {
 				World world = location.getWorld();
 				Firework fw = world.spawn(location, Firework.class);
 				// the net.minecraft.server.World
-				Object nms_world = null;
 				Object nms_firework = null;
 
 				// Wait on synclock so no two threads attempt to retrieve Method objects at the same time
@@ -562,24 +557,14 @@ public final class Utilities {
 					/*
 					 * The reflection part, this gives us access to funky ways of messing around with things
 					 */
-					if(world_getHandle == null || firework_getHandle == null) {
-						// get the methods of the CraftBukkit objects and make them accessible
-						// Use getClass() not Whatever.class because we need the CraftWhatever class instance, not Whatever's class instance
-						world_getHandle = ReflectionUtilities.getMethodsByName(world.getClass(), "getHandle")[0];
-						firework_getHandle = ReflectionUtilities.getMethodsByName(fw.getClass(), "getHandle")[0];
-					}
-					// invoke with no arguments
 
-					nms_world = world_getHandle.invoke(world);
-
-					// null checks are fast, so having this separate is OK
-					if(nms_world_broadcastEntityEffect == null) {
-						// get the method of the nms_world
-						nms_world_broadcastEntityEffect = ReflectionUtilities.getMethodsByName(nms_world.getClass(), "broadcastEntityEffect")[0];
+					nms_firework = ReflectionUtilities.getNMSHandle(fw);
+					
+					if(firework_ticksFlown == null){
+						firework_ticksFlown = nms_firework.getClass().getDeclaredField("ticksFlown");
+						firework_ticksFlown.setAccessible(true);
 					}
 				}
-
-				nms_firework = firework_getHandle.invoke(fw);
 
 				/*
 				 * Now we mess with the metadata, allowing nice clean spawning of a pretty firework (look, pretty lights!)
@@ -588,22 +573,17 @@ public final class Utilities {
 				FireworkMeta data = fw.getFireworkMeta();
 				// clear existing
 				data.clearEffects();
-				// power of zero - according to CB source this is allowed
-				data.setPower(0);
+				// power of one
+				data.setPower(1);
 				// add the effects
 				data.addEffects(effects);
 				// set the meta
 				fw.setFireworkMeta(data);
-				/*
-				 * Finally, we broadcast the entity effect then kill our fireworks object
-				 */
-
-				// invoke with arguments
-				nms_world_broadcastEntityEffect.invoke(nms_world, new Object[] {nms_firework, (byte) 17});
-				// remove from the game
-				fw.remove();
+				
+				// Set the "ticks flown" to a high value - game will remove everything after playing the effect
+				firework_ticksFlown.set(fw, 123);
 			} catch (IllegalAccessException | IllegalArgumentException
-					| InvocationTargetException e) {
+					| InvocationTargetException | NoSuchFieldException | SecurityException | NoSuchMethodException e) {
 				// Reflection error, rethrow exception
 				throw new RuntimeException("The reflective operations required for this method's functionality failed.", e);
 			}
