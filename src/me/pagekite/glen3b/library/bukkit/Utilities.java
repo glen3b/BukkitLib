@@ -17,8 +17,6 @@
 
 package me.pagekite.glen3b.library.bukkit;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -508,85 +506,43 @@ public final class Utilities {
 		 * Reset internal cache.
 		 */
 		static void resetCache(){
-			synchronized(methodHandleSynclock){
-				firework_ticksFlown = null;
-			}
+			// Nothing!
 		}
-
-		// internal references, performance improvements
-		private static Field firework_ticksFlown = null;
-		// Do not need to store getHandle Method because ReflectionUtilities caches it
-
-		// used for thread safety
-		private static Object methodHandleSynclock = new Object();
 
 		/**
 		 * <p>
-		 * This method provides a reasonably version independent way to instantly explode {@code FireworkEffect}s at a given location.
-		 * It uses reflection to accomplish this. This implementation should be thread safe, but no tests have been made against it. Please file a bug on the GBukkitLib project if you experience a concurrency issue.
-		 * </p>
-		 * <p>
-		 * <h5><u>Licensing</u></h5>
-		 * You are welcome to use, redistribute, modify and destroy your own copies of this source with the following conditions:
-		 * <ol>
-		 * <li>No warranty is given or implied.</li>
-		 * <li>All damage is your own responsibility.</li>
-		 * <li>You provide credit publicly to the original source should you release the plugin.</li>
-		 * </ol>
+		 * This method provides a version independent way to instantly explode {@code FireworkEffect}s at a given location.
+		 * It uses {@link org.bukkit.entity.Entity#setTicksLived(int) setTicksLived} to accomplish this.
 		 * </p>
 		 * @param location The location at which to display the firework effects.
 		 * @param effects The firework effects to render.
-		 * @author <a href="https://forums.bukkit.org/members/codename_b.39980/">codename_B</a> (<a href="https://forums.bukkit.org/threads/util-fireworkeffectplayer-v1-0.119424/">original code</a>)
-		 * @author <a href="https://forums.bukkit.org/members/bob7.90613106/">bob7</a> (<a href="https://forums.bukkit.org/threads/util-fireworkeffectplayer-v1-0.119424/page-5#post-2144535">modified code</a>)
-		 * @author Glen Husman (modifications, synchronization, documentation)
+		 * @author Glen Husman
 		 */
 		public static void playFirework(Location location, FireworkEffect... effects) {
 			Validate.notNull(location, "The location of the effect must not be null.");
 			Validate.notNull(location.getWorld(), "The location must not have a null world.");
 			Validate.noNullElements(effects, "Null firework effects are not allowed.");
 
-			try {
-				// Bukkity load (CraftFirework)
-				World world = location.getWorld();
-				Firework fw = world.spawn(location, Firework.class);
-				// the net.minecraft.server.World
-				Object nms_firework = null;
+			// Bukkity load (CraftFirework)
+			World world = location.getWorld();
+			Firework fw = world.spawn(location, Firework.class);
 
-				// Wait on synclock so no two threads attempt to retrieve Method objects at the same time
-				synchronized(methodHandleSynclock){
-					/*
-					 * The reflection part, this gives us access to funky ways of messing around with things
-					 */
+			/*
+			 * Now we mess with the metadata, allowing nice clean spawning of a pretty firework (look, pretty lights!)
+			 */
+			// metadata load
+			FireworkMeta data = fw.getFireworkMeta();
+			// clear existing
+			data.clearEffects();
+			// power of one
+			data.setPower(1);
+			// add the effects
+			data.addEffects(effects);
+			// set the meta
+			fw.setFireworkMeta(data);
 
-					nms_firework = ReflectionUtilities.getNMSHandle(fw);
-					
-					if(firework_ticksFlown == null){
-						firework_ticksFlown = nms_firework.getClass().getDeclaredField("ticksFlown");
-						firework_ticksFlown.setAccessible(true);
-					}
-				}
-
-				/*
-				 * Now we mess with the metadata, allowing nice clean spawning of a pretty firework (look, pretty lights!)
-				 */
-				// metadata load
-				FireworkMeta data = fw.getFireworkMeta();
-				// clear existing
-				data.clearEffects();
-				// power of one
-				data.setPower(1);
-				// add the effects
-				data.addEffects(effects);
-				// set the meta
-				fw.setFireworkMeta(data);
-				
-				// Set the "ticks flown" to a high value - game will remove everything after playing the effect
-				firework_ticksFlown.set(nms_firework, 123);
-			} catch (IllegalAccessException | IllegalArgumentException
-					| InvocationTargetException | NoSuchFieldException | SecurityException | NoSuchMethodException e) {
-				// Reflection error, rethrow exception
-				throw new RuntimeException("The reflective operations required for this method's functionality failed.", e);
-			}
+			// Set the "ticks flown" to a high value - game will remove everything after playing the effect
+			fw.setTicksLived(123);
 		}
 
 	}
