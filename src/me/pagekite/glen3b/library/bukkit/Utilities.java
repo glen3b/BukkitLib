@@ -581,7 +581,7 @@ public final class Utilities {
 				fw.setFireworkMeta(data);
 				
 				// Set the "ticks flown" to a high value - game will remove everything after playing the effect
-				firework_ticksFlown.set(fw, 123);
+				firework_ticksFlown.set(nms_firework, 123);
 			} catch (IllegalAccessException | IllegalArgumentException
 					| InvocationTargetException | NoSuchFieldException | SecurityException | NoSuchMethodException e) {
 				// Reflection error, rethrow exception
