@@ -222,6 +222,10 @@ public final class ReflectionUtilities {
 		// return handleMethod.invoke(object, args);
 	}
 
+	private static Method _bukkitAPIItemStackToNMSStack;
+	private static Method _nmsItemStackToCraftbukkitItemStack;
+	private static Class<?> _nmsItemStackClass;
+
 	/**
 	 * Returns a {@code CraftItemStack} instance representing the specified
 	 * instance. If reflective NBT operations are to be performed on this stack,
@@ -232,9 +236,9 @@ public final class ReflectionUtilities {
 	 * The return of this method will be {@code null} if any of the following
 	 * are true:
 	 * <ul>
-	 * <li>ProtocolLib (and its bundled minecraft reflection utilities) are not
-	 * available on this server.</li>
-	 * <li>An unexpected error occurs.</li>
+	 * <li>Reflective utilities are not compatible with this server.</li>
+	 * <li>An unexpected error occurs. Due to this behavior, no exceptions
+	 * except argument invalidity exceptions will be thrown from this method.</li>
 	 * </ul>
 	 * </p>
 	 * 
@@ -244,11 +248,43 @@ public final class ReflectionUtilities {
 	 *         data.
 	 */
 	public static ItemStack getCraftStack(ItemStack instance) {
+		Validate.notNull(instance, "The ItemStack is null.");
+
 		try {
-			if (Utilities._protocolLib == null) {
-				return null;
+			if (Utilities._protocolLib != null) {
+				return Utilities._protocolLib.assureCraftItemStack(instance);
+
+			} else {
+				if (_bukkitAPIItemStackToNMSStack == null) {
+					_bukkitAPIItemStackToNMSStack = Class.forName(
+							"org.bukkit.craftbukkit."
+									+ getPackageVersionString()
+									+ ".inventory.CraftItemStack", true,
+									Bukkit.getServer().getClass().getClassLoader())
+									.getMethod("asNMSCopy", ItemStack.class); // Reasonably
+					// hacky
+					// :)
+				}
+
+				Object nmsItemStack = _bukkitAPIItemStackToNMSStack.invoke(
+						null, instance);
+				if (_nmsItemStackClass == null) {
+					_nmsItemStackClass = nmsItemStack.getClass();
+				}
+
+				if (_nmsItemStackToCraftbukkitItemStack == null) {
+					_nmsItemStackToCraftbukkitItemStack = Class.forName(
+							"org.bukkit.craftbukkit."
+									+ getPackageVersionString()
+									+ ".inventory.CraftItemStack", true,
+									Bukkit.getServer().getClass().getClassLoader())
+									.getMethod("asCraftMirror", _nmsItemStackClass);
+				}
+
+				// Next, actually build the stack
+				return (ItemStack) _nmsItemStackToCraftbukkitItemStack.invoke(
+						null, nmsItemStack);
 			}
-			return Utilities._protocolLib.assureCraftItemStack(instance);
 		} catch (Exception except) {
 			// Unexpected error
 			// For the purposes of reflection, we don't want client code to have
