@@ -48,6 +48,7 @@ import org.bukkit.inventory.meta.FireworkMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitTask;
 
@@ -72,17 +73,19 @@ public final class Utilities {
 	/**
 	 * Initializes the utilities class with event registrations and such. Internal method, not meant to be called by user code.
 	 * @param hostPlugin The GBukkitLib plugin instance.
-	 * @param protocolLib ProtocolLib utility wrapper, or {@code null} if it does not exist.
 	 */
-	static void initialize(GBukkitLibraryPlugin hostPlugin, @Nullable ProtocolUtilities protocolLib){
+	static void initialize(GBukkitLibraryPlugin hostPlugin){
 		synchronized(initializationSynclock){
 			Preconditions.checkState(_protocolLib == null, "Utilities has not been cleaned up since last initialization! Call cleanup(Plugin) to clean up internal fields before you reinitialize it.");
 
-			if(protocolLib != null){
-				protocolLib.init(hostPlugin);
+			RegisteredServiceProvider<ProtocolUtilities> pLib = Bukkit.getServicesManager().getRegistration(ProtocolUtilities.class);
+			
+			if(pLib != null && pLib.getProvider() != null){
+				_protocolLib = pLib.getProvider();
+				_protocolLib.init(hostPlugin);
+			}else{
+				_protocolLib = null;
 			}
-
-			_protocolLib = protocolLib;
 
 			Utilities.Effects.resetCache();
 		}

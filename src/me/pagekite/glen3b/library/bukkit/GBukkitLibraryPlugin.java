@@ -28,6 +28,7 @@ import me.pagekite.glen3b.library.bukkit.datastore.Message;
 import me.pagekite.glen3b.library.bukkit.datastore.MessageProvider;
 import me.pagekite.glen3b.library.bukkit.datastore.SerializableLocation;
 import me.pagekite.glen3b.library.bukkit.protocol.ProtocolLibUtilImplementation;
+import me.pagekite.glen3b.library.bukkit.protocol.ProtocolUtilities;
 import me.pagekite.glen3b.library.bukkit.teleport.QueuedTeleport;
 import me.pagekite.glen3b.library.bukkit.teleport.ServerTeleportationManager;
 import me.pagekite.glen3b.library.bukkit.teleport.TeleportationManager;
@@ -304,7 +305,14 @@ public final class GBukkitLibraryPlugin extends JavaPlugin {
 		this.getServer().getServicesManager().register(ServerTeleportationManager.class, new DefaultServerTeleportationManager(this), this, ServicePriority.Highest);
 		ConfigurationSerialization.registerClass(SerializableLocation.class);
 		Plugin protocol = getServer().getPluginManager().getPlugin("ProtocolLib");
-		Utilities.initialize(this, protocol == null || !protocol.isEnabled() ? null : new ProtocolLibUtilImplementation());
+		if(protocol != null && protocol.isEnabled()){
+			this.getServer().getServicesManager().register(ProtocolUtilities.class, new ProtocolLibUtilImplementation(), this, ServicePriority.Highest);
+		}else{
+			// TODO: Support more protocol libraries
+			// TODO: Add reflective protocol operation support
+			this.getServer().getServicesManager().register(ProtocolUtilities.class, null, this, ServicePriority.Lowest);
+		}
+		Utilities.initialize(this);
 		saveDefaultConfig();
 	}
 	
