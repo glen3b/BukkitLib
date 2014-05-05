@@ -184,6 +184,7 @@ public final class ServerTransportManager implements PluginMessageListener {
 					while(handlerIterator.hasNext()){
 						ResultReceived<String[]> handler = handlerIterator.next();
 						handler.onReceive(playerList);
+						handlerIterator.remove();
 					}
 				}
 			}

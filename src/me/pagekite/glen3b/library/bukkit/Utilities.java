@@ -334,7 +334,7 @@ public final class Utilities {
 		 * Schedules a task to execute every second, starting one second after the call to this method.
 		 * @param host The plugin under which to schedule this task. This parameter may not be {@code null}.
 		 * @param task The task to execute on the main server thread after one server tick. It must not be {@code null}.
-		 * @param Whether to run this task asynchronously. If this is true, the task will be executed on a separate thread from the main server thread. Asynchronous tasks should <b>never</b> access any Bukkit API other than the scheduler, which can be used to schedule a synchronous task. Synchronous tasks block the main server thread, but have the liberty of full Bukkit API access.
+		 * @param async Whether to run this task asynchronously. If this is true, the task will be executed on a separate thread from the main server thread. Asynchronous tasks should <b>never</b> access any Bukkit API other than the scheduler, which can be used to schedule a synchronous task. Synchronous tasks block the main server thread, but have the liberty of full Bukkit API access.
 		 * @return The scheduled task as returned by the bukkit scheduler.
 		 * @see org.bukkit.scheduler.BukkitScheduler#runTaskTimer(Plugin plugin, Runnable task, long delay)
 		 * @see org.bukkit.scheduler.BukkitScheduler#runTaskTimerAsynchronously(Plugin, Runnable, long)
@@ -350,7 +350,7 @@ public final class Utilities {
 		 * Schedules a task to execute after one tick.
 		 * @param host The plugin under which to schedule this task. This parameter may not be {@code null}.
 		 * @param task The task to execute after one server tick. It must not be {@code null}.
-		 * @param Whether to run this task asynchronously. If this is true, the task will be executed on a separate thread from the main server thread. Asynchronous tasks should <b>never</b> access any Bukkit API other than the scheduler, which can be used to schedule a synchronous task. Synchronous tasks block the main server thread, but have the liberty of full Bukkit API access.
+		 * @param async Whether to run this task asynchronously. If this is true, the task will be executed on a separate thread from the main server thread. Asynchronous tasks should <b>never</b> access any Bukkit API other than the scheduler, which can be used to schedule a synchronous task. Synchronous tasks block the main server thread, but have the liberty of full Bukkit API access.
 		 * @return The scheduled task as returned by the bukkit scheduler.
 		 * @see org.bukkit.scheduler.BukkitScheduler#runTaskLater(Plugin plugin, Runnable task, long delay)
 		 * @see org.bukkit.scheduler.BukkitScheduler#runTaskLaterAsynchronously(Plugin, Runnable, long)
