@@ -302,6 +302,24 @@ public final class ReflectionUtilities {
 	 * {@link Method} instance is cached internally, so repeated calls to this
 	 * method with the same parameter type should be relatively efficient.
 	 * 
+	 * <p>
+	 * Certain classes have special behaviors, and are documented below.
+	 * <table>
+	 * <tr>
+	 * <td><b>Class Name</b></td>
+	 * <td><b>Output</b></td>
+	 * </tr>
+	 * <tr>
+	 * <td>{@code ItemStack}</td>
+	 * <td>A copy of the {@code ItemStack} as a {@code net.minecraft.server.ItemStack}, as retrieved by static methods in the {@code CraftItemStack} implementation class.
+	 * </tr>
+	 * <tr>
+	 * <td>Any CraftBukkit type (with a {@code getHandle} method)</td>
+	 * <td>The return value of that type's {@code getHandle} method on that instance.</td>
+	 * </tr>
+	 * </table>
+	 * </p>
+	 * 
 	 * @param entity
 	 *            The bukkit object instance for which to retrieve the handle
 	 *            using the {@code getHandle()} method.
@@ -344,6 +362,35 @@ public final class ReflectionUtilities {
 			_getHandleMethods.put(entity.getClass(), handleMethod);
 			return handleMethod.invoke(entity);
 		} catch (NoSuchMethodException err) {
+			if(entity instanceof ItemStack){
+				// A CraftItemStack was retrieved
+				// We can assume that the item passed in was a bukkit ItemStack
+				// And that craftStack instanceof CraftItemStack
+				// Therefore, we should convert to NMS stack and return
+				// Using CraftItemStack.asNMSCopy(ItemStack)
+				if (_bukkitAPIItemStackToNMSStack == null) {
+					try {
+						_bukkitAPIItemStackToNMSStack = Class.forName(
+								"org.bukkit.craftbukkit."
+										+ getPackageVersionString()
+										+ ".inventory.CraftItemStack", true,
+										Bukkit.getServer().getClass().getClassLoader())
+										.getMethod("asNMSCopy", ItemStack.class);
+						// Reasonably hacky :)
+					} catch (ClassNotFoundException e) {
+						// Unexpected reflective error
+						// The class should exist
+						// However, it should be assumed that this
+						// plugin cannot convert NMS stacks, so according
+						// to us the method doesn't exist
+						// Therefore, we should rethrow the exception
+						throw (NoSuchMethodException) new NoSuchMethodException(
+								"The specified object does not have a getHandle method.")
+						.initCause(e);
+					}
+				}
+				return _bukkitAPIItemStackToNMSStack.invoke(null, entity);
+			}
 			_getHandleMethods.put(entity.getClass(), null);
 			throw (NoSuchMethodException) new NoSuchMethodException(
 					"The specified object does not have a getHandle method.")
