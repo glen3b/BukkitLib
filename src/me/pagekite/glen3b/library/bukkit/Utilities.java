@@ -675,7 +675,7 @@ public final class Utilities {
 		 * @return The modified item.
 		 */
 		public static ItemStack setItemName(ItemStack item, String name) {
-			return setItemNameAndLore(item, name, null);
+			return setItemNameAndLore(item, name, (String[])null);
 		}
 
 		/**
@@ -724,7 +724,7 @@ public final class Utilities {
 		 * @return The modified item.
 		 */
 		public static ItemStack setItemNameAndLore(ItemStack item, String name,
-				@Nullable String[] lore) {
+				@Nullable String... lore) {
 			Validate.notNull(item, "The item is null.");
 			Validate.notEmpty(name, "The name is null.");
 			// Lore array may be null, we just assume the user wants no lore
@@ -735,7 +735,7 @@ public final class Utilities {
 
 			ItemMeta im = item.getItemMeta();
 			im.setDisplayName(name);
-			im.setLore(lore == null ? emptyList : Arrays.asList(lore));
+			im.setLore(lore == null || lore.length == 0 ? emptyList : Arrays.asList(lore));
 			ItemStack nItem = item.clone();
 			nItem.setItemMeta(im);
 			return nItem;
