@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>me.pagekite.glen3b.library.bukkit</groupId>
+	<artifactId>GBukkitLib</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<name>GBukkitLib</name>
+	<description>A library for commonly used Bukkit API functions and utilities</description>
+	<repositories>
+		<!-- Bukkit can be found at the following repository -->
+		<repository>
+			<id>bukkit-repo</id>
+			<url>http://repo.bukkit.org/content/groups/public/</url>
+		</repository>
+		<repository>
+			<id>comphenix-rep</id>
+			<name>Comphenix Repository</name>
+			<url>http://repo.comphenix.net/content/groups/public</url>
+		</repository>
+	</repositories>
+	<dependencies>
+		<!-- Dependency information -->
+		<dependency>
+			<groupId>org.bukkit</groupId>
+			<artifactId>bukkit</artifactId>
+			<scope>provided</scope>
+			<!-- Bukkit API Version, change if necessary -->
+			<version>1.6.4-R2.0</version>
+		</dependency>
+		<dependency>
+			<groupId>com.comphenix.protocol</groupId>
+			<artifactId>ProtocolLib</artifactId>
+			<version>3.1.0</version>
+		</dependency>
+	</dependencies>
+	<build>
+		<sourceDirectory>src</sourceDirectory>
+		<plugins>
+			<plugin>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.1</version>
+				<configuration>
+					<source>1.7</source>
+					<target>1.7</target>
+				</configuration>
+			</plugin>
+			<plugins>
+    </plugins>
+		</plugins>
+	</build>
+</project>
