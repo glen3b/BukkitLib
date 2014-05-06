@@ -25,8 +25,7 @@
 			<groupId>org.bukkit</groupId>
 			<artifactId>bukkit</artifactId>
 			<scope>provided</scope>
-			<!-- Bukkit API Version, change if necessary -->
-			<version>1.6.4-R2.0</version>
+			<version>1.7.9-R0.1-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>com.comphenix.protocol</groupId>
@@ -35,7 +34,8 @@
 		</dependency>
 	</dependencies>
 	<build>
-		<sourceDirectory>src</sourceDirectory>
+	    <defaultGoal>clean install</defaultGoal>
+		<sourceDirectory>src/main/java</sourceDirectory>
 		<plugins>
 			<plugin>
 				<artifactId>maven-compiler-plugin</artifactId>
@@ -45,8 +45,6 @@
 					<target>1.7</target>
 				</configuration>
 			</plugin>
-			<plugins>
-    </plugins>
-		</plugins>
+			</plugins>
 	</build>
 </project>
