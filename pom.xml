@@ -33,9 +33,26 @@
 			<version>3.1.0</version>
 		</dependency>
 	</dependencies>
+	
 	<build>
 	    <defaultGoal>clean install</defaultGoal>
 		<sourceDirectory>src/main/java</sourceDirectory>
+		<resources>
+      <resource>
+        <directory>src/main/resources</directory>
+        <includes>
+          <include>plugin.yml</include>
+          <include>config.yml</include>
+        </includes>
+      </resource>
+      <resource>
+        <directory>/</directory>
+        <includes>
+          <include>COPYING</include>
+          <include>COPYING.LESSER</include>
+        </includes>
+      </resource>
+    </resources>
 		<plugins>
 			<plugin>
 				<artifactId>maven-compiler-plugin</artifactId>
