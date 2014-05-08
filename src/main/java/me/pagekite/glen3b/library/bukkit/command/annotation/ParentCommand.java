@@ -196,19 +196,19 @@ public abstract class ParentCommand implements TabExecutor {
 					try{
 						if(_params[i] == String.class){
 							// String parameters are easy
-							methodArgs[i] = containsIndex(i - 1, args) ? args[i - 1] : null;
+							methodArgs[i] = containsIndex(i, args) ? args[i] : null;
 						}else if(_params[i] == int.class || _params[i] == Integer.class){
 							// Integer parameters are supported
-							methodArgs[i] = containsIndex(i - 1, args) ? Integer.parseInt(args[i - 1]) : 0;
+							methodArgs[i] = containsIndex(i, args) ? Integer.parseInt(args[i]) : 0;
 						}else if(_params[i] == double.class || _params[i] == Double.class){
 							// Double parameters are supported
-							methodArgs[i] = containsIndex(i - 1, args) ? Double.parseDouble(args[i - 1]) : 0.0;
+							methodArgs[i] = containsIndex(i, args) ? Double.parseDouble(args[i]) : 0.0;
 						}else if(_params[i] == boolean.class || _params[i] == Boolean.class){
 							// Boolean parameters are supported
-							methodArgs[i] = containsIndex(i - 1, args) ? parseBool(args[i - 1]) : false;
+							methodArgs[i] = containsIndex(i, args) ? parseBool(args[i]) : false;
 						}
 						
-						if(!containsIndex(i - 1, args) && !_optionals[i]){
+						if(!containsIndex(i, args) && !_optionals[i]){
 							// TODO: Show proper "not enough args" message
 							sender.sendMessage(Message.get("cmdUnknown"));
 							break;
