@@ -39,6 +39,7 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Server;
 import org.bukkit.World;
+import org.bukkit.command.CommandSender;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Firework;
@@ -47,12 +48,14 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.FireworkMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
+import org.bukkit.permissions.Permission;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitTask;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableSet;
 
 /**
@@ -70,6 +73,64 @@ public final class Utilities {
 	 */
 	static ProtocolUtilities _protocolLib;
 
+	private static final class InstanceofPlayerPredicate implements Predicate<CommandSender>{
+
+		@Override
+		public boolean apply(CommandSender sender) {
+			return sender instanceof Player;
+		}
+
+	}	
+
+	private static final class HasPermissionPredicate implements Predicate<CommandSender>{
+
+		public HasPermissionPredicate(String permNode){
+			_usePermInstance = false;
+			_node = permNode;
+		}
+
+		boolean _usePermInstance;
+
+		public HasPermissionPredicate(Permission node){
+			_usePermInstance = true;
+			_perm = node;
+		}
+		private Permission _perm;
+		private String _node;
+
+		@Override
+		public boolean apply(CommandSender sender) {
+			return _usePermInstance ? _perm == null || sender.hasPermission(_perm) : _node == null || sender.hasPermission(_node);
+		}
+
+	}
+
+	/**
+	 * Returns a predicate that will return {@code true} if and only if the {@link CommandSender} in question is a {@link Player} instance.
+	 * @return A new predicate instance that will return {@code true} when the conditions above are satisfied.
+	 */
+	public static Predicate<CommandSender> playerPredicate(){
+		return new InstanceofPlayerPredicate();
+	}
+
+	/**
+	 * Gets a predicate that returns {@code true} if {@code node} is {@code null} <b>or</b> the {@link CommandSender} in question has the permission node {@code node}.
+	 * @param node The permission node to check.
+	 * @return A predicate that will return {@code true} when the conditions specified above are satisfied.
+	 */
+	public static Predicate<CommandSender> hasPermissionPredicate(String node){
+		return new HasPermissionPredicate(node);
+	}
+
+	/**
+	 * Gets a predicate that returns {@code true} if {@code node} is {@code null} <b>or</b> the {@link CommandSender} in question has the permission node {@code node}.
+	 * @param node The permission node to check.
+	 * @return A predicate that will return {@code true} when the conditions specified above are satisfied.
+	 */
+	public static Predicate<CommandSender> hasPermissionPredicate(Permission node){
+		return new HasPermissionPredicate(node);
+	}
+
 	/**
 	 * Initializes the utilities class with event registrations and such. Internal method, not meant to be called by user code.
 	 * @param hostPlugin The GBukkitLib plugin instance.
@@ -79,7 +140,7 @@ public final class Utilities {
 			Preconditions.checkState(_protocolLib == null, "Utilities has not been cleaned up since last initialization! Call cleanup(Plugin) to clean up internal fields before you reinitialize it.");
 
 			RegisteredServiceProvider<ProtocolUtilities> pLib = Bukkit.getServicesManager().getRegistration(ProtocolUtilities.class);
-			
+
 			if(pLib != null && pLib.getProvider() != null){
 				_protocolLib = pLib.getProvider();
 				_protocolLib.init(hostPlugin);
