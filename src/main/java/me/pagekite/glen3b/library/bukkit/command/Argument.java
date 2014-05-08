@@ -5,7 +5,7 @@ import org.apache.commons.lang.Validate;
 /**
  * Unused class.
  * @author Glen Husman
- * @deprecated  This class is not used, and the command infrastructure will be replaced with a more flexible, reflection-based approach.
+ * @deprecated  This class is not used and will not be used, and the command infrastructure will be replaced with a more flexible, reflection-based approach.
  */
 @Deprecated
 public class Argument {

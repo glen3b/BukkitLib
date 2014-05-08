@@ -17,9 +17,7 @@ import com.google.common.collect.Lists;
  * Represents a command that can be used via a base command.
  * TODO: TSender type argument (validates sender instance, such as players only command) and an Argument class and list.
  * @author Glen Husman
- * @deprecated The command infrastructure will be replaced with a more flexible, reflection-based approach.
  */
-@Deprecated
 public abstract class SubCommand implements PermissionConstrainedCommand {
 
 	/**

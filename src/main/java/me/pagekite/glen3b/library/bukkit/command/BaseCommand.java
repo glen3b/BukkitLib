@@ -24,9 +24,7 @@ import com.google.common.collect.Lists;
 /**
  * Represents a base command that can execute subcommands
  * @author Glen Husman
- * @deprecated The command infrastructure will be replaced with a more flexible, reflection-based approach.
  */
-@Deprecated
 public final class BaseCommand implements TabExecutor {
 
 	private String _helpPageHeader = "Help (page %d):";
