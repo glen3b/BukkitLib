@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 
 import me.pagekite.glen3b.library.bukkit.GBukkitLibraryPlugin;
 import me.pagekite.glen3b.library.bukkit.Utilities;
@@ -216,7 +217,7 @@ public abstract class ParentCommand implements TabExecutor {
 					}catch(IllegalArgumentException except){
 						// Error parsing argument
 						// TODO: Show proper "invalid blah" error message
-						except.printStackTrace();
+						Bukkit.getLogger().log(Level.FINE, "Couldn't parse an argument.", except);
 						sender.sendMessage(Message.get("cmdUnknown"));
 						break;
 					}
