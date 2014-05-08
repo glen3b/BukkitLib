@@ -9,13 +9,17 @@ import org.apache.commons.lang.Validate;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.util.StringUtil;
 
 import com.google.common.collect.Lists;
 
 /**
  * Represents a command that can be used via a base command.
  * TODO: TSender type argument (validates sender instance, such as players only command) and an Argument class and list.
+ * @author Glen Husman
+ * @deprecated The command infrastructure will be replaced with a more flexible, reflection-based approach.
  */
+@Deprecated
 public abstract class SubCommand implements PermissionConstrainedCommand {
 
 	/**
@@ -37,7 +41,7 @@ public abstract class SubCommand implements PermissionConstrainedCommand {
 		ArrayList<String> retVal = Lists.newArrayListWithExpectedSize(possibilities.size());
 		for(PermissionConstrainedCommand strSeq : possibilities){
 			String str = strSeq.getName();
-			if(str != null && (str.toLowerCase().startsWith(arg)) && (sender == null || strSeq.hasAccess(sender))){
+			if(str != null && StringUtil.startsWithIgnoreCase(str, arg) && (sender == null || strSeq.hasAccess(sender))){
 				retVal.add(str);
 			}
 		}
@@ -51,7 +55,9 @@ public abstract class SubCommand implements PermissionConstrainedCommand {
 	 * @param argument The argument in the command as typed so far. May be {@code null}.
 	 * @param possibilities All possibilities for the argument, not accounting for the argument so far.
 	 * @return All possibilities for the argument, accounting for the argument as typed so far. The returned list is guaranteed to be modifiable.
+	 * @deprecated Use {@link StringUtil#copyPartialMatches(String, Iterable, Collection)} instead of this method.
 	 */
+	@Deprecated
 	public static List<String> getTabCompletions(String argument, Collection<? extends CharSequence> possibilities){
 		Validate.noNullElements(possibilities, "There must not be a null tab completion argument.");
 		
@@ -63,7 +69,7 @@ public abstract class SubCommand implements PermissionConstrainedCommand {
 		ArrayList<String> retVal = Lists.newArrayListWithExpectedSize(possibilities.size());
 		for(CharSequence strSeq : possibilities){
 			String str = strSeq.toString();
-			if(str != null && (str.toLowerCase().startsWith(arg))){
+			if(str != null && StringUtil.startsWithIgnoreCase(str, arg)){
 				retVal.add(str);
 			}
 		}
@@ -134,7 +140,7 @@ public abstract class SubCommand implements PermissionConstrainedCommand {
 		
 		ArrayList<String> retVal = Lists.newArrayListWithExpectedSize(onlinePlayers.length / (argSoFar == null || argSoFar.length() == 0 ? 1 : (argSoFar.length() * 2) / 3)); // TODO: Check function performance, maybe make function less "magic"?
 		for(Player playr : onlinePlayers){
-			if(argSoFar == null || playr.getName().toLowerCase().startsWith(argSoFar)){
+			if(argSoFar == null || StringUtil.startsWithIgnoreCase(playr.getName(), argSoFar)){
 				retVal.add(playr.getName());
 			}
 		}

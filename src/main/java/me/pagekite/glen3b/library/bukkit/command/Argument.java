@@ -2,6 +2,12 @@ package me.pagekite.glen3b.library.bukkit.command;
 
 import org.apache.commons.lang.Validate;
 
+/**
+ * Unused class.
+ * @author Glen Husman
+ * @deprecated  This class is not used, and the command infrastructure will be replaced with a more flexible, reflection-based approach.
+ */
+@Deprecated
 public class Argument {
 
 	private String _name;
