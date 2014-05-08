@@ -17,7 +17,7 @@ public @interface Access {
 	/**
 	 * @return A string that represents the permission node required by {@code CommandSender} instances specifying that they are allowed to execute this command.
 	 */
-	String permission();
+	String permission() default "";
 	
 	/**
 	 * @return {@code true} if and only if only players can execute this command.

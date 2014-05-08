@@ -91,7 +91,7 @@ public abstract class ParentCommand implements TabExecutor {
 				Access annotation = method.getAnnotation(Access.class);
 				List<Predicate<CommandSender>> anded = Lists.newArrayListWithExpectedSize(3);
 				anded.add(Predicates.<CommandSender>notNull());
-				if(annotation.permission() != null){
+				if(annotation.permission() != null && !annotation.permission().isEmpty()){
 					anded.add(Utilities.hasPermissionPredicate(annotation.permission()));
 				}
 				if(annotation.playersOnly()){
