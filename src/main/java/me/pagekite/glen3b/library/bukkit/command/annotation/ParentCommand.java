@@ -186,12 +186,12 @@ public abstract class ParentCommand implements TabExecutor {
 			}
 		}
 
-		public void execute(CommandSender sender, String... args){
+		public void execute(CommandSender sender, String[] args){
 			// Assume predicate has been fulfilled
 			Object[] methodArgs = new Object[_params.length];
 			methodArgs[0] = sender;
 
-			if(args.length <= methodArgs.length - 1 && args.length >= (methodArgs.length - _optionalCt) - 1){
+			if(args.length <= methodArgs.length && args.length >= methodArgs.length - _optionalCt){
 				for(int i = 1; i < _params.length; i++){
 					try{
 						if(_params[i] == String.class){
@@ -216,6 +216,7 @@ public abstract class ParentCommand implements TabExecutor {
 					}catch(IllegalArgumentException except){
 						// Error parsing argument
 						// TODO: Show proper "invalid blah" error message
+						except.printStackTrace();
 						sender.sendMessage(Message.get("cmdUnknown"));
 						break;
 					}
@@ -375,9 +376,9 @@ public abstract class ParentCommand implements TabExecutor {
 					i.execute(sender, args);
 				}
 				return true;
+			}else{
+				sender.sendMessage(Message.get("cmdUnknown"));
 			}
-
-			sender.sendMessage(Message.get("cmdUnknown"));
 		}
 		return true;
 	}
