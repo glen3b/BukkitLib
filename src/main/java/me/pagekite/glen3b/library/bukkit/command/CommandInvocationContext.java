@@ -58,6 +58,10 @@ public final class CommandInvocationContext<T extends CommandSender> {
 		Validate.notNull(sender, "The sender of the command must not be null.");
 		Validate.notNull(command, "The command must not be null.");
 		Validate.notEmpty(alias, "The command alias must be specified.");
+		
+		_sender = sender;
+		_cmd = command;
+		_alias = alias;
 	}
 	
 	@Override
