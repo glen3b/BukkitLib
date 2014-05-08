@@ -14,6 +14,7 @@ import java.util.logging.Level;
 
 import me.pagekite.glen3b.library.bukkit.GBukkitLibraryPlugin;
 import me.pagekite.glen3b.library.bukkit.Utilities;
+import me.pagekite.glen3b.library.bukkit.command.CommandInvocationContext;
 import me.pagekite.glen3b.library.bukkit.datastore.Message;
 
 import org.apache.commons.lang.ClassUtils;
@@ -97,12 +98,12 @@ public abstract class ParentCommand implements TabExecutor {
 				}
 				if(annotation.playersOnly()){
 					anded.add(Utilities.playerPredicate());
-					if(!_params[0].isAssignableFrom(Player.class)){
+					if(!_params[0].isAssignableFrom(Player.class) && !CommandInvocationContext.class.isAssignableFrom(_params[0])){
 						// A Player instance cannot be passed in to this method
 						throwIllegalFirstArg();
 					}
 				}else{
-					if(!_params[0].isAssignableFrom(CommandSender.class)){
+					if(!_params[0].isAssignableFrom(CommandSender.class) && !CommandInvocationContext.class.isAssignableFrom(_params[0])){
 						// A CommandSender instance cannot be passed in to this method
 						throwIllegalFirstArg();
 					}
@@ -141,10 +142,10 @@ public abstract class ParentCommand implements TabExecutor {
 				}
 
 				for(Annotation a : paramAnnot){
-					if(a instanceof ArgumentAlias){
-						ArgumentAlias annot = (ArgumentAlias)a;
-						if(annot.alias() != null){
-							alias = annot.alias();
+					if(a instanceof Argument){
+						Argument annot = (Argument)a;
+						if(annot.name() != null){
+							alias = annot.name();
 						}
 					}else if(a instanceof Optional){
 						optional = ((Optional)a).optional();
@@ -187,10 +188,10 @@ public abstract class ParentCommand implements TabExecutor {
 			}
 		}
 
-		public void execute(CommandSender sender, String[] args){
+		public void execute(CommandSender sender, Command cmd, String alias, String[] args){
 			// Assume predicate has been fulfilled
 			Object[] methodArgs = new Object[_params.length];
-			methodArgs[0] = sender;
+			methodArgs[0] = CommandInvocationContext.class.isAssignableFrom(_params[0]) ? getMethod().isAnnotationPresent(Access.class) && getMethod().getAnnotation(Access.class).playersOnly() ? new CommandInvocationContext<Player>((Player)sender, cmd, alias) : new CommandInvocationContext<>(sender, cmd, alias) : sender;
 
 			if(args.length <= methodArgs.length && args.length >= methodArgs.length - _optionalCt){
 				for(int i = 1; i < _params.length; i++){
@@ -248,6 +249,33 @@ public abstract class ParentCommand implements TabExecutor {
 	}
 
 	/**
+	 * Represents the default subcommand, which displays command help.
+	 */
+	@CommandMethod(aliases = { "help", "?" }, description = "Displays help for this command.")
+	public void helpCommand(CommandInvocationContext<CommandSender> context, @Optional @Argument(name = "page") int page){
+
+		if(page < 0){
+			page *= -1;
+		}
+		
+		page--; // Convert to zero-based
+
+		context.getSender().sendMessage(String.format(ChatColor.AQUA + /* TODO Configurable header */ "Help (page %d):", page + 1));
+
+		if(page * getConfig().getInt("commandsPerPage") > _commands.size()){
+			return;
+		}
+
+		for(int i = page * getConfig().getInt("commandsPerPage"); (i < ((page + 1) * getConfig().getInt("commandsPerPage")) && i < _commands.size()); i++){
+			context.getSender().sendMessage(Message.get("cmdHelpEntry").replace("%basecommand%", context.getInvocationAlias()).replace("%usage%", _commands.get(i).getHelpMessage()).replace("%desc%", _commands.get(i).getDescription()));
+		}
+
+		if(((page + 1) * getConfig().getInt("commandsPerPage")) < _commands.size()){
+			context.getSender().sendMessage(Message.get("cmdHelpSeeMore").replace("%basecommand%", context.getInvocationAlias()).replace("%page%", Integer.valueOf(page + 2).toString()));
+		}
+	}
+	
+	/**
 	 * Creates a parent command instance. For this class to successfully execute a command, {@link ParentCommand#register(PluginCommand)} must be invoked. This constructor will iterate through all methods on the runtime class of this instance to determine which ones represent a subcommand, as determined by the {@link CommandMethod} annotation.
 	 */
 	public ParentCommand() {
@@ -255,7 +283,7 @@ public abstract class ParentCommand implements TabExecutor {
 		_commands = new ArrayList<AnnotatedCommandInfo>();
 		Class<?> clazz = getClass();
 		// Loop so if client class A extends ParentCommand and client class B extends A, then all command methods inherited from A are registered in B
-		while(clazz != null && clazz != ParentCommand.class && ClassUtils.isAssignable(clazz, ParentCommand.class)){
+		while(clazz != null && ClassUtils.isAssignable(clazz, ParentCommand.class)){
 			for(Method m: clazz.getDeclaredMethods()) {
 				if(m.isAnnotationPresent(CommandMethod.class)) {
 					AnnotatedCommandInfo info = new AnnotatedCommandInfo(m);
@@ -323,50 +351,12 @@ public abstract class ParentCommand implements TabExecutor {
 
 		return _plugin.getConfig();
 	}
-
+	
 	@Override
 	public boolean onCommand(CommandSender sender,
 			Command command, String alias,
 			String[] args) {
-		if(args.length == 0 || (args.length == 2 && Utilities.Arguments.parseInt(args[1], -1) > 0 && (args[0].equalsIgnoreCase("help") || args[0].equalsIgnoreCase("?"))) || (args.length == 1 && (Utilities.Arguments.parseInt(args[0], -1) > 0 || args[0].equalsIgnoreCase("help") || args[0].equalsIgnoreCase("?")))){
-			//Show help manual and quit
-			int page = 0;
-			if(args.length == 2){
-				try{
-					page = Integer.parseInt(args[1]) - 1;
-				}catch(Throwable thr){
-					//Ignore
-					page = 0;
-				}
-			}else if(args.length == 1 && !args[0].equalsIgnoreCase("help")){
-				try{
-					page = Integer.parseInt(args[0]) - 1;
-				}catch(Throwable thr){
-					//Ignore
-					page = 0;
-				}
-			}
-
-			if(page < 0){
-				page *= -1;
-			}
-
-			sender.sendMessage(String.format(ChatColor.AQUA + /* TODO Configurable header */ "Help (page %d):", page + 1));
-
-			if(page * getConfig().getInt("commandsPerPage") > _commands.size()){
-				return true;
-			}
-
-			for(int i = page * getConfig().getInt("commandsPerPage"); (i < ((page + 1) * getConfig().getInt("commandsPerPage")) && i < _commands.size()); i++){
-				sender.sendMessage(Message.get("cmdHelpEntry").replace("%basecommand%", alias).replace("%usage%", _commands.get(i).getHelpMessage()).replace("%desc%", _commands.get(i).getDescription()));
-			}
-
-			if(((page + 1) * getConfig().getInt("commandsPerPage")) < _commands.size()){
-				sender.sendMessage(Message.get("cmdHelpSeeMore").replace("%basecommand%", alias).replace("%page%", Integer.valueOf(page + 2).toString()));
-			}
-
-			return true;
-		}else if(args.length >= 1){
+		if(args.length >= 1){
 			AnnotatedCommandInfo i = _aliasesToCommands.containsKey(args[0]) ? _aliasesToCommands.get(args[0]) : null;
 
 			if(i != null){
@@ -374,12 +364,19 @@ public abstract class ParentCommand implements TabExecutor {
 					sender.sendMessage(Message.get("cmdNoPermission"));
 				}else{
 					// Execute the command!
-					i.execute(sender, args);
+					i.execute(sender, command, alias, args);
 				}
 				return true;
 			}else{
-				sender.sendMessage(Message.get("cmdUnknown"));
+				if(args.length == 1 && Utilities.Arguments.parseInt(args[0], -1) > 0){
+					// Assume help command
+					helpCommand(new CommandInvocationContext<>(sender, command, alias), Integer.parseInt(args[0]));
+				}else{
+					sender.sendMessage(Message.get("cmdUnknown"));
+				}
 			}
+		}else{
+			helpCommand(new CommandInvocationContext<>(sender, command, alias), 1);
 		}
 		return true;
 	}

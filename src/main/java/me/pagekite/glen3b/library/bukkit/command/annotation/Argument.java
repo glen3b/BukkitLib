@@ -16,8 +16,8 @@ import java.lang.annotation.Target;
 @Target(ElementType.PARAMETER)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-public @interface ArgumentAlias {
+public @interface Argument {
 
-	String alias();
+	String name();
 	
 }
