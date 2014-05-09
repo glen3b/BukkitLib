@@ -18,6 +18,14 @@ import java.lang.annotation.Target;
 @Documented
 public @interface Argument {
 
+	/**
+	 * Gets the help page alias for this argument.
+	 */
 	String name();
+	
+	/**
+	 * Determines whether to allow a space-delimited string as this argument.
+	 */
+	boolean spaces() default false;
 	
 }

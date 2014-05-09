@@ -72,6 +72,7 @@ public abstract class ParentCommand implements TabExecutor {
 
 		private int _optionalCt = 0;
 		private boolean[] _optionals; // Map _params index values to boolean indicating if optional
+		private boolean _continualStringAtEnd = false;
 
 		public AnnotatedCommandInfo(Method method){
 			_method = method;
@@ -141,11 +142,14 @@ public abstract class ParentCommand implements TabExecutor {
 					throw new IllegalStateException(_params[i].toString() + " is not a supported parameter type.");
 				}
 
+				boolean continualStrArg = false;
+
 				for(Annotation a : paramAnnot){
 					if(a instanceof Argument){
 						Argument annot = (Argument)a;
 						if(annot.name() != null){
 							alias = annot.name();
+							continualStrArg = annot.spaces(); // TODO: Instead of this, allow arrays of all supported types to be space delimited
 						}
 					}else if(a instanceof Optional){
 						optional = ((Optional)a).optional();
@@ -153,6 +157,17 @@ public abstract class ParentCommand implements TabExecutor {
 				}
 
 				_optionals[i] = optional;
+
+				if(i < _params.length - 1 && continualStrArg){
+					throw new IllegalStateException(getMethod().toString() + " specified a continual string argument, but it is not the last parameter.");
+				}else if(continualStrArg){
+					// If it IS the last element
+					_continualStringAtEnd = true;
+				}
+
+				if(continualStrArg && _params[i] != String.class){
+					throw new IllegalStateException(getMethod().toString() + " specified a continual string argument, but the argument in question is not a string.");
+				}
 
 				if(optional){
 					prevOptional = true;
@@ -163,6 +178,9 @@ public abstract class ParentCommand implements TabExecutor {
 
 				helpMessage.append(optional ? '[' : '<');
 				helpMessage.append(alias);
+				if(i == _params.length - 1 && continualStrArg){
+					helpMessage.append("...");
+				}
 				helpMessage.append(optional ? ']' : '>');
 
 				if(i != _params.length - 1){
@@ -193,23 +211,35 @@ public abstract class ParentCommand implements TabExecutor {
 			Object[] methodArgs = new Object[_params.length];
 			methodArgs[0] = CommandInvocationContext.class.isAssignableFrom(_params[0]) ? getMethod().isAnnotationPresent(Access.class) && getMethod().getAnnotation(Access.class).playersOnly() ? new CommandInvocationContext<Player>((Player)sender, cmd, alias) : new CommandInvocationContext<>(sender, cmd, alias) : sender;
 
-			if(args.length <= methodArgs.length && args.length >= methodArgs.length - _optionalCt){
+			if((args.length <= methodArgs.length || _continualStringAtEnd) && args.length >= methodArgs.length - _optionalCt){
 				for(int i = 1; i < _params.length; i++){
 					try{
-						if(_params[i] == String.class){
-							// String parameters are easy
-							methodArgs[i] = containsIndex(i, args) ? args[i] : null;
-						}else if(_params[i] == int.class || _params[i] == Integer.class){
-							// Integer parameters are supported
-							methodArgs[i] = containsIndex(i, args) ? Integer.parseInt(args[i]) : 0;
-						}else if(_params[i] == double.class || _params[i] == Double.class){
-							// Double parameters are supported
-							methodArgs[i] = containsIndex(i, args) ? Double.parseDouble(args[i]) : 0.0;
-						}else if(_params[i] == boolean.class || _params[i] == Boolean.class){
-							// Boolean parameters are supported
-							methodArgs[i] = containsIndex(i, args) ? parseBool(args[i]) : false;
+						if(_continualStringAtEnd && i == _params.length - 1){
+							StringBuilder arg = new StringBuilder();
+							for(int j = i; j < args.length; j++){
+								arg.append(args[i]);
+								if(j != args.length - 1){
+									arg.append(' ');
+								}
+							}
+							methodArgs[i] = arg.toString();
+						}else{
+
+							if(_params[i] == String.class){
+								// String parameters are easy
+								methodArgs[i] = containsIndex(i, args) ? args[i] : null;
+							}else if(_params[i] == int.class || _params[i] == Integer.class){
+								// Integer parameters are supported
+								methodArgs[i] = containsIndex(i, args) ? Integer.parseInt(args[i]) : 0;
+							}else if(_params[i] == double.class || _params[i] == Double.class){
+								// Double parameters are supported
+								methodArgs[i] = containsIndex(i, args) ? Double.parseDouble(args[i]) : 0.0;
+							}else if(_params[i] == boolean.class || _params[i] == Boolean.class){
+								// Boolean parameters are supported
+								methodArgs[i] = containsIndex(i, args) ? parseBool(args[i]) : false;
+							}
 						}
-						
+
 						if(!containsIndex(i, args) && !_optionals[i]){
 							// TODO: Show proper "not enough args" message
 							sender.sendMessage(Message.get("cmdUnknown"));
@@ -223,7 +253,7 @@ public abstract class ParentCommand implements TabExecutor {
 						break;
 					}
 				}
-				
+
 				// Method arguments have been computed, we are ready to execute!
 				try {
 					Object returnVal = getMethod().invoke(ParentCommand.this, methodArgs);
@@ -257,11 +287,11 @@ public abstract class ParentCommand implements TabExecutor {
 		if(page == 0){
 			page = 1;
 		}
-		
+
 		if(page < 0){
 			page *= -1;
 		}
-		
+
 		page--; // Convert to zero-based
 
 		context.getSender().sendMessage(String.format(ChatColor.AQUA + /* TODO Configurable header */ "Help (page %d):", page + 1));
@@ -278,7 +308,7 @@ public abstract class ParentCommand implements TabExecutor {
 			context.getSender().sendMessage(Message.get("cmdHelpSeeMore").replace("%basecommand%", context.getInvocationAlias()).replace("%page%", Integer.valueOf(page + 2).toString()));
 		}
 	}
-	
+
 	/**
 	 * Creates a parent command instance. For this class to successfully execute a command, {@link ParentCommand#register(PluginCommand)} must be invoked. This constructor will iterate through all methods on the runtime class of this instance to determine which ones represent a subcommand, as determined by the {@link CommandMethod} annotation.
 	 */
@@ -355,7 +385,7 @@ public abstract class ParentCommand implements TabExecutor {
 
 		return _plugin.getConfig();
 	}
-	
+
 	@Override
 	public boolean onCommand(CommandSender sender,
 			Command command, String alias,
