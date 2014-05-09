@@ -18,7 +18,6 @@ import me.pagekite.glen3b.library.bukkit.Utilities;
 import me.pagekite.glen3b.library.bukkit.command.CommandInvocationContext;
 import me.pagekite.glen3b.library.bukkit.datastore.Message;
 
-import org.apache.commons.lang.ClassUtils;
 import org.apache.commons.lang.Validate;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -301,9 +300,9 @@ public abstract class ParentCommand implements TabExecutor {
 	public ParentCommand() {
 		_aliasesToCommands = new HashMap<String, AnnotatedCommandInfo>();
 		_commands = new ArrayList<AnnotatedCommandInfo>();
-		Class<?> clazz = getClass();
 		// Loop so if client class A extends ParentCommand and client class B extends A, then all command methods inherited from A are registered in B
-		while(clazz != null && ClassUtils.isAssignable(clazz, ParentCommand.class)){
+		for (Class<?> clazz = getClass(); clazz != null; clazz = clazz.getSuperclass())
+	    {
 			for(Method m: clazz.getDeclaredMethods()) {
 				if(m.isAnnotationPresent(CommandMethod.class)) {
 					AnnotatedCommandInfo info = new AnnotatedCommandInfo(m);
@@ -325,7 +324,6 @@ public abstract class ParentCommand implements TabExecutor {
 					_commands.add(info);
 				}
 			}
-			clazz = clazz.getSuperclass();
 		}
 	}
 
