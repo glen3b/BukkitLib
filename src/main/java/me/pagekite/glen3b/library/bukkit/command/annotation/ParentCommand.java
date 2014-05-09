@@ -400,7 +400,7 @@ public abstract class ParentCommand implements TabExecutor {
 	private synchronized void checkInitSets(){
 		if(_inSetInitializer){
 			// TODO: Do I explain in more detail how to fix it?
-			throw new IllegalStateException("The subclass initializer has not completed execution. Calls to this method are not supported during initialization of the internal sets.");
+			throw new IllegalStateException("The subclass initializer has not completed execution. Calls to this method are not supported during initialization of the internal collections.");
 		}
 
 		if(_supportedParamTypes == null){
@@ -438,22 +438,13 @@ public abstract class ParentCommand implements TabExecutor {
 	}
 
 	/**
-	 * Returns a reference to the mutable set of supported method parameter types. If a {@code Class} is contained in this set, it is expected that {@link ParentCommand#parseParameter(String,Class<?>)} will be able to return an object of that type, assuming the string is in the proper format.
+	 * Returns a reference to the mutable set of supported method parameter types. If a {@code Class} is contained in this set, it is expected that {@link ParentCommand#parseParameter(String,Class)} will be able to return an object of that type, assuming the string is in the proper format.
 	 * @return The supported method parameter types. 
 	 */
 	protected final Set<Class<?>> getSupportedParameterTypes() {
 		checkInitSets();
 
 		return _supportedParamTypes;
-	}
-
-	/**
-	 * Gets the default value for the specified type.
-	 * @param type The {@code Class} for which the default instance will be retrieved.
-	 * @return The default value of {@code type} according to {@link ParentCommand#getDefaultParameterValues()}.
-	 */
-	protected final Object getDefault(Class<?> type){
-		return getDefaultParameterValues().get(type);
 	}
 
 	/**
@@ -470,7 +461,7 @@ public abstract class ParentCommand implements TabExecutor {
 		}
 
 		if(argument == null){
-			return getDefault(type);
+			return getDefaultParameterValues().get(type);
 		}
 
 		if(type == String.class){
