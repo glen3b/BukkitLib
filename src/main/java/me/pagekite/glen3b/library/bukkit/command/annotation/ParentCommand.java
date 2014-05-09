@@ -438,7 +438,7 @@ public abstract class ParentCommand implements TabExecutor {
 	 * @return The default value of {@code type} according to {@link ParentCommand#getDefaultParameterValues()}.
 	 */
 	protected final Object getDefault(Class<?> type){
-		return getDefaultParameterValues().containsKey(type) ? getDefaultParameterValues().get(type) : null;
+		return getDefaultParameterValues().get(type);
 	}
 	
 	/**
