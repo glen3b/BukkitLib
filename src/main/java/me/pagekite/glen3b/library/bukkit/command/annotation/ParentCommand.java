@@ -254,6 +254,10 @@ public abstract class ParentCommand implements TabExecutor {
 	@CommandMethod(aliases = { "help", "?" }, description = "Displays help for this command.")
 	public void helpCommand(CommandInvocationContext<CommandSender> context, @Optional @Argument(name = "page") int page){
 
+		if(page == 0){
+			page = 1;
+		}
+		
 		if(page < 0){
 			page *= -1;
 		}
