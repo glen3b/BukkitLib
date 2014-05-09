@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 
 import me.pagekite.glen3b.library.bukkit.GBukkitLibraryPlugin;
@@ -32,6 +33,8 @@ import org.bukkit.util.StringUtil;
 import com.google.common.base.Predicate;
 import com.google.common.base.Predicates;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 /**
  * Represents a parent command, which can encompass ase commands.
@@ -123,22 +126,9 @@ public abstract class ParentCommand implements TabExecutor {
 			_optionals[0] = false;
 			for(int i = 1 /* Exclude CommandSender param */; i < _params.length; i++){
 				Annotation[] paramAnnot = paramsAnnotations[i];
-				String alias = null;
+				String alias = "argument";
 				boolean optional = false;
-				if(_params[i] == String.class){
-					// String parameters are easy
-					alias = "string";
-				}else if(_params[i] == int.class || _params[i] == Integer.class){
-					// Integer parameters are supported
-					alias = "integer";
-				}else if(_params[i] == double.class || _params[i] == Double.class){
-					// Double parameters are supported
-					alias = "number";
-				}else if(_params[i] == boolean.class || _params[i] == Boolean.class){
-					// Boolean parameters are supported
-					alias = "yes/no";
-				}else{
-					// TODO: Let user specify own parameter types
+				if(!getSupportedParameterTypes().contains(_params[i])){
 					throw new IllegalStateException(_params[i].toString() + " is not a supported parameter type.");
 				}
 
@@ -195,17 +185,6 @@ public abstract class ParentCommand implements TabExecutor {
 			return arr != null && index >= 0 && index < arr.length;
 		}
 
-		private boolean parseBool(String val) throws IllegalArgumentException{
-			String vt = val.trim().toLowerCase();
-			if(vt.equals("true") || vt.equals("yes") || vt.equals("y") || vt.equals("on")){
-				return true;
-			}else if(vt.equals("false") || vt.equals("no") || vt.equals("n") || vt.equals("off")){
-				return false;
-			}else{
-				throw new IllegalArgumentException(val + " is not a boolean.");
-			}
-		}
-
 		public void execute(CommandSender sender, Command cmd, String alias, String[] args){
 			// Assume predicate has been fulfilled
 			Object[] methodArgs = new Object[_params.length];
@@ -224,32 +203,17 @@ public abstract class ParentCommand implements TabExecutor {
 							}
 							methodArgs[i] = arg.toString();
 						}else{
-
-							if(_params[i] == String.class){
-								// String parameters are easy
-								methodArgs[i] = containsIndex(i, args) ? args[i] : null;
-							}else if(_params[i] == int.class || _params[i] == Integer.class){
-								// Integer parameters are supported
-								methodArgs[i] = containsIndex(i, args) ? Integer.parseInt(args[i]) : 0;
-							}else if(_params[i] == double.class || _params[i] == Double.class){
-								// Double parameters are supported
-								methodArgs[i] = containsIndex(i, args) ? Double.parseDouble(args[i]) : 0.0;
-							}else if(_params[i] == boolean.class || _params[i] == Boolean.class){
-								// Boolean parameters are supported
-								methodArgs[i] = containsIndex(i, args) ? parseBool(args[i]) : false;
-							}
+							methodArgs[i] = parseParameter(containsIndex(i, args) ? args[i] : null, _params[i]);
 						}
 
 						if(!containsIndex(i, args) && !_optionals[i]){
-							// TODO: Show proper "not enough args" message
-							sender.sendMessage(Message.get("cmdUnknown"));
+							sender.sendMessage(Message.get("cmdNotEnoughArgs"));
 							break;
 						}
 					}catch(IllegalArgumentException except){
 						// Error parsing argument
-						// TODO: Show proper "invalid blah" error message
 						Bukkit.getLogger().log(Level.FINE, "Couldn't parse an argument.", except);
-						sender.sendMessage(Message.get("cmdUnknown"));
+						sender.sendMessage(Message.get("cmdInvalidArg"));
 						break;
 					}
 				}
@@ -263,7 +227,6 @@ public abstract class ParentCommand implements TabExecutor {
 					}
 				} catch (IllegalAccessException | IllegalArgumentException
 						| InvocationTargetException e) {
-					// TODO: Better handling of reflective exceptions
 					// I've taken lots of safeguards, so this code SHOULD never be called
 					// However, if it is called, I want Bukkit to handle it
 					// Bukkit will log it properly and display the "An internal error occurred..." message
@@ -272,17 +235,29 @@ public abstract class ParentCommand implements TabExecutor {
 					throw new RuntimeException("An error occured while reflecting the appropriate command method within ParentCommand.", e);
 				}
 			}else{
-				// Wrong number? TODO: Show proper "not enough args" message
-				sender.sendMessage(Message.get("cmdUnknown"));
+				sender.sendMessage(Message.get("cmdNotEnoughArgs"));
 			}
 		}
 	}
 
+	private boolean _subclassInitializedSets = false;
+	private Set<Class<?>> _supportedParamTypes;
+	private Map<Class<?>, Object> _defaultParamValues;
+	
 	/**
-	 * Represents the default subcommand, which displays command help.
+	 * Called by the superclass during execution of the superclass constructor when, if applicable, the subclass is expected to add its own parameter types (that it supports) to the appropriate sets and maps. Initializing the supported and default parameter collections at any point other than in this method will result in an {@link IllegalStateException} during initialization because they were initialized too late. If the subclass does not add support for additional parameter types beyond the default, this method may return without taking action.
+	 * <p>
+	 * <b>Any call to {@link ParentCommand#getSupportedParameterTypes()} or {@link ParentCommand#getDefaultParameterValues()} within this method will result in infinite recursion.</b>
+	 * @param paramTypes A reference to the set of parameter types that are supported for parsing by this class.
+	 * @param defaultParams A reference to the map that maps parameter type values to default instances to use (if the argument is not specified). {@code null} is the default if it is not in this map, so reference types need not be added to this set.
+	 */
+	protected abstract void initializeParameterTypes(Set<Class<?>> paramTypes, Map<Class<?>, Object> defaultParams);
+	
+	/**
+	 * Represents the default subcommand, which displays command help. This method is always implemented by the {@code ParentCommand} class for consistency.
 	 */
 	@CommandMethod(aliases = { "help", "?" }, description = "Displays help for this command.")
-	public void helpCommand(CommandInvocationContext<CommandSender> context, @Optional @Argument(name = "page") int page){
+	public final void helpCommand(CommandInvocationContext<CommandSender> context, @Optional @Argument(name = "page") int page){
 
 		if(page == 0){
 			page = 1;
@@ -294,7 +269,7 @@ public abstract class ParentCommand implements TabExecutor {
 
 		page--; // Convert to zero-based
 
-		context.getSender().sendMessage(String.format(ChatColor.AQUA + /* TODO Configurable header */ "Help (page %d):", page + 1));
+		context.getSender().sendMessage(String.format(getHelpHeader(), page + 1));
 
 		if(page * getConfig().getInt("commandsPerPage") > _commands.size()){
 			return;
@@ -307,6 +282,16 @@ public abstract class ParentCommand implements TabExecutor {
 		if(((page + 1) * getConfig().getInt("commandsPerPage")) < _commands.size()){
 			context.getSender().sendMessage(Message.get("cmdHelpSeeMore").replace("%basecommand%", context.getInvocationAlias()).replace("%page%", Integer.valueOf(page + 2).toString()));
 		}
+	}
+	
+	/**
+	 * Get a {@code String} which is used as the header of help pages for this command. This string is passed as a format string, with a formatting argument passed to {@link java.lang.String#format(String, Object...) String.format} of one integral value. Simpler implementations can assume that the first instance of "%d" within the string will be replaced with the page number. More complex visual displays may wish to use other formatting options with this format string.
+	 * The code which uses this method does not provide coloring by default. The default implementation uses a color of {@link org.bukkit.ChatColor#AQUA aqua} as the prefix, but this will not appear without inclusion in the returned string. Subclasses are free to choose any color they wish for the help header.
+	 * @return The help page header for this command.
+	 * @see java.lang.String#format(String, Object...)
+	 */
+	protected String getHelpHeader(){
+		return ChatColor.AQUA + "Help (page %d):";
 	}
 
 	/**
@@ -347,7 +332,7 @@ public abstract class ParentCommand implements TabExecutor {
 	 * Register this parent command to handle execution of the specified plugin command.
 	 * @param cmd A command which this instance represents.
 	 */
-	public void register(PluginCommand cmd){
+	public final void register(PluginCommand cmd){
 		Validate.notNull(cmd, "The plugin command is null.");
 
 		cmd.setExecutor(this);
@@ -379,15 +364,136 @@ public abstract class ParentCommand implements TabExecutor {
 	 */
 	private FileConfiguration getConfig(){
 		if(_plugin == null || !_plugin.isEnabled()){
-			// TODO: BaseCommand should not directly depend upon GBukkitLib, maybe global variable (not just message) service?
+			// TODO: ParentCommand should not directly depend upon GBukkitLib, maybe global variable (not just message) service?
 			_plugin = (GBukkitLibraryPlugin)Bukkit.getServer().getPluginManager().getPlugin("GBukkitLib");
 		}
 
 		return _plugin.getConfig();
 	}
 
+	/**
+	 * Returns a reference to the mutable map of supported method parameter types to default values for those types. If a {@code Class} is not contained in this set, {@code null} is assumed to be the default value.
+	 * @return The default values, which are used when an argument is not specified, for specific types. If a {@code Class} is not a key in this set, {@code null} is the default value. 
+	 */
+	protected final Map<Class<?>, Object> getDefaultParameterValues() {
+		checkInitSets();
+		return _defaultParamValues;
+	}
+	
+	/**
+	 * Checks if the local parameter type and default parameter value collections have been initialized properly.
+	 */
+	private synchronized void checkInitSets(){
+		if(_supportedParamTypes == null){
+			_subclassInitializedSets = false;
+			_supportedParamTypes = Sets.<Class<?>>newHashSet(String.class, int.class, Integer.class, Double.class, double.class, boolean.class, Boolean.class, float.class, Float.class, char.class, Character.class, long.class, Long.class, short.class, Short.class);
+		}
+		
+		if(_defaultParamValues == null){
+			_subclassInitializedSets = false;
+			_defaultParamValues = Maps.<Class<?>, Object>newHashMap();
+			_defaultParamValues.put(Double.class, Double.valueOf(0));
+			_defaultParamValues.put(double.class, 0.0);
+			_defaultParamValues.put(Integer.class, Integer.valueOf(0));
+			_defaultParamValues.put(int.class, 0);
+			_defaultParamValues.put(boolean.class, false);
+			_defaultParamValues.put(Boolean.class, Boolean.FALSE);
+			_defaultParamValues.put(float.class, 0.0F);
+			_defaultParamValues.put(Float.class, Float.valueOf(0.0F));
+			_defaultParamValues.put(Character.class, Character.valueOf(Character.MIN_VALUE));
+			_defaultParamValues.put(char.class, Character.MIN_VALUE);
+			_defaultParamValues.put(Byte.class, Byte.valueOf((byte) 0));
+			_defaultParamValues.put(byte.class, (byte) 0);
+			_defaultParamValues.put(long.class, 0L);
+			_defaultParamValues.put(Long.class, Long.valueOf(0L));
+			_defaultParamValues.put(short.class, (short)0);
+			_defaultParamValues.put(Short.class, Short.valueOf((short) 0));
+		}
+		
+		if(!_subclassInitializedSets){
+			initializeParameterTypes(_supportedParamTypes, _defaultParamValues);
+			_subclassInitializedSets = true;
+		}
+	}
+	
+	/**
+	 * Returns a reference to the mutable set of supported method parameter types. If a {@code Class} is contained in this set, it is expected that {@link ParentCommand#parseParameter(String,Class<?>)} will be able to return an object of that type, assuming the string is in the proper format.
+	 * @return The supported method parameter types. 
+	 */
+	protected final Set<Class<?>> getSupportedParameterTypes() {
+		checkInitSets();
+		
+		return _supportedParamTypes;
+	}
+	
+	/**
+	 * Gets the default value for the specified type.
+	 * @param type The {@code Class} for which the default instance will be retrieved.
+	 * @return The default value of {@code type} according to {@link ParentCommand#getDefaultParameterValues()}.
+	 */
+	protected final Object getDefault(Class<?> type){
+		return getDefaultParameterValues().containsKey(type) ? getDefaultParameterValues().get(type) : null;
+	}
+	
+	/**
+	 * Parses an argument, written in human-readable string form, to be of the specified type. Methods which derive from this method should call the superclass method as an attempted parse <em>after</em> attempting to parse the argument themselves, as the superclass call chain will ultimately throw the appropriate exception if no derived class can parse the argument.
+	 * @param argument The argument in string form to parse. If this value is {@code null}, the default value in the Java compiler for fields of type {@code type} should be returned. This is {@code null} for reference types, {@code 0} for most numerical types, and {@code false} for booleans.
+	 * @param type The {@code Class} of the argument that is being parsed. If this value is equivalent to {@code String.class}, it is expected that the argument itself is returned.
+	 * @return {@code argument} represented as an instance of {@code type}.
+	 * @throws IllegalArgumentException If {@code argument} is not deserializable to an instance of type. This exception should <i>not</i> if {@code argument} is {@code null}, in which case {@code null} (or the approprate default) should be returned. However, it <i>must</i> be thrown if {@code type} is {@code null}.
+	 * @throws UnsupportedOperationException If the specified {@code type} cannot be deserialized by this method.
+	 */
+	protected Object parseParameter(String argument, Class<?> type) throws IllegalArgumentException, UnsupportedOperationException {
+		if(type == null){
+			throw new IllegalArgumentException("The specified type is null.");
+		}
+		
+		if(argument == null){
+			return getDefault(type);
+		}
+		
+		if(type == String.class){
+			return argument;
+		}else if(type == Boolean.class || type == boolean.class){
+			String vt = argument.trim().toLowerCase();
+			
+			if(vt.equals("true") || vt.equals("yes") || vt.equals("y") || vt.equals("on")){
+				return type == Boolean.class ? Boolean.TRUE : true;
+			}else if(vt.equals("false") || vt.equals("no") || vt.equals("n") || vt.equals("off")){
+				return type == Boolean.class ? Boolean.FALSE : false;
+			}else{
+				throw new IllegalArgumentException(argument + " is not a boolean.");
+			}
+		}else if(type == Integer.class || type == int.class){
+			int val = Integer.parseInt(argument.toLowerCase().trim());
+			return type == Integer.class ? Integer.valueOf(val) : val;
+		}else if(type == Double.class || type == double.class){
+			double val = Double.parseDouble(argument.toLowerCase().trim());
+			return type == Double.class ? Double.valueOf(val) : val;
+		}else if(type == Float.class || type == float.class){
+			float val = Float.parseFloat(argument.toLowerCase().trim());
+			return type == Float.class ? Float.valueOf(val) : val;
+		}else if(type == char.class || type == Character.class){
+			if(argument.length() == 1){
+				return type == char.class ? argument.charAt(0) : Character.valueOf(argument.charAt(0));
+			}else if(argument.length() == 3 && ((argument.charAt(0) == '\'' && argument.charAt(2) == '\'') || (argument.charAt(0) == '"' && argument.charAt(2) == '"'))){
+				return type == char.class ? argument.charAt(1) : Character.valueOf(argument.charAt(1));
+			}else{
+				throw new IllegalArgumentException("The specified argument does not represent a single character.");
+			}
+		}else if(type == Long.class || type == long.class){
+			long val = Long.parseLong(argument.toLowerCase().trim());
+			return type == Long.class ? Long.valueOf(val) : val;
+		}else if(type == Short.class || type == short.class){
+			short val = Short.parseShort(argument.toLowerCase().trim());
+			return type == Short.class ? Short.valueOf(val) : val;
+		}
+		
+		throw new UnsupportedOperationException("The type " + type.getName() + " could not be parsed as a parameter.");
+	}
+
 	@Override
-	public boolean onCommand(CommandSender sender,
+	public final boolean onCommand(CommandSender sender,
 			Command command, String alias,
 			String[] args) {
 		if(args.length >= 1){
