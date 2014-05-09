@@ -16,6 +16,7 @@ import java.util.logging.Level;
 import me.pagekite.glen3b.library.bukkit.GBukkitLibraryPlugin;
 import me.pagekite.glen3b.library.bukkit.Utilities;
 import me.pagekite.glen3b.library.bukkit.command.CommandInvocationContext;
+import me.pagekite.glen3b.library.bukkit.command.CommandSenderType;
 import me.pagekite.glen3b.library.bukkit.datastore.Message;
 
 import org.apache.commons.lang.Validate;
@@ -26,7 +27,6 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.command.TabExecutor;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.entity.Player;
 import org.bukkit.util.StringUtil;
 
 import com.google.common.base.Predicate;
@@ -94,22 +94,37 @@ public abstract class ParentCommand implements TabExecutor {
 
 			if(method.isAnnotationPresent(Access.class)){
 				Access annotation = method.getAnnotation(Access.class);
-				List<Predicate<CommandSender>> anded = Lists.newArrayListWithExpectedSize(3);
+				List<Predicate<? super CommandSender>> anded = Lists.newArrayListWithExpectedSize(3);
 				anded.add(Predicates.<CommandSender>notNull());
 				if(annotation.permission() != null && !annotation.permission().isEmpty()){
-					anded.add(Utilities.hasPermissionPredicate(annotation.permission()));
+					anded.add(Utilities.Predicates.hasPermission(annotation.permission()));
 				}
-				if(annotation.playersOnly()){
-					anded.add(Utilities.playerPredicate());
-					if(!_params[0].isAssignableFrom(Player.class) && !CommandInvocationContext.class.isAssignableFrom(_params[0])){
-						// A Player instance cannot be passed in to this method
-						throwIllegalFirstArg();
-					}
+
+				List<Predicate<Object>> or = Lists.newArrayListWithCapacity(annotation.allowedSenders().length);
+
+				Class<? extends CommandSender> superclass = CommandSender.class;
+
+				if(annotation.allowedSenders().length == 0){
+					// Assume all senders allowed
+					or.add(Utilities.Predicates.isOfSenderType(CommandSenderType.ALL));
+				}else if(annotation.allowedSenders().length == 1){
+					or.add(Utilities.Predicates.isOfSenderType(annotation.allowedSenders()[0]));
+					superclass = annotation.allowedSenders()[0].getSenderType();
 				}else{
-					if(!_params[0].isAssignableFrom(CommandSender.class) && !CommandInvocationContext.class.isAssignableFrom(_params[0])){
-						// A CommandSender instance cannot be passed in to this method
-						throwIllegalFirstArg();
+					for(CommandSenderType t : annotation.allowedSenders()){
+						if(t == CommandSenderType.ALL){
+							throw new IllegalStateException("The allowed command sender types on " + method.toString() + " include ALL, but ALL is not the only element.");
+						}
+						or.add(Utilities.Predicates.isOfSenderType(t));
 					}
+				}
+
+				anded.add(Predicates.or(or));
+
+
+				if(_params[0] != superclass && _params[0] != CommandSender.class && !CommandInvocationContext.class.isAssignableFrom(_params[0])){
+					// The appropriate instance cannot be passed in to this method
+					throwIllegalFirstArg();
 				}
 				_accessPredicate = Predicates.and(anded);
 			}else{
@@ -187,7 +202,7 @@ public abstract class ParentCommand implements TabExecutor {
 		public void execute(CommandSender sender, Command cmd, String alias, String[] args){
 			// Assume predicate has been fulfilled
 			Object[] methodArgs = new Object[_params.length];
-			methodArgs[0] = CommandInvocationContext.class.isAssignableFrom(_params[0]) ? getMethod().isAnnotationPresent(Access.class) && getMethod().getAnnotation(Access.class).playersOnly() ? new CommandInvocationContext<Player>((Player)sender, cmd, alias) : new CommandInvocationContext<>(sender, cmd, alias) : sender;
+			methodArgs[0] = _params[0].isAssignableFrom(CommandInvocationContext.class) ? new CommandInvocationContext<>(sender, cmd, alias) : sender; // Only works due to generics not being safe in Java
 
 			if((args.length <= methodArgs.length || _continualStringAtEnd) && args.length >= methodArgs.length - _optionalCt){
 				for(int i = 1; i < _params.length; i++){
@@ -243,7 +258,7 @@ public abstract class ParentCommand implements TabExecutor {
 	private boolean _inSetInitializer = false;
 	private Set<Class<?>> _supportedParamTypes;
 	private Map<Class<?>, Object> _defaultParamValues;
-	
+
 	/**
 	 * Called by the superclass during execution of the superclass constructor when, if applicable, the subclass is expected to add its own parameter types (that it supports) to the appropriate sets and maps. Initializing the supported and default parameter collections at any point other than in this method will result in an {@link IllegalStateException} during initialization because they were initialized too late. If the subclass does not add support for additional parameter types beyond the default, this method may return without taking action.
 	 * <p>
@@ -252,7 +267,7 @@ public abstract class ParentCommand implements TabExecutor {
 	 * @param defaultParams A reference to the map that maps parameter type values to default instances to use (if the argument is not specified). {@code null} is the default if it is not in this map, so reference types need not be added to this set.
 	 */
 	protected abstract void initializeParameterTypes(Set<Class<?>> paramTypes, Map<Class<?>, Object> defaultParams);
-	
+
 	/**
 	 * Represents the default subcommand, which displays command help. This method is always implemented by the {@code ParentCommand} class for consistency.
 	 */
@@ -283,7 +298,7 @@ public abstract class ParentCommand implements TabExecutor {
 			context.getSender().sendMessage(Message.get("cmdHelpSeeMore").replace("%basecommand%", context.getInvocationAlias()).replace("%page%", Integer.valueOf(page + 2).toString()));
 		}
 	}
-	
+
 	/**
 	 * Get a {@code String} which is used as the header of help pages for this command. This string is passed as a format string, with a formatting argument passed to {@link java.lang.String#format(String, Object...) String.format} of one integral value. Simpler implementations can assume that the first instance of "%d" within the string will be replaced with the page number. More complex visual displays may wish to use other formatting options with this format string.
 	 * The code which uses this method does not provide coloring by default. The default implementation uses a color of {@link org.bukkit.ChatColor#AQUA aqua} as the prefix, but this will not appear without inclusion in the returned string. Subclasses are free to choose any color they wish for the help header.
@@ -302,7 +317,7 @@ public abstract class ParentCommand implements TabExecutor {
 		_commands = new ArrayList<AnnotatedCommandInfo>();
 		// Loop so if client class A extends ParentCommand and client class B extends A, then all command methods inherited from A are registered in B
 		for (Class<?> clazz = getClass(); clazz != null; clazz = clazz.getSuperclass())
-	    {
+		{
 			for(Method m: clazz.getDeclaredMethods()) {
 				if(m.isAnnotationPresent(CommandMethod.class)) {
 					AnnotatedCommandInfo info = new AnnotatedCommandInfo(m);
@@ -378,7 +393,7 @@ public abstract class ParentCommand implements TabExecutor {
 		checkInitSets();
 		return _defaultParamValues;
 	}
-	
+
 	/**
 	 * Checks if the local parameter type and default parameter value collections have been initialized properly.
 	 */
@@ -387,12 +402,12 @@ public abstract class ParentCommand implements TabExecutor {
 			// TODO: Do I explain in more detail how to fix it?
 			throw new IllegalStateException("The subclass initializer has not completed execution. Calls to this method are not supported during initialization of the internal sets.");
 		}
-		
+
 		if(_supportedParamTypes == null){
 			_subclassInitializedSets = false;
 			_supportedParamTypes = Sets.<Class<?>>newHashSet(String.class, int.class, Integer.class, Double.class, double.class, boolean.class, Boolean.class, float.class, Float.class, char.class, Character.class, long.class, Long.class, short.class, Short.class);
 		}
-		
+
 		if(_defaultParamValues == null){
 			_subclassInitializedSets = false;
 			_defaultParamValues = Maps.<Class<?>, Object>newHashMap();
@@ -413,7 +428,7 @@ public abstract class ParentCommand implements TabExecutor {
 			_defaultParamValues.put(short.class, (short)0);
 			_defaultParamValues.put(Short.class, Short.valueOf((short) 0));
 		}
-		
+
 		if(!_subclassInitializedSets){
 			_inSetInitializer = true;
 			initializeParameterTypes(_supportedParamTypes, _defaultParamValues);
@@ -421,17 +436,17 @@ public abstract class ParentCommand implements TabExecutor {
 			_inSetInitializer = false;
 		}
 	}
-	
+
 	/**
 	 * Returns a reference to the mutable set of supported method parameter types. If a {@code Class} is contained in this set, it is expected that {@link ParentCommand#parseParameter(String,Class<?>)} will be able to return an object of that type, assuming the string is in the proper format.
 	 * @return The supported method parameter types. 
 	 */
 	protected final Set<Class<?>> getSupportedParameterTypes() {
 		checkInitSets();
-		
+
 		return _supportedParamTypes;
 	}
-	
+
 	/**
 	 * Gets the default value for the specified type.
 	 * @param type The {@code Class} for which the default instance will be retrieved.
@@ -440,7 +455,7 @@ public abstract class ParentCommand implements TabExecutor {
 	protected final Object getDefault(Class<?> type){
 		return getDefaultParameterValues().get(type);
 	}
-	
+
 	/**
 	 * Parses an argument, written in human-readable string form, to be of the specified type. Methods which derive from this method should call the superclass method as an attempted parse <em>after</em> attempting to parse the argument themselves, as the superclass call chain will ultimately throw the appropriate exception if no derived class can parse the argument.
 	 * @param argument The argument in string form to parse. If this value is {@code null}, the default value in the Java compiler for fields of type {@code type} should be returned. This is {@code null} for reference types, {@code 0} for most numerical types, and {@code false} for booleans.
@@ -453,16 +468,16 @@ public abstract class ParentCommand implements TabExecutor {
 		if(type == null){
 			throw new IllegalArgumentException("The specified type is null.");
 		}
-		
+
 		if(argument == null){
 			return getDefault(type);
 		}
-		
+
 		if(type == String.class){
 			return argument;
 		}else if(type == Boolean.class || type == boolean.class){
 			String vt = argument.trim().toLowerCase();
-			
+
 			if(vt.equals("true") || vt.equals("yes") || vt.equals("y") || vt.equals("on")){
 				return type == Boolean.class ? Boolean.TRUE : true;
 			}else if(vt.equals("false") || vt.equals("no") || vt.equals("n") || vt.equals("off")){
@@ -494,7 +509,7 @@ public abstract class ParentCommand implements TabExecutor {
 			short val = Short.parseShort(argument.toLowerCase().trim());
 			return type == Short.class ? Short.valueOf(val) : val;
 		}
-		
+
 		throw new UnsupportedOperationException("The type " + type.getName() + " could not be parsed as a parameter.");
 	}
 

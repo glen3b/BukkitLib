@@ -26,6 +26,7 @@ import java.util.UUID;
 
 import javax.annotation.Nullable;
 
+import me.pagekite.glen3b.library.bukkit.command.CommandSenderType;
 import me.pagekite.glen3b.library.bukkit.protocol.ProtocolOperationResult;
 import me.pagekite.glen3b.library.bukkit.protocol.ProtocolUtilities;
 import me.pagekite.glen3b.library.bukkit.teleport.QueuedTeleport;
@@ -48,6 +49,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.FireworkMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
+import org.bukkit.permissions.Permissible;
 import org.bukkit.permissions.Permission;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
@@ -72,64 +74,6 @@ public final class Utilities {
 	 * Internal reference to ProtocolLib utils.
 	 */
 	static ProtocolUtilities _protocolLib;
-
-	private static final class InstanceofPlayerPredicate implements Predicate<CommandSender>{
-
-		@Override
-		public boolean apply(CommandSender sender) {
-			return sender instanceof Player;
-		}
-
-	}	
-
-	private static final class HasPermissionPredicate implements Predicate<CommandSender>{
-
-		public HasPermissionPredicate(String permNode){
-			_usePermInstance = false;
-			_node = permNode;
-		}
-
-		boolean _usePermInstance;
-
-		public HasPermissionPredicate(Permission node){
-			_usePermInstance = true;
-			_perm = node;
-		}
-		private Permission _perm;
-		private String _node;
-
-		@Override
-		public boolean apply(CommandSender sender) {
-			return _usePermInstance ? _perm == null || sender.hasPermission(_perm) : _node == null || sender.hasPermission(_node);
-		}
-
-	}
-
-	/**
-	 * Returns a predicate that will return {@code true} if and only if the {@link CommandSender} in question is a {@link Player} instance.
-	 * @return A new predicate instance that will return {@code true} when the conditions above are satisfied.
-	 */
-	public static Predicate<CommandSender> playerPredicate(){
-		return new InstanceofPlayerPredicate();
-	}
-
-	/**
-	 * Gets a predicate that returns {@code true} if {@code node} is {@code null} <b>or</b> the {@link CommandSender} in question has the permission node {@code node}.
-	 * @param node The permission node to check.
-	 * @return A predicate that will return {@code true} when the conditions specified above are satisfied.
-	 */
-	public static Predicate<CommandSender> hasPermissionPredicate(String node){
-		return new HasPermissionPredicate(node);
-	}
-
-	/**
-	 * Gets a predicate that returns {@code true} if {@code node} is {@code null} <b>or</b> the {@link CommandSender} in question has the permission node {@code node}.
-	 * @param node The permission node to check.
-	 * @return A predicate that will return {@code true} when the conditions specified above are satisfied.
-	 */
-	public static Predicate<CommandSender> hasPermissionPredicate(Permission node){
-		return new HasPermissionPredicate(node);
-	}
 
 	/**
 	 * Initializes the utilities class with event registrations and such. Internal method, not meant to be called by user code.
@@ -223,6 +167,91 @@ public final class Utilities {
 	@Deprecated
 	public static final long TICKS_PER_MINUTE = Constants.TICKS_PER_MINUTE;
 
+	/**
+	 * Utility predicates that apply to Bukkit.
+	 * @author Glen Husman
+	 */
+	public static final class Predicates{
+		private Predicates(){
+			// No instance
+		}
+		
+		private static final class InstanceofCommandSenderTypePredicate implements Predicate<Object>{
+
+			public InstanceofCommandSenderTypePredicate(CommandSenderType type){
+				_type = type == null ? CommandSenderType.ALL : type;
+			}
+			
+			private CommandSenderType _type;
+			
+			@Override
+			public boolean apply(Object sender) {
+				return sender instanceof CommandSender && _type.isInstance(sender.getClass());
+			}
+
+		}	
+
+		private static final class HasPermissionPredicate implements Predicate<Permissible>{
+
+			public HasPermissionPredicate(String permNode){
+				_usePermInstance = false;
+				_node = permNode;
+			}
+
+			boolean _usePermInstance;
+
+			public HasPermissionPredicate(Permission node){
+				_usePermInstance = true;
+				_perm = node;
+			}
+			private Permission _perm;
+			private String _node;
+
+			@Override
+			public boolean apply(Permissible sender) {
+				return _usePermInstance ? _perm == null || sender.hasPermission(_perm) : _node == null || sender.hasPermission(_node);
+			}
+
+		}
+
+		/**
+		 * Returns a predicate that will return {@code true} if and only if the {@link CommandSender} in question is of the specified {@link CommandSenderType}. If {@code type} is null, {@link CommandSenderType#ALL ALL} is the assumed default value.
+		 * @param type The type of the command sender.
+		 * @return A new predicate instance that will return {@code true} when the conditions above are satisfied.
+		 */
+		public static Predicate<Object> isOfSenderType(CommandSenderType type){
+			return new InstanceofCommandSenderTypePredicate(type);
+		}
+		
+		/**
+		 * Returns a predicate that will return {@code true} if and only if the {@link CommandSender} in question is a {@link Player} instance.
+		 * @return A new predicate instance that will return {@code true} when the conditions above are satisfied.
+		 * @deprecated The {@link Utilities.Predicates#isOfSenderType(CommandSenderType) isOfSenderType} method is preferred.
+		 */
+		@Deprecated
+		public static Predicate<Object> isPlayer(){
+			return new InstanceofCommandSenderTypePredicate(CommandSenderType.PLAYER);
+		}
+
+		/**
+		 * Gets a predicate that returns {@code true} if {@code node} is {@code null} <b>or</b> the {@link CommandSender} in question has the permission node {@code node}.
+		 * @param node The permission node to check.
+		 * @return A predicate that will return {@code true} when the conditions specified above are satisfied.
+		 */
+		public static Predicate<Permissible> hasPermission(String node){
+			return new HasPermissionPredicate(node);
+		}
+
+		/**
+		 * Gets a predicate that returns {@code true} if {@code node} is {@code null} <b>or</b> the {@link CommandSender} in question has the permission node {@code node}.
+		 * @param node The permission node to check.
+		 * @return A predicate that will return {@code true} when the conditions specified above are satisfied.
+		 */
+		public static Predicate<Permissible> hasPermission(Permission node){
+			return new HasPermissionPredicate(node);
+		}
+	}
+	
 	/**
 	 * Utility methods involving entities.
 	 * @author Glen Husman

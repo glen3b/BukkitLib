@@ -6,6 +6,8 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import me.pagekite.glen3b.library.bukkit.command.CommandSenderType;
+
 /**
  * This annotation represents access restrictions of a command at runtime.
  * @author Glen Husman
@@ -20,7 +22,7 @@ public @interface Access {
 	String permission() default "";
 	
 	/**
-	 * @return {@code true} if and only if only players can execute this command.
+	 * @return An array of allowed types of command senders.
 	 */
-	boolean playersOnly() default false;
+	CommandSenderType[] allowedSenders() default {CommandSenderType.ALL};
 }
