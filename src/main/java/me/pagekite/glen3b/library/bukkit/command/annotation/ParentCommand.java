@@ -217,7 +217,7 @@ public abstract class ParentCommand implements TabExecutor {
 						if(_continualStringAtEnd && i == _params.length - 1){
 							StringBuilder arg = new StringBuilder();
 							for(int j = i; j < args.length; j++){
-								arg.append(args[i]);
+								arg.append(args[j]);
 								if(j != args.length - 1){
 									arg.append(' ');
 								}
