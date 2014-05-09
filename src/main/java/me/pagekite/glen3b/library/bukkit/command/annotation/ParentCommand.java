@@ -241,6 +241,7 @@ public abstract class ParentCommand implements TabExecutor {
 	}
 
 	private boolean _subclassInitializedSets = false;
+	private boolean _inSetInitializer = false;
 	private Set<Class<?>> _supportedParamTypes;
 	private Map<Class<?>, Object> _defaultParamValues;
 	
@@ -384,6 +385,11 @@ public abstract class ParentCommand implements TabExecutor {
 	 * Checks if the local parameter type and default parameter value collections have been initialized properly.
 	 */
 	private synchronized void checkInitSets(){
+		if(_inSetInitializer){
+			// TODO: Do I explain in more detail how to fix it?
+			throw new IllegalStateException("The subclass initializer has not completed execution. Calls to this method are not supported during initialization of the internal sets.");
+		}
+		
 		if(_supportedParamTypes == null){
 			_subclassInitializedSets = false;
 			_supportedParamTypes = Sets.<Class<?>>newHashSet(String.class, int.class, Integer.class, Double.class, double.class, boolean.class, Boolean.class, float.class, Float.class, char.class, Character.class, long.class, Long.class, short.class, Short.class);
@@ -411,8 +417,10 @@ public abstract class ParentCommand implements TabExecutor {
 		}
 		
 		if(!_subclassInitializedSets){
+			_inSetInitializer = true;
 			initializeParameterTypes(_supportedParamTypes, _defaultParamValues);
 			_subclassInitializedSets = true;
+			_inSetInitializer = false;
 		}
 	}
 	
