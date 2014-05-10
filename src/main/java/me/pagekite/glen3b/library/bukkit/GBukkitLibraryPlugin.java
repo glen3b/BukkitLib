@@ -294,6 +294,8 @@ public final class GBukkitLibraryPlugin extends JavaPlugin {
 		Utilities.cleanup(this);
 	}
 	
+	//private Updater updater;
+	
 	@Override
 	public void onEnable(){
 		this.getServer().getServicesManager().register(AutoSaverScheduler.class, new AutoSaverScheduler(this), this, ServicePriority.Normal);
@@ -314,6 +316,7 @@ public final class GBukkitLibraryPlugin extends JavaPlugin {
 		}
 		Utilities.initialize(this);
 		saveDefaultConfig();
+		//updater = new Updater(...);
 	}
 	
 }
