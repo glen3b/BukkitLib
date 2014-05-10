@@ -89,12 +89,9 @@ public final class ReflectionUtilities {
 	 * avoid the overhead of this method.
 	 * 
 	 * <pre>
-	 * {
-	 * 	&#064;code
 	 * 	Method method = object.getClass().getMethod(method, argumentTypes);
 	 * 	method.setAccessible(true);
 	 * 	method.invoke(object, varArgs);
-	 * }
 	 * </pre>
 	 * 
 	 * </p>
