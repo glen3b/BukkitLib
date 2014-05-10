@@ -64,7 +64,7 @@ public final class GBukkitLibraryPlugin extends JavaPlugin {
 			if(getConfig().getConfigurationSection("messages").getString(messageId) == null){
 				return null;
 			}
-			
+
 			return new Message(messageId, getConfig().getConfigurationSection("messages").getString(messageId));
 		}
 
@@ -86,7 +86,7 @@ public final class GBukkitLibraryPlugin extends JavaPlugin {
 		@Override
 		public void setMessage(Message value) throws IllegalStateException {
 			Validate.notNull(value, "The value cannot be null.");
-			
+
 			setMessage(value.getKey(), value.getUnformattedValue());
 		}
 
@@ -95,26 +95,26 @@ public final class GBukkitLibraryPlugin extends JavaPlugin {
 				throws IllegalStateException {
 			throw new IllegalStateException("This is a read-only message provider.");
 		}
-		
+
 	}
-	
+
 	/**
 	 * Default implementation class for teleportation management.
 	 * @author Glen Husman
 	 */
 	public final class GBukkitTPManager implements TeleportationManager {
 		final class ScheduledDecrementRunner implements Runnable, Listener, QueuedTeleport<Location> {
-			
+
 			private int _remDelay;
 			private UUID _playerId;
 			private BukkitTask _ownTask;
 			private Location _target;
 			private boolean _isValid = true;
-			
+
 			private List<Runnable> _onTP = new ArrayList<Runnable>();
 
 			private List<Runnable> _onTPCancel = new ArrayList<Runnable>();
-			
+
 			private ScheduledDecrementRunner(final Player player, final int initialDelay, final Location target){
 				_remDelay = initialDelay;
 				_playerId = player.getUniqueId();
@@ -124,41 +124,41 @@ public final class GBukkitLibraryPlugin extends JavaPlugin {
 
 				player.sendMessage(Message.get("teleportBegin").replace("%time%", Integer.toString(initialDelay)).replace("%units%", initialDelay == 1 ? "second" : "seconds"));
 			}
-			
+
 			@Override
 			public void cancel() {
 				if(!isCancelled()){
 					cleanup(false);
 				}
 			}
-			
+
 			public void cleanup(boolean notifyPlayer){
 				_isValid = false;
 				_ownTask.cancel();
-				
+
 				if(notifyPlayer && Bukkit.getPlayer(_playerId) != null){
 					Bukkit.getPlayer(_playerId).sendMessage(Message.get("teleportCancelled"));
 					for(Runnable r : _onTPCancel){
 						r.run();
 					}
 				}
-				
+
 				HandlerList.unregisterAll(this);
 				_onTP.clear();
 				_onTPCancel.clear();
 			}
-			
+
 			@Override
 			public Location getDestination() {
 				return _target;
 			}
-			
+
 			@Override
 			public Player getEntity() {
 				if(isCancelled()){
 					throw new IllegalStateException("This method cannot be called on a cancelled queued teleport.");
 				}
-				
+
 				return Bukkit.getPlayer(_playerId);
 			}
 
@@ -177,7 +177,7 @@ public final class GBukkitLibraryPlugin extends JavaPlugin {
 				if(!_isValid){
 					return;
 				}
-				
+
 				if(event.getEntity() instanceof Player && event.getEntity().getUniqueId().equals(_playerId)){
 					cleanup(true);
 				}
@@ -188,12 +188,12 @@ public final class GBukkitLibraryPlugin extends JavaPlugin {
 				if(!_isValid){
 					return;
 				}
-				
+
 				if(event.getTo().getBlockX() == event.getFrom().getBlockX() && event.getTo().getBlockY() == event.getFrom().getBlockY() && event.getTo().getBlockZ() == event.getFrom().getBlockZ()){
 					//The player did not actually move across a block, ignore it
 					return;
 				}
-				
+
 				if(event.getPlayer().getUniqueId().equals(_playerId)){
 					//Bad boy, our player moved
 					cleanup(true);
@@ -203,59 +203,59 @@ public final class GBukkitLibraryPlugin extends JavaPlugin {
 			@Override
 			public void registerOnTeleport(Runnable delegate) {
 				Validate.notNull(delegate, "The method to call must not be null.");
-				
+
 				_onTP.add(delegate);
 			}
 
 			@Override
 			public void registerOnTeleportCancel(Runnable delegate) {
 				Validate.notNull(delegate, "The method to call must not be null.");
-				
+
 				_onTPCancel.add(delegate);
 			}
 
 			@Override
 			public void run() {
 				_isValid = !isCancelled() && Bukkit.getPlayer(_playerId) != null;
-				
+
 				if(!_isValid){
 					cleanup(false);
 					return;
 				}
-				
+
 				_remDelay--;
-				
+
 				Player affected = Bukkit.getPlayer(_playerId);
-				
+
 				if(_remDelay <= 0){
 					//Teleport to location
 					affected.sendMessage(Message.get("teleporting"));
 					affected.teleport(_target);
-					
+
 					for(Runnable r : _onTP){
 						r.run();
 					}
-					
+
 					cleanup(false);
 				}else if(getConfig().getBoolean("showIncrementalMessages")){
 					affected.sendMessage(Message.get("teleportProgress").replace("%time%", Integer.toString(_remDelay)).replace("%units%", _remDelay == 1 ? "second" : "seconds"));
 				}
 			}
 		}
-		
+
 		private HashMap<String, ScheduledDecrementRunner> _teleportsQueued = new HashMap<String, ScheduledDecrementRunner>();
-		
+
 		private GBukkitTPManager(){
-			
+
 		}
-		
+
 		@Override
 		public QueuedTeleport<Location> getTeleport(Player teleport) {
 			Validate.notNull(teleport, "The player is null.");
-			
+
 			return _teleportsQueued.containsKey(teleport.getName().toLowerCase().trim()) ? _teleportsQueued.get(teleport.getName().toLowerCase().trim()) : null;
 		}
-		
+
 		@Override
 		public QueuedTeleport<Location> teleportPlayer(Player player, Location targetLoc){
 			return teleportPlayer(player, targetLoc, getConfig().getInt("teleportDelay"));
@@ -266,36 +266,36 @@ public final class GBukkitLibraryPlugin extends JavaPlugin {
 			Validate.isTrue(teleportDelay >= 0, "Teleport delay must not be negative. Value: ", teleportDelay);
 			Validate.notNull(player, "The player must not be null.");
 			Validate.notNull(targetLoc, "The target location must not be null.");
-			
+
 			//Cleanup existing teleport, if any, in the queue
 			if(getTeleport(player) != null){
 				getTeleport(player).cancel();
 			}
-			
+
 			//Check for no teleport delay
 			if(teleportDelay == 0 || player.hasPermission("gbukkitlib.tpdelay.bypass")){
 				player.sendMessage(Message.get("teleporting"));
-			  	player.teleport(targetLoc);
-			  	return null;
+				player.teleport(targetLoc);
+				return null;
 			}
-			
+
 			//Queue new teleportation
 			ScheduledDecrementRunner runner = new ScheduledDecrementRunner(player, teleportDelay, targetLoc);
 			_teleportsQueued.put(player.getName().toLowerCase().trim(), runner);
-			
+
 			return runner;
 		}
 	}
-	
+
 	@Override
 	public void onDisable(){
 		this.getServer().getServicesManager().getRegistration(AutoSaverScheduler.class).getProvider().onDisable();
 		this.getServer().getServicesManager().unregisterAll(this);
 		Utilities.cleanup(this);
 	}
-	
-	//private Updater updater;
-	
+
+	int updaterTaskId;
+
 	@Override
 	public void onEnable(){
 		this.getServer().getServicesManager().register(AutoSaverScheduler.class, new AutoSaverScheduler(this), this, ServicePriority.Normal);
@@ -316,7 +316,21 @@ public final class GBukkitLibraryPlugin extends JavaPlugin {
 		}
 		Utilities.initialize(this);
 		saveDefaultConfig();
-		//updater = new Updater(...);
+
+//		if(getConfig().getBoolean("autoupdate")){
+//			Bukkit.getScheduler().runTaskTimerAsynchronously(this, new Runnable(){
+//
+//				@Override
+//				public void run() {
+//					final Updater up = new Updater(GBukkitLibraryPlugin.this, /*<PLUGIN ID ON DEVBUKKIT>*/0, getFile(), true);
+//					up.startThread(Updater.UpdateType.DEFAULT);
+//					Updater.UpdateResult res = up.getResult();
+//					Bukkit.getLogger().log(Level.FINE, "Update check result was " + res.toString());
+//				}
+//
+//			}, 0L, Constants.TICKS_PER_MINUTE * 5);
+//		}
+
 	}
-	
+
 }

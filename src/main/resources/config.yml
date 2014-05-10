@@ -1,3 +1,11 @@
+# Whether to automatically update this plugin from BukkitDev
+# This value only affects GBukkitLib itself
+# As of version 1.0, this value does nothing
+# When a version with automatic updating is implemented, this value will:
+# if false) not do any form of checking for updates
+# if true) check for an update on BukkitDev every 5 minutes
+autoupdate: true
+
 # Delay, in seconds, that must be waited before teleportation of a player
 # This time must be waited out without movement or taking damage
 # Set to 0 for instant teleports

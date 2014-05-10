@@ -6,7 +6,13 @@
 
 package me.pagekite.glen3b.library.bukkit;
 
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
@@ -15,6 +21,7 @@ import java.util.logging.Level;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
+import org.apache.commons.lang.Validate;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.Plugin;
 import org.json.simple.JSONArray;
@@ -149,17 +156,15 @@ public class Updater {
 	}
 
 	/**
-	 * Initialize the updater.
+	 * Initialize the updater. This will <em>not</em> automatically begin the update check, {@linkplain Updater#startThread(UpdateType) this method} will.
 	 *
 	 * @param plugin The plugin that is checking for an update.
 	 * @param id The dev.bukkit.org id of the project.
 	 * @param file The file that the plugin is running from, get this by doing this.getFile() from within your main class.
-	 * @param type Specify the type of update this will be. See {@link UpdateType}
 	 * @param announce True if the program should announce the progress of new updates in console.
 	 */
-	public Updater(Plugin plugin, int id, File file, UpdateType type, boolean announce) {
+	public Updater(Plugin plugin, int id, File file, boolean announce) {
 		this.plugin = plugin;
-		this.type = type;
 		this.announce = announce;
 		this.file = file;
 		this.id = id;
@@ -215,7 +220,15 @@ public class Updater {
 			plugin.getLogger().log(Level.SEVERE, "The project ID provided for updating, " + id + " is invalid.", e);
 			this.result = UpdateResult.FAIL_BADID;
 		}
-
+	}
+	
+	/**
+	 * Begin execution of the update checker thread.
+	 * @param type Specify the type of update this will be. See {@link UpdateType}
+	 */
+	public void startThread(UpdateType type){
+		Validate.notNull(type, "The update type must not be null.");
+		
 		this.thread = new Thread(new UpdateRunnable());
 		this.thread.start();
 	}
