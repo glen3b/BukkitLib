@@ -13,10 +13,6 @@ public final class ChatColorPalette {
 	// Internal mechanisms
 	private ChatColorPalette() {}
 
-	private static Color c(int r, int g, int b) {
-		return new Color(r, g, b);
-	}
-
 	private static double getDistance(Color c1, Color c2) {
 		double rmean = (c1.getRed() + c2.getRed()) / 2.0;
 		double r = c1.getRed() - c2.getRed();
@@ -30,12 +26,12 @@ public final class ChatColorPalette {
 
 	private static final Color[] colors = {
 		// foreground
-		c(0, 0, 0), c(0, 0, 170), c(0, 170, 0),
-		c(0, 170, 170), c(170, 0, 0), c(170, 0, 170),
-		c(255, 170, 0), c(170, 170, 170), c(85, 85, 85),
-		c(85, 85, 255), c(85, 255, 85), c(85, 255, 255),
-		c(255, 85, 85), c(255, 85, 255), c(255, 255, 85),
-		c(255, 255, 255),
+		new Color(0, 0, 0), new Color(0, 0, 170), new Color(0, 170, 0),
+		new Color(0, 170, 170), new Color(170, 0, 0), new Color(170, 0, 170),
+		new Color(255, 170, 0), new Color(170, 170, 170), new Color(85, 85, 85),
+		new Color(85, 85, 255), new Color(85, 255, 85), new Color(85, 255, 255),
+		new Color(255, 85, 85), new Color(255, 85, 255), new Color(255, 255, 85),
+		new Color(255, 255, 255),
 	};
 	
 	/**

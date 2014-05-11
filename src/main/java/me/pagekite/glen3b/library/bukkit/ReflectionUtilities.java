@@ -248,8 +248,8 @@ public final class ReflectionUtilities {
 		Validate.notNull(instance, "The ItemStack is null.");
 
 		try {
-			if (Utilities._protocolLib != null) {
-				return Utilities._protocolLib.assureCraftItemStack(instance);
+			if (Utilities.getProtocolUtilityInstance() != null) {
+				return Utilities.getProtocolUtilityInstance().assureCraftItemStack(instance);
 
 			} else {
 				if (_bukkitAPIItemStackToNMSStack == null) {

@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -45,6 +46,12 @@ import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Firework;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.HandlerList;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerKickEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.FireworkMeta;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -59,6 +66,7 @@ import org.bukkit.scheduler.BukkitTask;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Maps;
 
 /**
  * A static class housing common methods, constants, and utility functions.
@@ -73,15 +81,61 @@ public final class Utilities {
 	/**
 	 * Internal reference to ProtocolLib utils.
 	 */
-	static ProtocolUtilities _protocolLib;
+	private static ProtocolUtilities _protocolLib;
+	
+	/**
+	 * <b>This method should not be called in standard programming. It is only visible for internal use.</b>
+	 * @return The protocol operation utility instance, or {@code null} if it does not exist.
+	 */
+	public static ProtocolUtilities getProtocolUtilityInstance(){
+		return _protocolLib;
+	}
+	
+	private static UtilityEventListener _eventListener;
 
+	private static final class UtilityEventListener implements Listener{
+	
+		public UtilityEventListener(Plugin pl){
+			_host = pl;
+		}
+		
+		private Plugin _host;
+		private Map<UUID, String> _kickedPlayers = Maps.newHashMap();
+		
+		public Map<UUID, String> getKickedPlayers(){
+			return _kickedPlayers;
+		}
+		
+		private final class KickRunner implements Runnable{
+			private UUID _id;
+			
+			public KickRunner(Player pl){
+				_id = pl.getUniqueId();
+			}
+
+			@Override
+			public void run() {
+				_kickedPlayers.remove(_id);
+			}
+		}
+		
+		@SuppressWarnings("unused")
+		@EventHandler(priority = EventPriority.MONITOR)
+		public void onKick(final PlayerKickEvent event){
+			_kickedPlayers.put(event.getPlayer().getUniqueId(), event.getReason() == null ? "" : event.getReason());
+			Utilities.Scheduler.scheduleTickTask(_host, new KickRunner(event.getPlayer()));
+		}
+		
+	}
+	
 	/**
 	 * Initializes the utilities class with event registrations and such. Internal method, not meant to be called by user code.
 	 * @param hostPlugin The GBukkitLib plugin instance.
 	 */
-	static void initialize(GBukkitLibraryPlugin hostPlugin){
+	static void initialize(Plugin hostPlugin){
 		synchronized(initializationSynclock){
 			Preconditions.checkState(_protocolLib == null, "Utilities has not been cleaned up since last initialization! Call cleanup(Plugin) to clean up internal fields before you reinitialize it.");
+			Preconditions.checkState(_eventListener == null, "Utilities has not been cleaned up since last initialization! Call cleanup(Plugin) to clean up internal fields before you reinitialize it.");
 
 			RegisteredServiceProvider<ProtocolUtilities> pLib = Bukkit.getServicesManager().getRegistration(ProtocolUtilities.class);
 
@@ -92,6 +146,9 @@ public final class Utilities {
 				_protocolLib = null;
 			}
 
+			_eventListener = new UtilityEventListener(hostPlugin);
+			Bukkit.getPluginManager().registerEvents(_eventListener, hostPlugin);
+			
 			Utilities.Effects.resetCache();
 		}
 	}
@@ -107,6 +164,12 @@ public final class Utilities {
 			}
 
 			_protocolLib = null;
+			
+			if(_eventListener != null){
+				HandlerList.unregisterAll(_eventListener);
+			}
+			
+			_eventListener = null;
 		}
 	}
 
@@ -380,6 +443,15 @@ public final class Utilities {
 			}
 
 			return players;
+		}
+		
+		/**
+		 * Determines if the quit event corresponds to a player being kicked.
+		 * @param event The event representing the kicking of the player.
+		 * @return The kick reason, or {@code null} if and only if the event does not correspond to a known, non-cancelled kick.
+		 */
+		public static String isKick(PlayerQuitEvent event){
+			return _eventListener.getKickedPlayers().get(Preconditions.checkNotNull(event, "The specified event is null!").getPlayer().getUniqueId());
 		}
 
 		/**
