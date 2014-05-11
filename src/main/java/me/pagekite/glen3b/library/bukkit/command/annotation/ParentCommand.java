@@ -273,13 +273,21 @@ public abstract class ParentCommand implements TabExecutor, PreprocessedCommandH
 	private Map<Class<?>, Object> _defaultParamValues;
 
 	/**
-	 * Called by the superclass during execution of the superclass constructor when, if applicable, the subclass is expected to add its own parameter types (that it supports) to the appropriate sets and maps. Initializing the supported and default parameter collections at any point other than in this method will result in an {@link IllegalStateException} during initialization because they were initialized too late. If the subclass does not add support for additional parameter types beyond the default, this method may return without taking action.
+	 * Called by the superclass during execution of the superclass constructor when, if applicable, the subclass is expected to add its own parameter types (that it supports) to the appropriate sets and maps.
+	 * Initializing the supported and default parameter collections at any point other than in this method will result in an {@link IllegalStateException} during initialization because they were initialized too late.
 	 * <p>
-	 * <b>Any call to {@link ParentCommand#getSupportedParameterTypes()} or {@link ParentCommand#getDefaultParameterValues()} within this method will result in infinite recursion.</b>
+	 * If the subclass does not add support for additional parameter types beyond the default, this method does not have to be overriden.
+	 * <p>
+	 * The default implementation of this method is <i>not</i> where the default supported types are added to the collections. Therefore, if extending {@code ParentCommand} directly, it is unneccesary to call the superclass method.
+	 * The default implementation of this method does nothing.
+	 * <p>
+	 * Any call to {@link ParentCommand#getSupportedParameterTypes()} or {@link ParentCommand#getDefaultParameterValues()} within this method would result in infinite recursion, however a safeguard is in place against this. Please use the parameters which represent these variables instead of using the method.
 	 * @param paramTypes A reference to the set of parameter types that are supported for parsing by this class.
 	 * @param defaultParams A reference to the map that maps parameter type values to default instances to use (if the argument is not specified). {@code null} is the default if it is not in this map, so reference types need not be added to this set.
 	 */
-	protected abstract void initializeParameterTypes(Set<Class<?>> paramTypes, Map<Class<?>, Object> defaultParams);
+	protected void initializeParameterTypes(Set<Class<?>> paramTypes, Map<Class<?>, Object> defaultParams){
+		// Default to doing nothing
+	}
 	
 	/**
 	 * Represents the default subcommand, which displays command help. This method is always implemented by the {@code ParentCommand} class for consistency. It is also required that {@code ParentCommand} implements this method because it requires raw access to the list of registered subcommands.
