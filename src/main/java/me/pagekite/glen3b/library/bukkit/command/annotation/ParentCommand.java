@@ -22,11 +22,13 @@ import me.pagekite.glen3b.library.bukkit.datastore.Message;
 import org.apache.commons.lang.Validate;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.command.TabExecutor;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.entity.Player;
 import org.bukkit.util.StringUtil;
 
 import com.google.common.base.Predicate;
@@ -267,9 +269,9 @@ public abstract class ParentCommand implements TabExecutor {
 	 * @param defaultParams A reference to the map that maps parameter type values to default instances to use (if the argument is not specified). {@code null} is the default if it is not in this map, so reference types need not be added to this set.
 	 */
 	protected abstract void initializeParameterTypes(Set<Class<?>> paramTypes, Map<Class<?>, Object> defaultParams);
-
+	
 	/**
-	 * Represents the default subcommand, which displays command help. This method is always implemented by the {@code ParentCommand} class for consistency.
+	 * Represents the default subcommand, which displays command help. This method is always implemented by the {@code ParentCommand} class for consistency. It is also required that {@code ParentCommand} implements this method because it requires raw access to the list of registered subcommands.
 	 */
 	@CommandMethod(aliases = { "help", "?" }, description = "Displays help for this command.")
 	public final void helpCommand(CommandInvocationContext<CommandSender> context, @Optional @Argument(name = "page") int page){
@@ -374,15 +376,22 @@ public abstract class ParentCommand implements TabExecutor {
 	private GBukkitLibraryPlugin _plugin;
 
 	/**
-	 * Get the GBukkitLib config file.
+	 * Get the GBukkitLib plugin.
 	 */
-	private FileConfiguration getConfig(){
+	private GBukkitLibraryPlugin getPlugin(){
 		if(_plugin == null || !_plugin.isEnabled()){
 			// TODO: ParentCommand should not directly depend upon GBukkitLib, maybe global variable (not just message) service?
 			_plugin = (GBukkitLibraryPlugin)Bukkit.getServer().getPluginManager().getPlugin("GBukkitLib");
 		}
-
-		return _plugin.getConfig();
+		
+		return _plugin;
+	}
+	
+	/**
+	 * Get the GBukkitLib config file.
+	 */
+	private FileConfiguration getConfig(){
+		return getPlugin().getConfig();
 	}
 
 	/**
@@ -405,7 +414,7 @@ public abstract class ParentCommand implements TabExecutor {
 
 		if(_supportedParamTypes == null){
 			_subclassInitializedSets = false;
-			_supportedParamTypes = Sets.<Class<?>>newHashSet(String.class, int.class, Integer.class, Double.class, double.class, boolean.class, Boolean.class, float.class, Float.class, char.class, Character.class, long.class, Long.class, short.class, Short.class);
+			_supportedParamTypes = Sets.<Class<?>>newHashSet(String.class, int.class, Integer.class, Double.class, double.class, boolean.class, Boolean.class, float.class, Float.class, char.class, Character.class, long.class, Long.class, short.class, Short.class, Player.class, OfflinePlayer.class);
 		}
 
 		if(_defaultParamValues == null){
@@ -455,6 +464,7 @@ public abstract class ParentCommand implements TabExecutor {
 	 * @throws IllegalArgumentException If {@code argument} is not deserializable to an instance of type. This exception should <i>not</i> if {@code argument} is {@code null}, in which case {@code null} (or the approprate default) should be returned. However, it <i>must</i> be thrown if {@code type} is {@code null}.
 	 * @throws UnsupportedOperationException If the specified {@code type} cannot be deserialized by this method.
 	 */
+	@SuppressWarnings("deprecation") // Needed to get players by name
 	protected Object parseParameter(String argument, Class<?> type) throws IllegalArgumentException, UnsupportedOperationException {
 		if(type == null){
 			throw new IllegalArgumentException("The specified type is null.");
@@ -499,6 +509,10 @@ public abstract class ParentCommand implements TabExecutor {
 		}else if(type == Short.class || type == short.class){
 			short val = Short.parseShort(argument.toLowerCase().trim());
 			return type == Short.class ? Short.valueOf(val) : val;
+		}else if(type == Player.class){
+			return Bukkit.getPlayer(argument);
+		}else if(type == OfflinePlayer.class){
+			return Bukkit.getOfflinePlayer(argument);
 		}
 
 		throw new UnsupportedOperationException("The type " + type.getName() + " could not be parsed as a parameter.");
