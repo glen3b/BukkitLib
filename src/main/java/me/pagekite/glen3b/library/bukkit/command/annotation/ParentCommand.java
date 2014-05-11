@@ -17,6 +17,8 @@ import me.pagekite.glen3b.library.bukkit.GBukkitLibraryPlugin;
 import me.pagekite.glen3b.library.bukkit.Utilities;
 import me.pagekite.glen3b.library.bukkit.command.CommandInvocationContext;
 import me.pagekite.glen3b.library.bukkit.command.CommandSenderType;
+import me.pagekite.glen3b.library.bukkit.command.PreprocessableCommand;
+import me.pagekite.glen3b.library.bukkit.command.PreprocessedCommandHandler;
 import me.pagekite.glen3b.library.bukkit.datastore.Message;
 
 import org.apache.commons.lang.Validate;
@@ -41,7 +43,7 @@ import com.google.common.collect.Sets;
  * Represents a parent command, which can encompass ase commands.
  * @author Glen Husman
  */
-public abstract class ParentCommand implements TabExecutor {
+public abstract class ParentCommand implements TabExecutor, PreprocessedCommandHandler {
 
 	private Map<String, AnnotatedCommandInfo> _aliasesToCommands;
 	private List<AnnotatedCommandInfo> _commands;
@@ -201,58 +203,67 @@ public abstract class ParentCommand implements TabExecutor {
 			return arr != null && index >= 0 && index < arr.length;
 		}
 
-		public void execute(CommandSender sender, Command cmd, String alias, String[] args){
+		private void execute(CommandSender sender, Object arg0, String[] args){
 			// Assume predicate has been fulfilled
-			Object[] methodArgs = new Object[_params.length];
-			methodArgs[0] = _params[0].isAssignableFrom(CommandInvocationContext.class) ? new CommandInvocationContext<>(sender, cmd, alias) : sender; // Only works due to generics not being safe in Java
+						Object[] methodArgs = new Object[_params.length];
+						methodArgs[0] = arg0; // Only works due to generics not being safe in Java
+						if((args.length <= methodArgs.length || _continualStringAtEnd) && args.length >= methodArgs.length - _optionalCt){
+							for(int i = 1; i < _params.length; i++){
+								try{
+									if(_continualStringAtEnd && i == _params.length - 1){
+										StringBuilder arg = new StringBuilder();
+										for(int j = i; j < args.length; j++){
+											arg.append(args[j]);
+											if(j != args.length - 1){
+												arg.append(' ');
+											}
+										}
+										methodArgs[i] = arg.toString();
+									}else{
+										methodArgs[i] = parseParameter(containsIndex(i, args) ? args[i] : null, _params[i]);
+									}
 
-			if((args.length <= methodArgs.length || _continualStringAtEnd) && args.length >= methodArgs.length - _optionalCt){
-				for(int i = 1; i < _params.length; i++){
-					try{
-						if(_continualStringAtEnd && i == _params.length - 1){
-							StringBuilder arg = new StringBuilder();
-							for(int j = i; j < args.length; j++){
-								arg.append(args[j]);
-								if(j != args.length - 1){
-									arg.append(' ');
+									if(!containsIndex(i, args) && !_optionals[i]){
+										sender.sendMessage(Message.get("cmdNotEnoughArgs"));
+										break;
+									}
+								}catch(IllegalArgumentException except){
+									// Error parsing argument
+									Bukkit.getLogger().log(Level.FINE, "Couldn't parse an argument.", except);
+									sender.sendMessage(Message.get("cmdInvalidArg"));
+									break;
 								}
 							}
-							methodArgs[i] = arg.toString();
+
+							// Method arguments have been computed, we are ready to execute!
+							try {
+								Object returnVal = getMethod().invoke(ParentCommand.this, methodArgs);
+								if(returnVal != null && returnVal instanceof CharSequence){
+									// Interpret as a message
+									sender.sendMessage(returnVal.toString());
+								}
+							} catch (IllegalAccessException | IllegalArgumentException
+									| InvocationTargetException e) {
+								// I've taken lots of safeguards, so this code SHOULD never be called
+								// However, if it is called, I want Bukkit to handle it
+								// Bukkit will log it properly and display the "An internal error occurred..." message
+								// Which is the case: Unexpected internal error
+								// Therefore, proper behavior is to rethrow the exception
+								throw new RuntimeException("An error occured while reflecting the appropriate command method within ParentCommand.", e);
+							}
 						}else{
-							methodArgs[i] = parseParameter(containsIndex(i, args) ? args[i] : null, _params[i]);
-						}
-
-						if(!containsIndex(i, args) && !_optionals[i]){
 							sender.sendMessage(Message.get("cmdNotEnoughArgs"));
-							break;
 						}
-					}catch(IllegalArgumentException except){
-						// Error parsing argument
-						Bukkit.getLogger().log(Level.FINE, "Couldn't parse an argument.", except);
-						sender.sendMessage(Message.get("cmdInvalidArg"));
-						break;
 					}
-				}
-
-				// Method arguments have been computed, we are ready to execute!
-				try {
-					Object returnVal = getMethod().invoke(ParentCommand.this, methodArgs);
-					if(returnVal != null && returnVal instanceof CharSequence){
-						// Interpret as a message
-						sender.sendMessage(returnVal.toString());
-					}
-				} catch (IllegalAccessException | IllegalArgumentException
-						| InvocationTargetException e) {
-					// I've taken lots of safeguards, so this code SHOULD never be called
-					// However, if it is called, I want Bukkit to handle it
-					// Bukkit will log it properly and display the "An internal error occurred..." message
-					// Which is the case: Unexpected internal error
-					// Therefore, proper behavior is to rethrow the exception
-					throw new RuntimeException("An error occured while reflecting the appropriate command method within ParentCommand.", e);
-				}
-			}else{
-				sender.sendMessage(Message.get("cmdNotEnoughArgs"));
-			}
+		
+		public void execute(CommandSender sender, Command cmd, String alias, String[] args){
+			// Assume predicate has been fulfilled
+			execute(sender, _params[0].isAssignableFrom(CommandInvocationContext.class) ? new CommandInvocationContext<>(sender, cmd, alias) : sender, args); // Only works due to generics not being safe in Java
+		}
+			
+		public void execute(Player sender, PreprocessableCommand cmd, String alias, String[] args){
+			// Assume predicate has been fulfilled
+			execute(sender, _params[0].isAssignableFrom(CommandInvocationContext.class) ? new CommandInvocationContext<>(sender, cmd, alias) : sender, args); // Only works due to generics not being safe in Java
 		}
 	}
 
@@ -274,7 +285,7 @@ public abstract class ParentCommand implements TabExecutor {
 	 * Represents the default subcommand, which displays command help. This method is always implemented by the {@code ParentCommand} class for consistency. It is also required that {@code ParentCommand} implements this method because it requires raw access to the list of registered subcommands.
 	 */
 	@CommandMethod(aliases = { "help", "?" }, description = "Displays help for this command.")
-	public final void helpCommand(CommandInvocationContext<CommandSender> context, @Optional @Argument(name = "page") int page){
+	public final void helpCommand(CommandInvocationContext<CommandSender, ?> context, @Optional @Argument(name = "page") int page){
 
 		if(page == 0){
 			page = 1;
@@ -543,6 +554,34 @@ public abstract class ParentCommand implements TabExecutor {
 			}
 		}else{
 			helpCommand(new CommandInvocationContext<>(sender, command, alias), 1);
+		}
+		return true;
+	}
+
+	@Override
+	public final boolean onCommand(Player sender, PreprocessableCommand command,
+			String alias, String[] args) {
+		if(args.length >= 1){
+			AnnotatedCommandInfo i = _aliasesToCommands.containsKey(args[0]) ? _aliasesToCommands.get(args[0]) : null;
+
+			if(i != null){
+				if(!i.getAccessRequirement().apply(sender)){
+					sender.sendMessage(Message.get("cmdNoPermission"));
+				}else{
+					// Execute the command!
+					i.execute(sender, command, alias, args);
+				}
+				return true;
+			}else{
+				if(args.length == 1 && Utilities.Arguments.parseInt(args[0], -1) > 0){
+					// Assume help command
+					helpCommand(new CommandInvocationContext<CommandSender, PreprocessableCommand>(sender, command, alias), Integer.parseInt(args[0]));
+				}else{
+					sender.sendMessage(Message.get("cmdUnknown"));
+				}
+			}
+		}else{
+			helpCommand(new CommandInvocationContext<CommandSender, PreprocessableCommand>(sender, command, alias), 1);
 		}
 		return true;
 	}

@@ -1,34 +1,25 @@
 package me.pagekite.glen3b.library.bukkit.command;
 
 import org.apache.commons.lang.Validate;
-import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 
 /**
  * Represents the context of an invoked command.
  * @author Glen Husman
- * @param <T> The guaranteed type of the command sender.
+ * @param <TSender> The guaranteed type of the command sender.
+ * @param <TCommand> The type of the command.
  */
-public final class CommandInvocationContext<T extends CommandSender> {
-
-	/**
-	 * Creates an invocation context with the following parameters. The alias is assumed to be the name of the command.
-	 * @param sender The sender of the command.
-	 * @param command The command being executed.
-	 */
-	public CommandInvocationContext(T sender, Command command){
-		this(sender, command, command == null ? null : command.getName());
-	}
+public final class CommandInvocationContext<TSender extends CommandSender, TCommand> {
 	
-	private T _sender;
-	private Command _cmd;
+	private TSender _sender;
+	private TCommand _cmd;
 	private String _alias;
 	
 	/**
 	 * Get the command that was executed.
 	 * @return The {@code Command} instance which was executed, and is represented by this context.
 	 */
-	public Command getCommand(){
+	public TCommand getCommand(){
 		return _cmd;
 	}
 	
@@ -44,7 +35,7 @@ public final class CommandInvocationContext<T extends CommandSender> {
 	 * Get the sender of this command.
 	 * @return The {@code CommandSender} instance which sent this command.
 	 */
-	public T getSender(){
+	public TSender getSender(){
 		return _sender;
 	}
 	
@@ -54,7 +45,7 @@ public final class CommandInvocationContext<T extends CommandSender> {
 	 * @param command The command being executed.
 	 * @param alias The alias of the command being used for execution.
 	 */
-	public CommandInvocationContext(T sender, Command command, String alias){
+	public CommandInvocationContext(TSender sender, TCommand command, String alias){
 		Validate.notNull(sender, "The sender of the command must not be null.");
 		Validate.notNull(command, "The command must not be null.");
 		Validate.notEmpty(alias, "The command alias must be specified.");
@@ -85,7 +76,7 @@ public final class CommandInvocationContext<T extends CommandSender> {
 		if (!(obj instanceof CommandInvocationContext)) {
 			return false;
 		}
-		CommandInvocationContext<?> other = (CommandInvocationContext<?>) obj;
+		CommandInvocationContext<?, ?> other = (CommandInvocationContext<?, ?>) obj;
 		if (_alias == null) {
 			if (other._alias != null) {
 				return false;

@@ -18,14 +18,15 @@ import org.bukkit.command.PluginCommand;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.command.TabExecutor;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.entity.Player;
 
 import com.google.common.collect.Lists;
 
 /**
- * Represents a base command that can execute subcommands
+ * Represents a base command that can execute subcommands.
  * @author Glen Husman
  */
-public final class BaseCommand implements TabExecutor {
+public final class BaseCommand implements TabExecutor, PreprocessedCommandHandler {
 
 	private String _helpPageHeader = "Help (page %d):";
 	private ArrayList<SubCommand> _subCommands;
@@ -183,6 +184,64 @@ public final class BaseCommand implements TabExecutor {
 		
 		cmd.setExecutor(this);
 		cmd.setTabCompleter(this);
+	}
+
+	@Override
+	public boolean onCommand(Player sender, PreprocessableCommand command,
+			String label, String[] args) {
+		if(args.length == 0 || (args.length == 2 && Utilities.Arguments.parseInt(args[1], -1) > 0 && (args[0].equalsIgnoreCase("help") || args[0].equalsIgnoreCase("?"))) || (args.length == 1 && (Utilities.Arguments.parseInt(args[0], -1) > 0 || args[0].equalsIgnoreCase("help") || args[0].equalsIgnoreCase("?")))){
+    		//Show help manual and quit
+    		int page = 0;
+    		if(args.length == 2){
+    			try{
+    				page = Integer.parseInt(args[1]) - 1;
+    			}catch(Throwable thr){
+    				//Ignore
+    				page = 0;
+    			}
+    		}else if(args.length == 1 && !args[0].equalsIgnoreCase("help")){
+    			try{
+    				page = Integer.parseInt(args[0]) - 1;
+    			}catch(Throwable thr){
+    				//Ignore
+    				page = 0;
+    			}
+    		}
+    		
+    		if(page < 0){
+    			page *= -1;
+    		}
+    		
+    		sender.sendMessage(String.format(ChatColor.AQUA + _helpPageHeader, page + 1));
+    		
+    		if(page * getConfig().getInt("commandsPerPage") > _subCommands.size()){
+    			return true;
+    		}
+    		
+    		for(int i = page * getConfig().getInt("commandsPerPage"); (i < ((page + 1) * getConfig().getInt("commandsPerPage")) && i < _subCommands.size()); i++){
+    			sender.sendMessage(Message.get("cmdHelpEntry").replace("%basecommand%", label).replace("%usage%", _subCommands.get(i).getUsage()).replace("%desc%", _subCommands.get(i).getDescription()));
+    		}
+    		
+    		if(((page + 1) * getConfig().getInt("commandsPerPage")) < _subCommands.size()){
+    			sender.sendMessage(Message.get("cmdHelpSeeMore").replace("%basecommand%", label).replace("%page%", Integer.valueOf(page + 2).toString()));
+    		}
+    		
+    		return true;
+    	}else if(args.length >= 1){
+    		List<SubCommand> cmd = getCommands(args[0], true);
+    		
+    		if(cmd.size() == 1){
+    			if(!cmd.get(0).hasAccess(sender)){
+    				sender.sendMessage(Message.get("cmdNoPermission"));
+    			}else{
+    				cmd.get(0).execute(sender, args);
+    			}
+    			return true;
+    		}
+    		
+    		sender.sendMessage(Message.get("cmdUnknown"));			
+    	}
+		return true;
 	}
 
 }
