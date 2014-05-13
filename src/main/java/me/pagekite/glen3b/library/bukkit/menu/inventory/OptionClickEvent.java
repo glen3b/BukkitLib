@@ -1,6 +1,7 @@
 package me.pagekite.glen3b.library.bukkit.menu.inventory;
 
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 
 /**
  * The event raised by the inventory when an option in the inventory menu is clicked.
@@ -22,6 +23,7 @@ public class OptionClickEvent {
 	private String name;
 	private boolean close;
 	private boolean destroy;
+	private ItemStack clicked;
 	
 	private Player player;
 	
@@ -29,12 +31,13 @@ public class OptionClickEvent {
 	 * Creates an instance of this event.
 	 * @param who The player who clicked on the inventory.
 	 * @param position The zero-based position within the inventory which was clicked.
-	 * @param name The name of the clicked item.
+	 * @param stack The clicked item.
 	 */
-	public OptionClickEvent(Player who, int position, String name) {
+	public OptionClickEvent(Player who, int position, ItemStack stack) {
 		this.player = who;
 		this.position = position;
-		this.name = name;
+		this.name = stack.hasItemMeta() && stack.getItemMeta().hasDisplayName() ? stack.getItemMeta().getDisplayName() : /* TODO Better way? */ stack.getType().toString();
+		this.clicked = stack;
 		this.close = true;
 		this.destroy = false;
 	}
@@ -42,9 +45,19 @@ public class OptionClickEvent {
 	/**
 	 * Gets the name of the item. It may be {@code null}.
 	 * @return The name of the clicked item.
+	 * @deprecated This name is no longer set by the creator of the {@link InventoryMenu}. {@link OptionClickEvent#getItem() getItem()} is preferred.
 	 */
+	@Deprecated
 	public String getName() {
 		return name;
+	}
+	
+	/**
+	 * Gets the item that was clicked.
+	 * @return A reference to the {@link ItemStack} clicked by the player.
+	 */
+	public ItemStack getItem(){
+		return clicked;
 	}
 	
 	/**

@@ -118,6 +118,18 @@ public final class CyclingInventoryMenuFactory {
 	
 	/**
 	 * Sets the option at the specified position to the specified item.
+	 * @param position The zero-based index of the item.
+	 * @param icon The item itself to use.
+	 * @return This instance.
+	 */
+	public CyclingInventoryMenuFactory setOption(int position, ItemStack icon){
+		_wrapped.setOption(position, icon);
+		
+		return this;
+	}
+	
+	/**
+	 * Sets the option at the specified position to the specified item.
 	 * The item will have the name and lore as they were when the array was passed in.
 	 * @param position The zero-based index of the item.
 	 * @param icons The items to use.

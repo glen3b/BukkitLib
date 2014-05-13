@@ -1,10 +1,7 @@
 package me.pagekite.glen3b.library.bukkit.menu.inventory;
 
 import org.apache.commons.lang.Validate;
-import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-
-import com.google.common.base.Function;
 
 /**
  * A class for the creation of inventory menus.
@@ -83,30 +80,6 @@ public final class InventoryMenuFactory {
 	
 	/**
 	 * Registers an option selection handler.
-	 * @param position The position for which to call this handler.
-	 * @param handler The option click handler. The argument is the player that clicked on the slot.
-	 * @return This instance.
-	 * @deprecated Use your own implementation.
-	 */
-	@Deprecated
-	public InventoryMenuFactory registerClickHandler(final int position, final Function<Player, Void> handler){
-		Validate.isTrue(position >= 0 && position < _wrapped.getSize(), "The position is not within the bounds of the menu. Position: ", position);
-		
-		_wrapped.registerOptionClickHandler(new OptionClickEvent.Handler() {
-			
-			@Override
-			public void onOptionClick(OptionClickEvent event) {
-				if(event.getPosition() == position){
-					handler.apply(event.getPlayer());
-				}
-			}
-		});
-		
-		return this;
-	}
-	
-	/**
-	 * Registers an option selection handler.
 	 * @param handler The option click handler.
 	 * @return This instance.
 	 */
@@ -123,6 +96,18 @@ public final class InventoryMenuFactory {
 	 */
 	public InventoryMenuFactory removeOption(int position){
 		_wrapped.deleteOption(position);
+		
+		return this;
+	}
+	
+	/**
+	 * Sets the option at the specified position to the specified item.
+	 * @param position The zero-based index of the item.
+	 * @param icon The item itself to use.
+	 * @return This instance.
+	 */
+	public InventoryMenuFactory setOption(int position, ItemStack icon){
+		_wrapped.setOption(position, icon);
 		
 		return this;
 	}

@@ -167,13 +167,13 @@ public class CyclingInventoryMenu extends InventoryMenu {
 	 *         return {@code -1}.
 	 */
 	public int getSize() {
-		if (optionNames == null || optionIcons == null || cycleDelays == null
-				|| optionNames.length != optionIcons.length) {
+		if (optionIcons == null || cycleDelays == null
+				|| optionIcons.length != optionIcons.length) {
 			// Illegal internal state
 			return -1;
 		}
 
-		return optionNames.length;
+		return optionIcons.length;
 	}
 
 	/**
@@ -193,7 +193,7 @@ public class CyclingInventoryMenu extends InventoryMenu {
 			int slot = event.getRawSlot();
 			if (slot >= 0 && slot < getSize() && optionIcons[slot] != null && optionIcons[slot].length > 0) {
 				OptionClickEvent e = new OptionClickEvent(
-						(Player) event.getWhoClicked(), slot, optionNames[slot]);
+						(Player) event.getWhoClicked(), slot, event.getCurrentItem());
 				for(OptionClickEvent.Handler handlr :_eventHandlers){
 					handlr.onOptionClick(e);
 				}
@@ -227,7 +227,7 @@ public class CyclingInventoryMenu extends InventoryMenu {
 		for (int i = 0; i < optionIcons.length; i++) {
 			if (optionIcons[i] != null && optionIcons[i].length > 0) {
 				inventory.setItem(i, optionIcons[i][0]);
-				if (optionIcons[i].length > 1) {
+				if (optionIcons[i].length > 1 && cycleDelays[i] >= 0) {
 					new ItemCycler(i, inventory).schedule(cycleDelays[i]);
 				}
 			}
@@ -235,6 +235,18 @@ public class CyclingInventoryMenu extends InventoryMenu {
 		return player.openInventory(inventory);
 	}
 
+	/**
+	 * Sets the option at the specified position to the specified item.
+	 * 
+	 * @param position
+	 *            The zero-based index of the item.
+	 * @param icon
+	 *            The item itself to use.
+	 */
+	public void setOption(int position, ItemStack icon) {
+		setOption(position, new ItemStack[] { icon }, 0L);
+	}
+	
 	/**
 	 * Sets the option at the specified position to the specified item. The item
 	 * will have the specified name and lore.
@@ -260,8 +272,8 @@ public class CyclingInventoryMenu extends InventoryMenu {
 	 * 
 	 * @param position
 	 *            The zero-based index of the item.
-	 * @param icon
-	 *            The item itself to use.
+	 * @param icons
+	 *            The items to use.
 	 * @param cycleDelay
 	 *            The time between cycling through items, in server ticks.
 	 */
@@ -279,7 +291,7 @@ public class CyclingInventoryMenu extends InventoryMenu {
 	 *            The items to use.
 	 * @param name
 	 *            The color-formatted name of the item. This name will override
-	 *            all provided names. If it is null, the name will remain
+	 *            all provided names. If it is {@code null}, the names will remain
 	 *            unchanged.
 	 * @param cycleDelay
 	 *            The time between cycling through items, in server ticks.
@@ -292,7 +304,7 @@ public class CyclingInventoryMenu extends InventoryMenu {
 				position);
 		Validate.notEmpty(icons, "The icons array is null or empty.");
 		Validate.noNullElements(icons, "Some icons icons are null.");
-		Validate.isTrue(cycleDelay > 0 || icons.length == 1,
+		Validate.isTrue(cycleDelay >= 0 || icons.length == 1,
 				"The cycle delay must be at least one tick.");
 
 		if (name != null) {
@@ -303,7 +315,6 @@ public class CyclingInventoryMenu extends InventoryMenu {
 			}
 		}
 
-		optionNames[position] = name;
 		optionIcons[position] = icons;
 		cycleDelays[position] = cycleDelay;
 	}
