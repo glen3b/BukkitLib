@@ -27,6 +27,131 @@ import org.bukkit.scheduler.BukkitRunnable;
 public class CyclingInventoryMenu extends InventoryMenu {
 
 	/**
+	 * Creates an inventory menu builder.
+	 * @param name The name of the inventory.
+	 * @param rows The number of rows in the inventory.
+	 * @return The new factory instance.
+	 */
+	public static Builder create(String name, int rows){
+		return new Builder(new CyclingInventoryMenu(name, rows * 9));
+	}
+	
+	/**
+	 * Creates an inventory menu the size of a chest (3 rows).
+	 * @param name The name of the inventory.
+	 * @return The new factory instance.
+	 */
+	public static Builder createChest(String name){
+		return create(name, 3);
+	}
+	
+	/**
+	 * Creates an inventory menu the size of a large chest (6 rows).
+	 * @param name The name of the inventory.
+	 * @return The new factory instance.
+	 */
+	public static Builder createLargeChest(String name){
+		return create(name, 6);
+	}
+	
+	/**
+	 * Creates an inventory menu with one row.
+	 * @param name The name of the inventory.
+	 * @return The new factory instance.
+	 */
+	public static Builder createRow(String name){
+		return create(name, 1);
+	}
+	
+	/**
+	 * A class for the creation of cycling inventory menus.
+	 * @author Glen Husman
+	 */
+	public static class Builder extends InventoryMenu.Builder {
+
+		/**
+		 * Creates an inventory menu factory.
+		 * @param wrapped The inventory menu so far.
+		 */
+		public Builder(CyclingInventoryMenu wrapped){
+			super(wrapped);
+		}
+		
+		/**
+		 * Builds the inventory menu.
+		 * @return A reference to the inventory menu created by this factory.
+		 */
+		public CyclingInventoryMenu build(){
+			return (CyclingInventoryMenu)_wrapped;
+		}
+		
+		/**
+		 * Registers an option selection handler.
+		 * @param handler The option click handler.
+		 * @return This instance.
+		 */
+		public Builder registerClickHandler(OptionClickEvent.Handler handler){
+			_wrapped.registerOptionClickHandler(handler);
+			
+			return this;
+		}
+		
+		/**
+		 * Removes the icon at the specified position.
+		 * @param position The zero-based index of the item.
+		 * @return This instance.
+		 */
+		public Builder removeOption(int position){
+			_wrapped.deleteOption(position);
+			
+			return this;
+		}
+		
+		/**
+		 * Sets the option at the specified position to the specified item.
+		 * The item will have the specified name and lore. All strings must be color-formatted by the caller.
+		 * @param position The zero-based index of the item.
+		 * @param icon The item itself to use.
+		 * @param name The color-formatted name of the item.
+		 * @param info The color-formatted lore of the item.
+		 * @return This instance.
+		 */
+		public Builder setOption(int position, ItemStack icon, String name,
+				String... info){
+			_wrapped.setOption(position, icon, name, info == null ? new String[0] : info);
+			
+			return this;
+		}
+		
+		/**
+		 * Sets the option at the specified position to the specified item.
+		 * @param position The zero-based index of the item.
+		 * @param icon The item itself to use.
+		 * @return This instance.
+		 */
+		public Builder setOption(int position, ItemStack icon){
+			_wrapped.setOption(position, icon);
+			
+			return this;
+		}
+		
+		/**
+		 * Sets the option at the specified position to the specified item.
+		 * The item will have the name and lore as they were when the array was passed in.
+		 * @param position The zero-based index of the item.
+		 * @param icons The items to use.
+		 * @param cycleDelay The delay between cycles of the item, in server ticks.
+		 * @return This instance.
+		 */
+		public Builder setOption(int position, ItemStack[] icons, long cycleDelay){
+			((CyclingInventoryMenu)_wrapped).setOption(position, icons, cycleDelay);
+			
+			return this;
+		}
+		
+	}
+	
+	/**
 	 * Runnable that cycles through items at a specified index.
 	 * 
 	 * @author Glen Husman
