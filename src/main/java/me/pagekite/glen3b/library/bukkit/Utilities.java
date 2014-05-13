@@ -36,11 +36,13 @@ import me.pagekite.glen3b.library.bukkit.teleport.TeleportationManager;
 import org.apache.commons.lang.Validate;
 import org.bukkit.Bukkit;
 import org.bukkit.Color;
+import org.bukkit.DyeColor;
 import org.bukkit.FireworkEffect;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Server;
 import org.bukkit.World;
+import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Entity;
@@ -53,9 +55,12 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerKickEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.FireworkEffectMeta;
 import org.bukkit.inventory.meta.FireworkMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
+import org.bukkit.material.Colorable;
+import org.bukkit.material.MaterialData;
 import org.bukkit.permissions.Permissible;
 import org.bukkit.permissions.Permission;
 import org.bukkit.plugin.Plugin;
@@ -82,7 +87,7 @@ public final class Utilities {
 	 * Internal reference to ProtocolLib utils.
 	 */
 	private static ProtocolUtilities _protocolLib;
-	
+
 	/**
 	 * <b>This method should not be called in standard programming. It is only visible for internal use.</b>
 	 * @return The protocol operation utility instance, or {@code null} if it does not exist.
@@ -90,25 +95,25 @@ public final class Utilities {
 	public static ProtocolUtilities getProtocolUtilityInstance(){
 		return _protocolLib;
 	}
-	
+
 	private static UtilityEventListener _eventListener;
 
 	private static final class UtilityEventListener implements Listener{
-	
+
 		public UtilityEventListener(Plugin pl){
 			_host = pl;
 		}
-		
+
 		private Plugin _host;
 		private Map<UUID, String> _kickedPlayers = Maps.newHashMap();
-		
+
 		public Map<UUID, String> getKickedPlayers(){
 			return _kickedPlayers;
 		}
-		
+
 		private final class KickRunner implements Runnable{
 			private UUID _id;
-			
+
 			public KickRunner(Player pl){
 				_id = pl.getUniqueId();
 			}
@@ -118,16 +123,16 @@ public final class Utilities {
 				_kickedPlayers.remove(_id);
 			}
 		}
-		
+
 		@SuppressWarnings("unused")
 		@EventHandler(priority = EventPriority.MONITOR)
 		public void onKick(final PlayerKickEvent event){
 			_kickedPlayers.put(event.getPlayer().getUniqueId(), event.getReason() == null ? "" : event.getReason());
 			Utilities.Scheduler.scheduleTickTask(_host, new KickRunner(event.getPlayer()));
 		}
-		
+
 	}
-	
+
 	/**
 	 * Initializes the utilities class with event registrations and such. Internal method, not meant to be called by user code.
 	 * @param hostPlugin The GBukkitLib plugin instance.
@@ -148,7 +153,7 @@ public final class Utilities {
 
 			_eventListener = new UtilityEventListener(hostPlugin);
 			Bukkit.getPluginManager().registerEvents(_eventListener, hostPlugin);
-			
+
 			Utilities.Effects.resetCache();
 		}
 	}
@@ -164,11 +169,11 @@ public final class Utilities {
 			}
 
 			_protocolLib = null;
-			
+
 			if(_eventListener != null){
 				HandlerList.unregisterAll(_eventListener);
 			}
-			
+
 			_eventListener = null;
 		}
 	}
@@ -238,15 +243,15 @@ public final class Utilities {
 		private Predicates(){
 			// No instance
 		}
-		
+
 		private static final class InstanceofCommandSenderTypePredicate implements Predicate<Object>{
 
 			public InstanceofCommandSenderTypePredicate(CommandSenderType type){
 				_type = type == null ? CommandSenderType.ALL : type;
 			}
-			
+
 			private CommandSenderType _type;
-			
+
 			@Override
 			public boolean apply(Object sender) {
 				return sender instanceof CommandSender && _type.isInstance(sender.getClass());
@@ -285,7 +290,7 @@ public final class Utilities {
 		public static Predicate<Object> isOfSenderType(CommandSenderType type){
 			return new InstanceofCommandSenderTypePredicate(type);
 		}
-		
+
 		/**
 		 * Returns a predicate that will return {@code true} if and only if the {@link CommandSender} in question is a {@link Player} instance.
 		 * @return A new predicate instance that will return {@code true} when the conditions above are satisfied.
@@ -314,7 +319,7 @@ public final class Utilities {
 			return new HasPermissionPredicate(node);
 		}
 	}
-	
+
 	/**
 	 * Utility methods involving entities.
 	 * @author Glen Husman
@@ -444,7 +449,7 @@ public final class Utilities {
 
 			return players;
 		}
-		
+
 		/**
 		 * Determines if the quit event corresponds to a player being kicked.
 		 * @param event The event representing the kicking of the player.
@@ -828,6 +833,134 @@ public final class Utilities {
 
 			return _protocolLib.setGlowing(stack, isGlowing);
 		}
+
+		/* BEGIN COLORING REGION */
+		
+		private static boolean isColorable(ItemStack stack){
+			return stack.getData() instanceof Colorable || stack.getType() == Material.STAINED_CLAY
+					|| stack.getType() == Material.STAINED_GLASS || stack.getType() == Material.STAINED_GLASS_PANE || stack.getType() == Material.CARPET
+					|| stack.getType() == Material.FIREWORK;
+		}
+
+		@SuppressWarnings("deprecation")
+		private static void color(ItemStack stack, Color color){
+			if(!isColorable(stack)){
+				return;
+			}
+
+			if(stack.getType() != Material.FIREWORK){
+				if(stack.getData() instanceof Colorable){
+					MaterialData data = stack.getData();
+					((Colorable)data).setColor(DyeColor.getByFireworkColor(color));
+					stack.setData(data);
+				}else{
+					stack.setData(new MaterialData(DyeColor.getByFireworkColor(color).getWoolData())); // Needed until Bukkit adds proper support
+				}
+			}else{
+				// Set firework color
+				// This implementation overwrites other colors
+				FireworkEffectMeta meta = ((FireworkEffectMeta)stack.getItemMeta());
+				FireworkEffect eff = meta.getEffect();
+				eff.getColors().clear();
+				eff.getColors().add(color);
+				meta.setEffect(eff);
+				stack.setItemMeta(meta);
+			}
+		}
+		
+		@SuppressWarnings("deprecation")
+		private static void color(ItemStack stack, DyeColor color){
+			if(!isColorable(stack)){
+				return;
+			}
+
+			if(stack.getType() != Material.FIREWORK){
+				if(stack.getData() instanceof Colorable){
+					MaterialData data = stack.getData();
+					((Colorable)data).setColor(color);
+					stack.setData(data);
+				}else{
+					stack.setData(new MaterialData(color.getWoolData())); // Needed until Bukkit adds proper support
+				}
+			}else{
+				// Set firework color
+				// This implementation overwrites other colors
+				FireworkEffectMeta meta = ((FireworkEffectMeta)stack.getItemMeta());
+				FireworkEffect eff = meta.getEffect();
+				eff.getColors().clear();
+				eff.getColors().add(color.getFireworkColor());
+				meta.setEffect(eff);
+				stack.setItemMeta(meta);
+			}
+		}
+
+		/**
+		 * Sets the color of the specified item.
+		 * The item that is passed will be unmodified after the operation.
+		 * @param item The item to modify the data of.
+		 * @param color The new color of the item.
+		 * @return The modified item.
+		 */
+		public static ItemStack setColor(ItemStack item, DyeColor color) {
+			Validate.isTrue(item != null && isColorable(item), "The specified item is not colorable.");
+			Validate.notNull(color, "The specified color is null.");
+
+			ItemStack nItem = item.clone();
+			color(nItem, color);
+			return nItem;
+		}
+		
+		/**
+		 * Sets the color of the specified item.
+		 * The item that is passed will be unmodified after the operation.
+		 * @param item The item to modify the data of.
+		 * @param color The new color of the item. This is assumed to be a color representing a firework's color.
+		 * @return The modified item.
+		 */
+		public static ItemStack setColor(ItemStack item, Color color) {
+			Validate.isTrue(item != null && isColorable(item), "The specified item is not colorable.");
+			Validate.notNull(color, "The specified color is null.");
+
+			ItemStack nItem = item.clone();
+			color(nItem, color);
+			return nItem;
+		}
+		
+		/**
+		 * Sets the color of the specified block.
+		 * The block that is passed will be modified by reference after the operation.
+		 * @param block The block to modify the data of.
+		 * @param color The new color of the item.
+		 */
+		@SuppressWarnings("deprecation")
+		public static void setColor(Block block, DyeColor color) {
+			Validate.isTrue(block != null && ((block.getState() != null && block.getState().getData() instanceof Colorable)
+					|| (block.getType() == Material.STAINED_CLAY
+							|| block.getType() == Material.STAINED_GLASS || block.getType() == Material.STAINED_GLASS_PANE || block.getType() == Material.CARPET)), "The specified block is not colorable.");
+			Validate.notNull(color, "The specified color is null.");
+
+			if(block.getState().getData() instanceof Colorable){
+				MaterialData data = block.getState().getData();
+				((Colorable)data).setColor(color);
+				block.getState().setData(data);
+			}else{
+				block.setData(color.getWoolData()); // Needed until Bukkit adds proper support
+			}
+		}
+		
+		/**
+		 * Sets the color of the specified block.
+		 * The block that is passed will be modified by reference after the operation.
+		 * @param block The block to modify the data of.
+		 * @param color The new color of the item. This is assumed to be a standard color (not a firework color).
+		 */
+		public static void setColor(Block block, Color color) {
+			Validate.notNull(color, "The specified color is null.");
+
+			setColor(block, DyeColor.getByColor(color));
+		}
+		
+		/* END COLORING REGION */
 
 		/**
 		 * Sets the display name of the specified item. <b>It also removes any existing lore.</b>
