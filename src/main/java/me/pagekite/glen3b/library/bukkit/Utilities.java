@@ -854,7 +854,7 @@ public final class Utilities {
 					((Colorable)data).setColor(DyeColor.getByFireworkColor(color));
 					stack.setData(data);
 				}else{
-					stack.setData(new MaterialData(DyeColor.getByFireworkColor(color).getWoolData())); // Needed until Bukkit adds proper support
+					stack.setData(stack.getType().getNewData(DyeColor.getByFireworkColor(color).getWoolData())); // Needed until Bukkit adds proper support
 				}
 			}else{
 				// Set firework color
@@ -880,7 +880,7 @@ public final class Utilities {
 					((Colorable)data).setColor(color);
 					stack.setData(data);
 				}else{
-					stack.setData(new MaterialData(color.getWoolData())); // Needed until Bukkit adds proper support
+					stack.setData(stack.getType().getNewData(color.getWoolData())); // Needed until Bukkit adds proper support
 				}
 			}else{
 				// Set firework color
@@ -914,8 +914,9 @@ public final class Utilities {
 		 * Sets the color of the specified item.
 		 * The item that is passed will be unmodified after the operation.
 		 * @param item The item to modify the data of.
-		 * @param color The new color of the item. This is assumed to be a color representing a firework's color.
+		 * @param color The new color of the item. This is assumed to be a color representing a firework's color (not a standard color).
 		 * @return The modified item.
+		 * @see DyeColor#getByFireworkColor(Color)
 		 */
 		public static ItemStack setColor(ItemStack item, Color color) {
 			Validate.isTrue(item != null && isColorable(item), "The specified item is not colorable.");
@@ -953,6 +954,7 @@ public final class Utilities {
 		 * The block that is passed will be modified by reference after the operation.
 		 * @param block The block to modify the data of.
 		 * @param color The new color of the item. This is assumed to be a standard color (not a firework color).
+		 * @see DyeColor#getByColor(Color)
 		 */
 		public static void setColor(Block block, Color color) {
 			Validate.notNull(color, "The specified color is null.");
