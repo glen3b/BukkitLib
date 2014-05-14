@@ -1,4 +1,4 @@
-package me.pagekite.glen3b.library.bukkit;
+package me.pagekite.glen3b.library.bukkit.reflection;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -9,6 +9,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import me.pagekite.glen3b.library.bukkit.Utilities;
 
 import org.apache.commons.lang.ClassUtils;
 import org.apache.commons.lang.Validate;
