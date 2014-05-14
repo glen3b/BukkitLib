@@ -1,15 +1,20 @@
 package me.pagekite.glen3b.library.bukkit.reflection;
 
-import java.util.HashMap;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 
+import org.apache.commons.lang.ClassUtils;
+import org.apache.commons.lang.Validate;
 import org.bukkit.Bukkit;
+
+import com.google.common.collect.Maps;
 
 /**
  * Represents an internal minecraft package.
  * @author Glen Husman
  */
-public enum InternalPackage implements PackageRepresentation{
+public enum InternalPackage implements PackageClassSource{
 
 	/**
 	 * Represents the {@code net.minecraft.server} package, also known as NMS. This package contains vanilla minecraft server implementation classes.
@@ -39,11 +44,54 @@ public enum InternalPackage implements PackageRepresentation{
 		return _package.getName();
 	}
 	
+	@Override
+	public Class<?> getClass(String className) throws ClassNotFoundException {
+		Validate.notEmpty(className, "The class name must be specified.");
+		
+		String cName = className.trim();
+		String fqcName = getPackage().getName() + ClassUtils.PACKAGE_SEPARATOR + cName;
+		
+		Class<?> retVal = null;
+		Exception errCause = null;
+		
+		if(_loadedClasses.containsKey(cName)){
+			retVal = _loadedClasses.get(cName);
+			
+			if(retVal == null){
+				errCause = new NullPointerException("The cached Class instance representing " + fqcName + " is null.");
+			}
+		}else{
+			try{
+				retVal = Class.forName(fqcName);
+			}catch(ClassNotFoundException except){
+				// Will rethrow later
+				errCause = except;
+				retVal = null;
+			}
+
+			_loadedClasses.put(cName, retVal);
+		}
+		
+		if(retVal == null){
+			throw new ClassNotFoundException(fqcName + " does not exist.", errCause);
+		}
+		
+		return retVal;
+	}
+
+	private Map<String, Class<?>> _loadedClasses = Maps.newHashMap();
+	private Collection<Class<?>> _cachedClassView = Collections.unmodifiableCollection(_loadedClasses.values());
+	
+	@Override
+	public Collection<Class<?>> getCachedClasses() {
+		return _cachedClassView;
+	}
+	
 	/**
 	 * Represents a sub-package of {@link InternalPackage#ORG_BUKKIT_CRAFTBUKKIT org.bukkit.craftbukkit} which further divides that package into categories.
 	 * @author Glen Husman
 	 */
-	public static enum SubPackage implements PackageRepresentation{
+	public static enum SubPackage implements PackageClassSource{
 		
 		/**
 		 * Represents the main subpackage, which is not actually a subpackage, but is the main package.
@@ -151,7 +199,7 @@ public enum InternalPackage implements PackageRepresentation{
 		static {
 			SubPackage[] vals = values();
 			
-			BY_NAME = new HashMap<String, SubPackage>(vals.length);
+			BY_NAME = Maps.newHashMapWithExpectedSize(vals.length);
 			
 	        for (SubPackage subpkg : vals) {
 	            
@@ -171,6 +219,49 @@ public enum InternalPackage implements PackageRepresentation{
 		@Override
 		public String toString(){
 			return _package.getName();
+		}
+		
+		@Override
+		public Class<?> getClass(String className) throws ClassNotFoundException {
+			Validate.notEmpty(className, "The class name must be specified.");
+			
+			String cName = className.trim();
+			String fqcName = getPackage().getName() + ClassUtils.PACKAGE_SEPARATOR + cName;
+			
+			Class<?> retVal = null;
+			Exception errCause = null;
+			
+			if(_loadedClasses.containsKey(cName)){
+				retVal = _loadedClasses.get(cName);
+				
+				if(retVal == null){
+					errCause = new NullPointerException("The cached Class instance representing " + fqcName + " is null.");
+				}
+			}else{
+				try{
+					retVal = Class.forName(fqcName);
+				}catch(ClassNotFoundException except){
+					// Will rethrow later
+					errCause = except;
+					retVal = null;
+				}
+
+				_loadedClasses.put(cName, retVal);
+			}
+			
+			if(retVal == null){
+				throw new ClassNotFoundException(fqcName + " does not exist.", errCause);
+			}
+			
+			return retVal;
+		}
+
+		private Map<String, Class<?>> _loadedClasses = Maps.newHashMap();
+		private Collection<Class<?>> _cachedClassView = Collections.unmodifiableCollection(_loadedClasses.values());
+		
+		@Override
+		public Collection<Class<?>> getCachedClasses() {
+			return _cachedClassView;
 		}
 	}
 }
