@@ -1,8 +1,9 @@
 package me.pagekite.glen3b.library.bukkit.reflection;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 
-import org.bukkit.inventory.ItemStack;
+import org.apache.commons.lang.Validate;
 
 
 /**
@@ -21,7 +22,7 @@ public final class SafeReflection {
 	public static Object getFieldValue(Class<?> clazz, String fieldName){
 		return getFieldValue(clazz, null, fieldName, true);
 	}
-	
+
 	/**
 	 * Attempts to return the value of the specified field.
 	 * @param instance The instance of the specified object which contains the field value.
@@ -32,10 +33,10 @@ public final class SafeReflection {
 		if(instance == null){
 			return null;
 		}
-		
+
 		return getFieldValue(instance.getClass(), instance, fieldName, true);
 	}
-	
+
 	/**
 	 * Attempts to return the value of the specified field.
 	 * @param clazz The type for which to retrieve the field value.
@@ -46,9 +47,9 @@ public final class SafeReflection {
 	public static Object getFieldValue(Class<?> clazz, Object instance, String fieldName){
 		return getFieldValue(clazz, instance, fieldName, true);
 	}
-	
-	
-	
+
+
+
 	/**
 	 * Attempts to return the value of the specified field.
 	 * @param clazz The type for which to retrieve the field value.
@@ -61,11 +62,11 @@ public final class SafeReflection {
 		if(fieldName == null){
 			return null;
 		}
-		
+
 		if(clazz == null){
 			return null;
 		}
-		
+
 		try {
 			Field f;
 			try{
@@ -80,10 +81,10 @@ public final class SafeReflection {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		
+
 		return null;
 	}
-	
+
 	/**
 	 * Attempts to set the value of the specified static.
 	 * @param clazz The type for which to set the field value.
@@ -95,10 +96,10 @@ public final class SafeReflection {
 		if(clazz == null){
 			return false;
 		}
-		
+
 		return setFieldValue(clazz, null, fieldName, true, val);
 	}
-	
+
 	/**
 	 * Attempts to set the value of the specified field.
 	 * @param instance The instance of the specified object which contains the field value.
@@ -110,10 +111,10 @@ public final class SafeReflection {
 		if(instance == null){
 			return false;
 		}
-		
+
 		return setFieldValue(instance.getClass(), instance, fieldName, true, val);
 	}
-	
+
 	/**
 	 * Attempts to set the value of the specified field.
 	 * @param clazz The type for which to set the field value.
@@ -125,7 +126,7 @@ public final class SafeReflection {
 	public static boolean setFieldValue(Class<?> clazz, Object instance, String fieldName, Object val){
 		return setFieldValue(clazz, instance, fieldName, true, val);
 	}
-	
+
 	/**
 	 * Attempts to set the value of the specified field.
 	 * @param clazz The type for which to set the field value.
@@ -139,18 +140,15 @@ public final class SafeReflection {
 		if(fieldName == null){
 			return false;
 		}
-		
+
 		if(clazz == null){
 			return false;
 		}
-		
+
 		try {
 			Field f;
-			try{
-				f = clazz.getField(fieldName);
-			}catch(NoSuchFieldException ex){
-				f = clazz.getDeclaredField(fieldName);
-			}
+			f = clazz.getDeclaredField(fieldName);
+
 			if(setAccessible){
 				f.setAccessible(true);
 			}
@@ -159,48 +157,50 @@ public final class SafeReflection {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		
+
 		return false;
 	}
-	
-	/**
-	 * Attempts to convert an {@code org.bukkit.inventory.ItemStack} into a {@code org.bukkit.craftbukkit.inventory.CraftItemStack}.
-	 * @param craftbukkitObject The object for which to retrieve a CraftBukkit instance.
-	 * @return A new {@code CraftItemStack} instance representing the specified object, or {@code null} if an error occurs.
-	 * @see ReflectionUtilities#getCraftStack(org.bukkit.inventory.ItemStack)
-	 */
-	public static Object toCraftInstance(ItemStack craftbukkitObject){
-		if(craftbukkitObject == null){
-			return null;
-		}
-		
-		try {
-			return ReflectionUtilities.getCraftStack(craftbukkitObject);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		
-		return null;
-	}
-	
+
 	/**
 	 * Attempts to get the NMS handle of the specified object reflectively.
 	 * @param craftbukkitObject The object for which to retrieve the handle.
 	 * @return The method returned by the {@code getHandle()} method of the specified object, or {@code null} if an error occurs.
-	 * @see ReflectionUtilities#getNMSHandle(Object)
+	 * @see ReflectionUtilities.CraftBukkit#getNMSHandle(Object)
 	 */
 	public static Object getNMSHandle(Object craftbukkitObject){
 		if(craftbukkitObject == null){
 			return null;
 		}
-		
+
 		try {
-			return ReflectionUtilities.getNMSHandle(craftbukkitObject);
+			return ReflectionUtilities.CraftBukkit.getNMSHandle(craftbukkitObject);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		
+
 		return null;
 	}
-	
+
+	/**
+	 * Gets the method with the specified parameter types.
+	 * @param clazz The class containing the method.
+	 * @param methodName The name of the method.
+	 * @param parameters The method parameter types.
+	 * @return The method with the details specified, or {@code null} if an error occurs.
+	 * @see Class#getDeclaredMethod(String, Class...)
+	 */
+	public static Method getMethod(Class<?> clazz, String methodName, Class<?>[] parameters){
+		Validate.notNull(clazz, "The class must not be null.");
+
+		try {
+			Method val = clazz.getDeclaredMethod(methodName, parameters);
+			val.setAccessible(true);
+			return val;
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return null;
+	}
+
 }

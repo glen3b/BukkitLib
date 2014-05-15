@@ -36,21 +36,209 @@ import com.google.common.collect.Lists;
  */
 public final class ReflectionUtilities {
 
-	// Reflective instance cache
-	private static Map<Class<?>, Method> _getHandleMethods;
-
 	/**
 	 * Reset the reflective caches stored internally by this class. This should
 	 * generally only be used if reflective operations that are expected to
 	 * succeed do not without a call to this method.
 	 */
-	public static void resetCache() {
-		_getHandleMethods = Collections
+	static void resetCache() {
+		CraftBukkit._getHandleMethods = Collections
 				.synchronizedMap(new HashMap<Class<?>, Method>());
+		_fieldCache = Collections
+				.synchronizedMap(new HashMap<Class<?>, Map<String, Field>>());
+	}
+	
+	/**
+	 * Assumes caller synchronizes on the fieldCache properly.
+	 * @param clazz The class.
+	 * @param field The field to get.
+	 * @return The field value.
+	 * @throws NoSuchFieldException If the field doesn't exist.
+	 */
+	private static Field getCachedFieldInstance(Class<?> clazz, String field) throws NoSuchFieldException{
+		if(!_fieldCache.containsKey(clazz)){
+			_fieldCache.put(clazz, new HashMap<String, Field>());
+		}
+		Map<String, Field> declaredFields = _fieldCache.get(clazz); // returns a REFERENCE
+		if(declaredFields.containsKey(field)){
+			Field val = declaredFields.get(field);
+			if(val == null){
+				throw new NoSuchFieldException(clazz.getCanonicalName() + " does not declare a reflectively accessible field by the name of '" + field + "'.");
+			}
+			return val;
+		}
+		
+		Field value = null;
+		Throwable cause = null;
+		
+		// Caching is my excuse to use an extremely expensive search operation
+		// Hopefully barely any of this will have to be called
+		try{
+			value = clazz.getField(field);
+		}catch(NoSuchFieldException err){
+			try{
+				value = clazz.getDeclaredField(field);
+			}catch(NoSuchFieldException innerErr){
+				try{
+					cause = innerErr.initCause(err);
+				}catch(IllegalStateException except){
+					cause = innerErr;
+				}
+				// value should still be null
+				for(Class<?> superclass = clazz; superclass != null; superclass = superclass.getSuperclass()){
+					for(Field f : superclass.getDeclaredFields()){
+						if(f.getName().equals(field)){
+							value = f;
+							break;
+						}
+					}
+					if(value != null){
+						// We found it!
+						break;
+					}
+				}
+			}
+		}
+		
+		declaredFields.put(field, value);
+		
+		if(value == null){
+			throw (NoSuchFieldException) new NoSuchFieldException(clazz.getCanonicalName() + " does not declare a reflectively accessible field by the name of '" + field + "'.").initCause(cause);
+		}else{
+			// Very important!
+			value.setAccessible(true);
+		}
+		
+		return value;
 	}
 
+	private static Map<Class<?>, Map<String, Field>> _fieldCache;
+	
 	static {
 		resetCache();
+	}
+
+	/**
+	 * Reflection involving Minecraft (NMS) classes and code.
+	 * @author Glen Husman
+	 */
+	public static final class Minecraft{
+
+		private Minecraft(){}
+		
+	}
+
+	/**
+	 * Reflection involving CraftBukkit (OBC) classes and code.
+	 * @author Glen Husman
+	 */
+	public static final class CraftBukkit{
+		
+		private CraftBukkit(){}
+		
+		private static Map<Class<?>, Method> _getHandleMethods;
+
+		/**
+		 * Gets the NMS handle for the specified CraftBukkit object (this method does
+		 * NOT return the CraftBukkit class). Should be compatible across versions as
+		 * it uses reflection. The {@link Method} instance is cached internally,
+		 * so repeated calls to this method with the same parameter type should be relatively efficient.
+		 * 
+		 * <p>
+		 * Certain classes have special behaviors, and are documented below.
+		 * <table>
+		 * <tr>
+		 * <td><b>Class Name</b></td>
+		 * <td><b>Output</b></td>
+		 * </tr>
+		 * <tr>
+		 * <td>{@code ItemStack}</td>
+		 * <td>A copy of the {@code ItemStack} as a {@code net.minecraft.server.ItemStack}, as retrieved by static methods in the {@code CraftItemStack} implementation class.
+		 * </tr>
+		 * <tr>
+		 * <td>Any CraftBukkit type (with a {@code getHandle} method)</td>
+		 * <td>The return value of that type's {@code getHandle} method on that instance.</td>
+		 * </tr>
+		 * </table>
+		 * </p>
+		 * 
+		 * @param entity
+		 *            The bukkit object instance for which to retrieve the handle
+		 *            using the {@code getHandle()} method.
+		 * @return The NMS handle for the specified CraftBukkit object.
+		 * @author Glen Husman
+		 * @throws SecurityException
+		 *             If a {@link SecurityManager} blocks this operation.
+		 * @throws NoSuchMethodException
+		 *             If the object does not have an NMS representation retrievable
+		 *             via a CraftBukkit method with the signature of
+		 *             {@code getHandle()}.
+		 * @throws InvocationTargetException
+		 *             If the handle retriever method throws an exception.
+		 * @throws IllegalArgumentException
+		 *             If an argument is invalid.
+		 * @throws IllegalAccessException
+		 *             If the method cannot be successfully accessed.
+		 */
+		public static Object getNMSHandle(Object entity)
+				throws NoSuchMethodException, SecurityException,
+				IllegalAccessException, IllegalArgumentException,
+				InvocationTargetException {
+			Validate.notNull(entity, "The object instance must not be null.");
+
+			if (_getHandleMethods.containsKey(entity.getClass())) {
+				try {
+					Method hMethod = _getHandleMethods.get(entity.getClass());
+
+					return hMethod.invoke(entity);
+				} catch (NullPointerException npe) {
+					throw (NoSuchMethodException) new NoSuchMethodException(
+							"The specified object does not have a getHandle method.")
+					.initCause(npe);
+				}
+			}
+
+			try {
+				Method handleMethod = entity.getClass().getMethod("getHandle");
+				handleMethod.setAccessible(true);
+				_getHandleMethods.put(entity.getClass(), handleMethod);
+				return handleMethod.invoke(entity);
+			} catch (NoSuchMethodException err) {
+				if(entity instanceof ItemStack){
+					// A CraftItemStack was retrieved
+					// We can assume that the item passed in was a bukkit ItemStack
+					// And that craftStack instanceof CraftItemStack
+					// Therefore, we should convert to NMS stack and return
+					// Using CraftItemStack.asNMSCopy(ItemStack)
+					if (_bukkitAPIItemStackToNMSStack == null) {
+						try {
+							_bukkitAPIItemStackToNMSStack = Class.forName(
+									"org.bukkit.craftbukkit."
+											+ getPackageVersionString()
+											+ ".inventory.CraftItemStack", true,
+											Bukkit.getServer().getClass().getClassLoader())
+											.getMethod("asNMSCopy", ItemStack.class);
+							// Reasonably hacky :)
+						} catch (ClassNotFoundException e) {
+							// Unexpected reflective error
+							// The class should exist
+							// However, it should be assumed that this
+							// plugin cannot convert NMS stacks, so according
+							// to us the method doesn't exist
+							// Therefore, we should rethrow the exception
+							throw (NoSuchMethodException) new NoSuchMethodException(
+									"The specified object does not have a getHandle method.")
+							.initCause(e);
+						}
+					}
+					return _bukkitAPIItemStackToNMSStack.invoke(null, entity);
+				}
+				_getHandleMethods.put(entity.getClass(), null);
+				throw (NoSuchMethodException) new NoSuchMethodException(
+						"The specified object does not have a getHandle method.")
+				.initCause(err);
+			}
+		}
 	}
 
 	/**
@@ -64,10 +252,10 @@ public final class ReflectionUtilities {
 		if(PrimitiveType.PRIMITIVE_TYPE_MAP.inverse().containsKey(wrapper)){
 			return PrimitiveType.PRIMITIVE_TYPE_MAP.inverse().get(wrapper);
 		}
-		
+
 		throw new ClassNotFoundException("The specified type (" + wrapper.getCanonicalName() + ") is not a supported primitive wrapper type.");
 	}
-	
+
 	/**
 	 * Get the {@code Class} instance representing the wrapper type of the specified primitive keyword.
 	 * @param primitive The primitive type for which to find the wrapper type.
@@ -79,10 +267,10 @@ public final class ReflectionUtilities {
 		if(PrimitiveType.PRIMITIVE_TYPE_MAP.containsKey(primitive)){
 			return PrimitiveType.PRIMITIVE_TYPE_MAP.get(primitive);
 		}
-		
+
 		throw new ClassNotFoundException("The specified type (" + primitive.getCanonicalName() + ") is not a supported primitive type.");
 	}
-	
+
 	/**
 	 * Sets the value of a field on an {@link Object} instance via reflection.
 	 * 
@@ -110,11 +298,10 @@ public final class ReflectionUtilities {
 	public static void setValue(Object instance, String fieldName, Object value)
 			throws NoSuchFieldException, SecurityException,
 			IllegalArgumentException, IllegalAccessException {
-		Validate.notNull(instance, "The object instance must not be null.");
-		Validate.notEmpty(fieldName, "The field name must be defined.");
-
-		Field field = instance.getClass().getDeclaredField(fieldName);
-		field.setAccessible(true);
+		Validate.notNull(instance, "The specified object must not be null.");
+		Validate.notEmpty(fieldName, "The field name must be specified.");
+		
+		Field field = getCachedFieldInstance(instance.getClass(), fieldName);
 		field.set(instance, value);
 	}
 
@@ -271,9 +458,10 @@ public final class ReflectionUtilities {
 	 * are true:
 	 * <ul>
 	 * <li>Reflective utilities are not compatible with this server.</li>
-	 * <li>An unexpected error occurs. Due to this behavior, no exceptions
-	 * except argument invalidity exceptions will be thrown from this method.</li>
+	 * <li>An unexpected error occurs.</li>
 	 * </ul>
+	 * Due to this behavior, no exceptions except argument invalidity
+	 * exceptions will be thrown from this method.
 	 * </p>
 	 * 
 	 * @param instance
@@ -328,108 +516,6 @@ public final class ReflectionUtilities {
 
 		}
 		return null;
-	}
-
-	/**
-	 * Gets the NMS handle for the specified bukkit object (NOT the CraftBukkit
-	 * class). Should be compatible across versions as it uses reflection. The
-	 * {@link Method} instance is cached internally, so repeated calls to this
-	 * method with the same parameter type should be relatively efficient.
-	 * 
-	 * <p>
-	 * Certain classes have special behaviors, and are documented below.
-	 * <table>
-	 * <tr>
-	 * <td><b>Class Name</b></td>
-	 * <td><b>Output</b></td>
-	 * </tr>
-	 * <tr>
-	 * <td>{@code ItemStack}</td>
-	 * <td>A copy of the {@code ItemStack} as a {@code net.minecraft.server.ItemStack}, as retrieved by static methods in the {@code CraftItemStack} implementation class.
-	 * </tr>
-	 * <tr>
-	 * <td>Any CraftBukkit type (with a {@code getHandle} method)</td>
-	 * <td>The return value of that type's {@code getHandle} method on that instance.</td>
-	 * </tr>
-	 * </table>
-	 * </p>
-	 * 
-	 * @param entity
-	 *            The bukkit object instance for which to retrieve the handle
-	 *            using the {@code getHandle()} method.
-	 * @return The NMS handle for the specified CraftBukkit object.
-	 * @author Glen Husman
-	 * @throws SecurityException
-	 *             If a {@link SecurityManager} blocks this operation.
-	 * @throws NoSuchMethodException
-	 *             If the object does not have an NMS representation retrievable
-	 *             via a CraftBukkit method with the signature of
-	 *             {@code getHandle()}.
-	 * @throws InvocationTargetException
-	 *             If the handle retriever method throws an exception.
-	 * @throws IllegalArgumentException
-	 *             If an argument is invalid.
-	 * @throws IllegalAccessException
-	 *             If the method cannot be successfully accessed.
-	 */
-	public static Object getNMSHandle(Object entity)
-			throws NoSuchMethodException, SecurityException,
-			IllegalAccessException, IllegalArgumentException,
-			InvocationTargetException {
-		Validate.notNull(entity, "The object instance must not be null.");
-
-		if (_getHandleMethods.containsKey(entity.getClass())) {
-			try {
-				Method hMethod = _getHandleMethods.get(entity.getClass());
-
-				return hMethod.invoke(entity);
-			} catch (NullPointerException npe) {
-				throw (NoSuchMethodException) new NoSuchMethodException(
-						"The specified object does not have a getHandle method.")
-				.initCause(npe);
-			}
-		}
-
-		try {
-			Method handleMethod = entity.getClass().getMethod("getHandle");
-			handleMethod.setAccessible(true);
-			_getHandleMethods.put(entity.getClass(), handleMethod);
-			return handleMethod.invoke(entity);
-		} catch (NoSuchMethodException err) {
-			if(entity instanceof ItemStack){
-				// A CraftItemStack was retrieved
-				// We can assume that the item passed in was a bukkit ItemStack
-				// And that craftStack instanceof CraftItemStack
-				// Therefore, we should convert to NMS stack and return
-				// Using CraftItemStack.asNMSCopy(ItemStack)
-				if (_bukkitAPIItemStackToNMSStack == null) {
-					try {
-						_bukkitAPIItemStackToNMSStack = Class.forName(
-								"org.bukkit.craftbukkit."
-										+ getPackageVersionString()
-										+ ".inventory.CraftItemStack", true,
-										Bukkit.getServer().getClass().getClassLoader())
-										.getMethod("asNMSCopy", ItemStack.class);
-						// Reasonably hacky :)
-					} catch (ClassNotFoundException e) {
-						// Unexpected reflective error
-						// The class should exist
-						// However, it should be assumed that this
-						// plugin cannot convert NMS stacks, so according
-						// to us the method doesn't exist
-						// Therefore, we should rethrow the exception
-						throw (NoSuchMethodException) new NoSuchMethodException(
-								"The specified object does not have a getHandle method.")
-						.initCause(e);
-					}
-				}
-				return _bukkitAPIItemStackToNMSStack.invoke(null, entity);
-			}
-			_getHandleMethods.put(entity.getClass(), null);
-			throw (NoSuchMethodException) new NoSuchMethodException(
-					"The specified object does not have a getHandle method.")
-			.initCause(err);
-		}
 	}
 
 	/**
@@ -495,15 +581,14 @@ public final class ReflectionUtilities {
 	 *             If an argument is invalid.
 	 * @see Class#getDeclaredField
 	 * @see Field#get
-	 * @author <a
-	 *         href="https://forums.bukkit.org/members/microgeek.90705652/">microgeek
-	 *         </a>
 	 */
 	public static Object getValue(Object instance, String fieldName)
 			throws NoSuchFieldException, SecurityException,
 			IllegalArgumentException, IllegalAccessException {
-		Field field = instance.getClass().getDeclaredField(fieldName);
-		field.setAccessible(true);
+		Validate.notNull(instance, "The specified object must not be null.");
+		Validate.notEmpty(fieldName, "The field name must be specified.");
+		
+		Field field = getCachedFieldInstance(instance.getClass(), fieldName);
 		return field.get(instance);
 	}
 
