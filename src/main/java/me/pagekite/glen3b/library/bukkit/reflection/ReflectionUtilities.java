@@ -3,6 +3,7 @@ package me.pagekite.glen3b.library.bukkit.reflection;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.Collections;
@@ -28,6 +29,10 @@ import com.google.common.collect.Lists;
  * @author <a
  *         href="https://forums.bukkit.org/members/microgeek.90705652/">microgeek
  *         </a>
+ * @see Class
+ * @see Method
+ * @see Field
+ * @see Constructor
  */
 public final class ReflectionUtilities {
 
@@ -48,6 +53,36 @@ public final class ReflectionUtilities {
 		resetCache();
 	}
 
+	/**
+	 * Get the {@code Class} instance representing the primitive type of the specified wrapper class.
+	 * @param wrapper The wrapper type for which to find the primitive type.
+	 * @return The primitive type for the specified wrapper.
+	 * @see PrimitiveType
+	 * @exception ClassNotFoundException Thrown if a matching primitive class cannot be found for the specified wrapper type.
+	 */
+	public static Class<?> getPrimitiveForWrapper(Class<?> wrapper) throws ClassNotFoundException{
+		if(PrimitiveType.PRIMITIVE_TYPE_MAP.inverse().containsKey(wrapper)){
+			return PrimitiveType.PRIMITIVE_TYPE_MAP.inverse().get(wrapper);
+		}
+		
+		throw new ClassNotFoundException("The specified type (" + wrapper.getCanonicalName() + ") is not a supported primitive wrapper type.");
+	}
+	
+	/**
+	 * Get the {@code Class} instance representing the wrapper type of the specified primitive keyword.
+	 * @param primitive The primitive type for which to find the wrapper type.
+	 * @return The wrapper type for the specified primitive.
+	 * @see PrimitiveType
+	 * @exception ClassNotFoundException Thrown if a matching wrapper class cannot be found for the specified primitive type.
+	 */
+	public static Class<?> getWrapperForPrimitive(Class<?> primitive) throws ClassNotFoundException{
+		if(PrimitiveType.PRIMITIVE_TYPE_MAP.containsKey(primitive)){
+			return PrimitiveType.PRIMITIVE_TYPE_MAP.get(primitive);
+		}
+		
+		throw new ClassNotFoundException("The specified type (" + primitive.getCanonicalName() + ") is not a supported primitive type.");
+	}
+	
 	/**
 	 * Sets the value of a field on an {@link Object} instance via reflection.
 	 * 

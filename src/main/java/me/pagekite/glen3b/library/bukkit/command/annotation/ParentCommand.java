@@ -20,6 +20,7 @@ import me.pagekite.glen3b.library.bukkit.command.CommandSenderType;
 import me.pagekite.glen3b.library.bukkit.command.PreprocessableCommand;
 import me.pagekite.glen3b.library.bukkit.command.PreprocessedCommandHandler;
 import me.pagekite.glen3b.library.bukkit.datastore.Message;
+import me.pagekite.glen3b.library.bukkit.reflection.PrimitiveType;
 
 import org.apache.commons.lang.Validate;
 import org.bukkit.Bukkit;
@@ -206,7 +207,7 @@ public abstract class ParentCommand implements TabExecutor, PreprocessedCommandH
 		private void execute(CommandSender sender, Object arg0, String[] args){
 			// Assume predicate has been fulfilled
 						Object[] methodArgs = new Object[_params.length];
-						methodArgs[0] = arg0; // Only works due to generics not being safe in Java
+						methodArgs[0] = arg0;
 						if((args.length <= methodArgs.length || _continualStringAtEnd) && args.length >= methodArgs.length - _optionalCt){
 							for(int i = 1; i < _params.length; i++){
 								try{
@@ -249,7 +250,10 @@ public abstract class ParentCommand implements TabExecutor, PreprocessedCommandH
 								// Bukkit will log it properly and display the "An internal error occurred..." message
 								// Which is the case: Unexpected internal error
 								// Therefore, proper behavior is to rethrow the exception
-								throw new RuntimeException("An error occured while reflecting the appropriate command method within ParentCommand.", e);
+								//
+								// Also, an InvocationTargetException means that the clients method threw the exceptiom
+								// Therefore it should be handed up to Bukkit (like we've previously been doing)
+								throw new RuntimeException("An error occured while reflecting a command method within ParentCommand.", e); // Bukkit will display the appropriate error message to the sender and will log the error
 							}
 						}else{
 							sender.sendMessage(Message.get("cmdNotEnoughArgs"));
@@ -281,9 +285,10 @@ public abstract class ParentCommand implements TabExecutor, PreprocessedCommandH
 	 * The default implementation of this method is <i>not</i> where the default supported types are added to the collections. Therefore, if extending {@code ParentCommand} directly, it is unneccesary to call the superclass method.
 	 * The default implementation of this method does nothing.
 	 * <p>
-	 * Any call to {@link ParentCommand#getSupportedParameterTypes()} or {@link ParentCommand#getDefaultParameterValues()} within this method would result in infinite recursion, however a safeguard is in place against this. Please use the parameters which represent these variables instead of using the method.
+	 * Any call to {@link ParentCommand#getSupportedParameterTypes()} or {@link ParentCommand#getDefaultParameterValues()} within this method would result in infinite recursion, however a safeguard is in place against this.
+	 * Please use the parameters which represent these variables instead of using those methods.
 	 * @param paramTypes A reference to the set of parameter types that are supported for parsing by this class.
-	 * @param defaultParams A reference to the map that maps parameter type values to default instances to use (if the argument is not specified). {@code null} is the default if it is not in this map, so reference types need not be added to this set.
+	 * @param defaultParams A reference to the map that maps parameter type values to default instances to use (if the argument is not specified). {@code null} is the default if it is not in this map, so reference types need not be added to this set unless the implementation wishes to provide custom default values for reference types.
 	 */
 	protected void initializeParameterTypes(Set<Class<?>> paramTypes, Map<Class<?>, Object> defaultParams){
 		// Default to doing nothing
@@ -399,7 +404,6 @@ public abstract class ParentCommand implements TabExecutor, PreprocessedCommandH
 	 */
 	private GBukkitLibraryPlugin getPlugin(){
 		if(_plugin == null || !_plugin.isEnabled()){
-			// TODO: ParentCommand should not directly depend upon GBukkitLib, maybe global variable (not just message) service?
 			_plugin = (GBukkitLibraryPlugin)Bukkit.getServer().getPluginManager().getPlugin("GBukkitLib");
 		}
 		
@@ -427,34 +431,33 @@ public abstract class ParentCommand implements TabExecutor, PreprocessedCommandH
 	 */
 	private synchronized void checkInitSets(){
 		if(_inSetInitializer){
-			// TODO: Do I explain in more detail how to fix it?
 			throw new IllegalStateException("The subclass initializer has not completed execution. Calls to this method are not supported during initialization of the internal collections.");
 		}
 
 		if(_supportedParamTypes == null){
 			_subclassInitializedSets = false;
-			_supportedParamTypes = Sets.<Class<?>>newHashSet(String.class, int.class, Integer.class, Double.class, double.class, boolean.class, Boolean.class, float.class, Float.class, char.class, Character.class, long.class, Long.class, short.class, Short.class, Player.class, OfflinePlayer.class);
+			_supportedParamTypes = Sets.<Class<?>>newHashSet(String.class,
+					int.class, Integer.class,
+					Double.class, double.class, boolean.class, Boolean.class,
+					float.class, Float.class, char.class, Character.class,
+					long.class, Long.class, short.class, Short.class,
+					Player.class, OfflinePlayer.class);
 		}
 
 		if(_defaultParamValues == null){
+			// Even with the introduction of the PrimitiveType enum, subclasses still may wish to add in their own default values
+			// or possibly override our defaults completely
 			_subclassInitializedSets = false;
 			_defaultParamValues = Maps.<Class<?>, Object>newHashMap();
-			_defaultParamValues.put(Double.class, Double.valueOf(0));
-			_defaultParamValues.put(double.class, 0.0);
-			_defaultParamValues.put(Integer.class, Integer.valueOf(0));
-			_defaultParamValues.put(int.class, 0);
-			_defaultParamValues.put(boolean.class, false);
-			_defaultParamValues.put(Boolean.class, Boolean.FALSE);
-			_defaultParamValues.put(float.class, 0.0F);
-			_defaultParamValues.put(Float.class, Float.valueOf(0.0F));
-			_defaultParamValues.put(Character.class, Character.valueOf(Character.MIN_VALUE));
-			_defaultParamValues.put(char.class, Character.MIN_VALUE);
-			_defaultParamValues.put(Byte.class, Byte.valueOf((byte) 0));
-			_defaultParamValues.put(byte.class, (byte) 0);
-			_defaultParamValues.put(long.class, 0L);
-			_defaultParamValues.put(Long.class, Long.valueOf(0L));
-			_defaultParamValues.put(short.class, (short)0);
-			_defaultParamValues.put(Short.class, Short.valueOf((short) 0));
+			for(PrimitiveType primitive : PrimitiveType.values()){
+				if(primitive == PrimitiveType.VOID){
+					// We don't need to put too many nulls in the map
+					continue;
+				}
+				
+				_defaultParamValues.put(primitive.getPrimitive(), primitive.getDefaultValue(false));
+				_defaultParamValues.put(primitive.getWrapper(), primitive.getDefaultValue(true));
+			}
 		}
 
 		if(!_subclassInitializedSets){
