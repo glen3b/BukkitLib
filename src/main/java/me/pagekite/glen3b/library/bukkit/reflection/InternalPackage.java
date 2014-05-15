@@ -54,8 +54,8 @@ public enum InternalPackage implements PackageClassSource{
 		Class<?> retVal = null;
 		Exception errCause = null;
 		
-		if(_loadedClasses.containsKey(cName)){
-			retVal = _loadedClasses.get(cName);
+		if(loadedClasses.containsKey(cName)){
+			retVal = loadedClasses.get(cName);
 			
 			if(retVal == null){
 				errCause = new NullPointerException("The cached Class instance representing " + fqcName + " is null.");
@@ -69,7 +69,7 @@ public enum InternalPackage implements PackageClassSource{
 				retVal = null;
 			}
 
-			_loadedClasses.put(cName, retVal);
+			loadedClasses.put(cName, retVal);
 		}
 		
 		if(retVal == null){
@@ -79,8 +79,8 @@ public enum InternalPackage implements PackageClassSource{
 		return retVal;
 	}
 
-	private Map<String, Class<?>> _loadedClasses = Maps.newHashMap();
-	private Collection<Class<?>> _cachedClassView = Collections.unmodifiableCollection(_loadedClasses.values());
+	Map<String, Class<?>> loadedClasses = Maps.newHashMap(); // Package-private to allow for resetCache to work
+	private Collection<Class<?>> _cachedClassView = Collections.unmodifiableCollection(loadedClasses.values());
 	
 	@Override
 	public Collection<Class<?>> getCachedClasses() {
@@ -231,8 +231,8 @@ public enum InternalPackage implements PackageClassSource{
 			Class<?> retVal = null;
 			Exception errCause = null;
 			
-			if(_loadedClasses.containsKey(cName)){
-				retVal = _loadedClasses.get(cName);
+			if(loadedClasses.containsKey(cName)){
+				retVal = loadedClasses.get(cName);
 				
 				if(retVal == null){
 					errCause = new NullPointerException("The cached Class instance representing " + fqcName + " is null.");
@@ -246,7 +246,7 @@ public enum InternalPackage implements PackageClassSource{
 					retVal = null;
 				}
 
-				_loadedClasses.put(cName, retVal);
+				loadedClasses.put(cName, retVal);
 			}
 			
 			if(retVal == null){
@@ -256,8 +256,8 @@ public enum InternalPackage implements PackageClassSource{
 			return retVal;
 		}
 
-		private Map<String, Class<?>> _loadedClasses = Maps.newHashMap();
-		private Collection<Class<?>> _cachedClassView = Collections.unmodifiableCollection(_loadedClasses.values());
+		Map<String, Class<?>> loadedClasses = Maps.newHashMap(); // Package-private to allow for resetCache to work
+		private Collection<Class<?>> _cachedClassView = Collections.unmodifiableCollection(loadedClasses.values());
 		
 		@Override
 		public Collection<Class<?>> getCachedClasses() {

@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 import me.pagekite.glen3b.library.bukkit.Utilities;
+import me.pagekite.glen3b.library.bukkit.reflection.InternalPackage.SubPackage;
 
 import org.apache.commons.lang.ClassUtils;
 import org.apache.commons.lang.Validate;
@@ -46,6 +47,14 @@ public final class ReflectionUtilities {
 				.synchronizedMap(new HashMap<Class<?>, Method>());
 		_fieldCache = Collections
 				.synchronizedMap(new HashMap<Class<?>, Map<String, Field>>());
+		
+		for(InternalPackage pkg : InternalPackage.values()){
+			pkg.loadedClasses.clear();
+		}
+		
+		for(SubPackage pkg : SubPackage.values()){
+			pkg.loadedClasses.clear();
+		}
 	}
 	
 	/**
@@ -126,6 +135,16 @@ public final class ReflectionUtilities {
 
 		private Minecraft(){}
 		
+		/**
+		 * Gets the NMS class with the specified name.
+		 * @param name The name of the class in the {@code net.minecraft.server} package.
+		 * @return The class instance.
+		 * @throws ClassNotFoundException If the class with the specified name is not found.
+		 * @see InternalPackage#getClass(String)
+		 */
+		public static Class<?> getNMSType(String name) throws ClassNotFoundException{
+			return InternalPackage.NET_MINECRAFT_SERVER.getClass(name);
+		}
 	}
 
 	/**
