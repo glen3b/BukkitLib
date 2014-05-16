@@ -4,11 +4,13 @@ import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.logging.Level;
 
 import me.pagekite.glen3b.library.bukkit.Constants;
 
@@ -30,24 +32,10 @@ public final class ServerTransportManager implements PluginMessageListener {
 
 	private Plugin _plugin;
 
-	/**
-	 * Represents a handler of a received result. This interface is intended to be used for results which may not be returned immediately. Default usages of this interface will remove the reference to the object after calling it once. This means you must re-register it to receive another notification of receiving data.
-	 * @author Glen Husman
-	 * @param <T> The type of the result.
-	 */
-	public static interface ResultReceived<T>{
-
-		/**
-		 * Called upon receiving the result of an operation.
-		 * @param result The result.
-		 */
-		public void onReceive(T result);
-	}
-
-	private Map<String, List<ResultReceived<String[]>>> _playerListReceivers = new HashMap<String, List<ResultReceived<String[]>>>();
+	private Map<String, List<ResultReceived<String[]>>> _playerListReceivers = Collections.synchronizedMap(new HashMap<String, List<ResultReceived<String[]>>>());
 
 	/**
-	 * Internal constructor. <b>Should not be called except by the GBukkitLib plugin instance.</b>
+	 * Internal constructor. <b>Should not be called except by the GBukkitLib plugin instance.</b> This type is registered as a service.
 	 * @param plugin The GBukkitLib plugin instance.
 	 */
 	public ServerTransportManager(Plugin plugin){
@@ -83,7 +71,7 @@ public final class ServerTransportManager implements PluginMessageListener {
 		Validate.notEmpty(serverName, "The server name must not be empty.");
 
 		if(!_playerListReceivers.containsKey(serverName.toLowerCase().trim())){
-			_playerListReceivers.put(serverName.toLowerCase().trim(), new ArrayList<ResultReceived<String[]>>());
+			_playerListReceivers.put(serverName.toLowerCase().trim(), new ArrayList<ResultReceived<String[]>>(1));
 		}
 
 		_playerListReceivers.get(serverName.toLowerCase().trim()).add(resultHandler);
@@ -93,16 +81,24 @@ public final class ServerTransportManager implements PluginMessageListener {
 		out.writeUTF("PlayerList");
 		out.writeUTF(serverName);
 
-		schedulePlayerTask(new PlayerTaskHandler(){
-
-			@Override
-			public void runTask(Player player) {
-				player.sendPluginMessage(_plugin, "BungeeCord", out.toByteArray());
-			}
-
-		});
+		schedulePlayerTask(new SendPluginMessageToPlayer(out));
 	}
 
+	private final class SendPluginMessageToPlayer implements PlayerTaskHandler{
+
+		private ByteArrayDataOutput _out;
+		
+		public SendPluginMessageToPlayer(ByteArrayDataOutput out){
+			_out = out;
+		}
+		
+		@Override
+		public void runTask(Player player) {
+			player.sendPluginMessage(_plugin, "BungeeCord", _out.toByteArray());
+		}
+		
+	}
+	
 	/**
 	 * Interface allowing a task to be run upon a player signing on.
 	 * @author Glen Husman
@@ -125,8 +121,9 @@ public final class ServerTransportManager implements PluginMessageListener {
 	/**
 	 * Schedule a player task if necessary, or run it immediately if possible.
 	 * @param task The task to run.
+	 * @return {@code true} if the task ran immediately, {@code false} otherwise.
 	 */
-	private void schedulePlayerTask(PlayerTaskHandler task){
+	private boolean schedulePlayerTask(PlayerTaskHandler task){
 		Validate.notNull(task);
 		
 		int onlineCount = Bukkit.getServer().getOnlinePlayers().length;
@@ -134,9 +131,11 @@ public final class ServerTransportManager implements PluginMessageListener {
 		if(onlineCount >= 1){
 			// We have a player
 			task.runTask(Bukkit.getServer().getOnlinePlayers()[_randomProvider.nextInt(onlineCount)]);
+			return true;
 		}else{
 			// Wait until sign-on
 			new PlayerSignonWaiter(task).runTaskTimer(_plugin, Constants.TICKS_PER_SECOND, Constants.TICKS_PER_SECOND / 2);
+			return false;
 		}
 	}
 	
@@ -191,7 +190,7 @@ public final class ServerTransportManager implements PluginMessageListener {
 		} catch (IOException e) {
 			// There was an issue in creating the subchannel string
 			// TODO: Handle it better
-			e.printStackTrace();
+			Bukkit.getLogger().log(Level.SEVERE, "Error reading subchannel response information from BungeeCord.", e);
 		}
 	}
 
