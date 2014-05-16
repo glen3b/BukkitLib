@@ -10,6 +10,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import me.pagekite.glen3b.library.bukkit.Utilities;
 import me.pagekite.glen3b.library.bukkit.reflection.InternalPackage.SubPackage;
@@ -47,16 +48,16 @@ public final class ReflectionUtilities {
 				.synchronizedMap(new HashMap<Class<?>, Method>());
 		_fieldCache = Collections
 				.synchronizedMap(new HashMap<Class<?>, Map<String, Field>>());
-		
+
 		for(InternalPackage pkg : InternalPackage.values()){
 			pkg.loadedClasses.clear();
 		}
-		
+
 		for(SubPackage pkg : SubPackage.values()){
 			pkg.loadedClasses.clear();
 		}
 	}
-	
+
 	/**
 	 * Assumes caller synchronizes on the fieldCache properly.
 	 * @param clazz The class.
@@ -76,10 +77,10 @@ public final class ReflectionUtilities {
 			}
 			return val;
 		}
-		
+
 		Field value = null;
 		Throwable cause = null;
-		
+
 		// Caching is my excuse to use an extremely expensive search operation
 		// Hopefully barely any of this will have to be called
 		try{
@@ -108,21 +109,21 @@ public final class ReflectionUtilities {
 				}
 			}
 		}
-		
+
 		declaredFields.put(field, value);
-		
+
 		if(value == null){
 			throw (NoSuchFieldException) new NoSuchFieldException(clazz.getCanonicalName() + " does not declare a reflectively accessible field by the name of '" + field + "'.").initCause(cause);
 		}else{
 			// Very important!
 			value.setAccessible(true);
 		}
-		
+
 		return value;
 	}
 
 	private static Map<Class<?>, Map<String, Field>> _fieldCache;
-	
+
 	static {
 		resetCache();
 	}
@@ -134,7 +135,7 @@ public final class ReflectionUtilities {
 	public static final class Minecraft{
 
 		private Minecraft(){}
-		
+
 		/**
 		 * Gets the NMS class with the specified name.
 		 * @param name The name of the class in the {@code net.minecraft.server} package.
@@ -152,9 +153,9 @@ public final class ReflectionUtilities {
 	 * @author Glen Husman
 	 */
 	public static final class CraftBukkit{
-		
+
 		private CraftBukkit(){}
-		
+
 		/**
 		 * Gets the OBC class with the specified name.
 		 * @param name The name of the class in the specified subpackage.
@@ -166,7 +167,32 @@ public final class ReflectionUtilities {
 		public static Class<?> getType(SubPackage src, String name) throws ClassNotFoundException{
 			return src == null ? getType(name) : src.getClass(name);
 		}
-		
+
+		private static boolean _hasCachedCraftPlayer = false;
+		private static Class<? extends org.bukkit.entity.Player> _cachedCraftPlayerType = null;
+
+		/**
+		 * Gets the {@link Class} instance representing the {@code org.bukkit.craftbukkit.entity.CraftPlayer} implementation class.
+		 * @return The cached {@code org.bukkit.craftbukkit.entity.CraftPlayer} {@link Class} instance, or {@code null} if it could not be found.
+		 */
+		public static synchronized Class<? extends org.bukkit.entity.Player> getCraftPlayerType(){
+			if(!_hasCachedCraftPlayer){
+				Class<?> cachedPl = null;
+				try{
+					cachedPl = getType(SubPackage.ENTITY, "CraftPlayer");
+				}catch(ClassNotFoundException except){
+					cachedPl = null;
+					except.printStackTrace();
+				}
+
+				_cachedCraftPlayerType = cachedPl == null ? null : cachedPl.asSubclass(org.bukkit.entity.Player.class);
+
+				_hasCachedCraftPlayer = true;
+			}
+
+			return _cachedCraftPlayerType;
+		}
+
 		/**
 		 * Gets the OBC class with the specified name.
 		 * @param name The name of the class in the {@code prg.bukkit.craftbukkit} package.
@@ -177,7 +203,7 @@ public final class ReflectionUtilities {
 		public static Class<?> getType(String name) throws ClassNotFoundException{
 			return InternalPackage.ORG_BUKKIT_CRAFTBUKKIT.getClass(name);
 		}
-		
+
 		private static Map<Class<?>, Method> _getHandleMethods;
 
 		/**
@@ -342,7 +368,7 @@ public final class ReflectionUtilities {
 			IllegalArgumentException, IllegalAccessException {
 		Validate.notNull(instance, "The specified object must not be null.");
 		Validate.notEmpty(fieldName, "The field name must be specified.");
-		
+
 		Field field = getCachedFieldInstance(instance.getClass(), fieldName);
 		field.set(instance, value);
 	}
@@ -598,10 +624,15 @@ public final class ReflectionUtilities {
 	 * @return The version component of the NMS package running on this server.
 	 * @author Glen Husman
 	 */
-	public static String getPackageVersionString() {
-		return Bukkit.getServer().getClass().getPackage().getName()
-				.replace(ClassUtils.PACKAGE_SEPARATOR, ",").split(",")[3];
+	public static synchronized String getPackageVersionString() {
+		if(_obcPkgVerStr == null){
+			_obcPkgVerStr = Bukkit.getServer().getClass().getPackage().getName()
+					.split(Pattern.quote(ClassUtils.PACKAGE_SEPARATOR))[3];
+		}
+		return _obcPkgVerStr;
 	}
+	
+	private static String _obcPkgVerStr = null;
 
 	/**
 	 * Gets the value of a field on an {@link Object} instance via reflection.
@@ -629,7 +660,7 @@ public final class ReflectionUtilities {
 			IllegalArgumentException, IllegalAccessException {
 		Validate.notNull(instance, "The specified object must not be null.");
 		Validate.notEmpty(fieldName, "The field name must be specified.");
-		
+
 		Field field = getCachedFieldInstance(instance.getClass(), fieldName);
 		return field.get(instance);
 	}

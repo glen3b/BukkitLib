@@ -22,6 +22,7 @@ public enum InternalPackage implements PackageClassSource{
 	NET_MINECRAFT_SERVER(Package.getPackage("net.minecraft.server." + ReflectionUtilities.getPackageVersionString())),
 	/**
 	 * Represents the {@code org.bukkit.craftbukkit} package, also known as OBC. This package contains CraftBukkit implementation classes of Bukkit interfaces and abstract classes.
+	 * As a general rule, fully-qualified references to types within this package will not be a link, and they will not contain the version component of the package name.
 	 */
 	ORG_BUKKIT_CRAFTBUKKIT(Bukkit.getServer().getClass().getPackage());
 	
