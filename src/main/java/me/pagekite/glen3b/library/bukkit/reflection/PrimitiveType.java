@@ -1,12 +1,12 @@
 package me.pagekite.glen3b.library.bukkit.reflection;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.Map;
 
-import com.google.common.base.Defaults;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.primitives.Primitives;
 
 /**
  * Represents all Java primitives. This class does not convert to and from primitives and wrappers.
@@ -15,52 +15,160 @@ import com.google.common.primitives.Primitives;
  */
 public enum PrimitiveType {
 
+	
+	
 	/**
 	 * Represents a boolean.
 	 * @see Boolean
 	 */
-	BOOLEAN(boolean.class),
+	BOOLEAN(boolean.class, Boolean.class),
 	/**
 	 * Represents a signed byte.
 	 * @see Byte
 	 */
-	BYTE(byte.class),
+	BYTE(byte.class, Byte.class),
 	/**
 	 * Represents a character.
 	 * @see Character
 	 */
-	CHARACTER(char.class),
+	CHARACTER(char.class, Character.class),
 	/**
 	 * Represents a double-precision floating-point value.
 	 * @see Double
 	 */
-	DOUBLE(double.class),
+	DOUBLE(double.class, Double.class),
 	/**
 	 * Represents a single-precision floating-point value.
 	 * @see Float
 	 */
-	FLOAT(float.class),
+	FLOAT(float.class, Float.class),
 	/**
 	 * Represents a signed integer.
 	 * @see Integer
 	 */
-	INTEGER(int.class),
+	INTEGER(int.class, Integer.class),
 	/**
 	 * Represents a long integer (signed).
 	 * @see Long
 	 */
-	LONG(long.class),
+	LONG(long.class, Long.class),
 	/**
 	 * Represents a short integer (signed).
 	 * @see Short
 	 */
-	SHORT(short.class),
+	SHORT(short.class, Short.class),
 	/**
 	 * Represents void, which has no value.
 	 * Note that by this class, {@code null} is considered to be the only instance of this type.
 	 * @see Void
 	 */
-	VOID(void.class);
+	VOID(void.class, Void.class);
+	
+	/**
+	 * Represents default values for primitive types as defined by the <i>Java Language Specification</i>.
+	 */
+	public static final class DefaultValues{
+		private DefaultValues(){}
+		
+		/**
+		 * Represents default primitive values as instances of the primitive types.
+		 */
+		public static final class Primitives{
+			private Primitives(){}
+			
+			/**
+			 * Represents the default boolean value.
+			 */
+			public static final boolean BOOLEAN_DEFAULT = false;
+			
+			/**
+			 * Represents the default byte value.
+			 */
+			public static final byte BYTE_DEFAULT = (byte)0;
+			
+			/**
+			 * Represents the default character value.
+			 */
+			public static final char CHARACTER_DEFAULT = '\0';
+			
+			/**
+			 * Represents the default double value.
+			 */
+			public static final double DOUBLE_DEFAULT = 0.0;
+			
+			/**
+			 * Represents the default float value.
+			 */
+			public static final float FLOAT_DEFAULT = 0.0F;
+			
+			/**
+			 * Represents the default integer value.
+			 */
+			public static final int INTEGER_DEFAULT = 0;
+			
+			/**
+			 * Represents the default long value.
+			 */
+			public static final long LONG_DEFAULT = 0L;
+			
+			/**
+			 * Represents the default short value.
+			 */
+			public static final short SHORT_DEFAULT = (short)0;
+		}
+		
+		/**
+		 * Represents default primitive values as instances of the wrapper types.
+		 */
+		public static final class Wrappers{
+			private Wrappers(){}
+			
+			/**
+			 * Represents the default {@link Boolean} value.
+			 */
+			public static final Boolean BOOLEAN_DEFAULT = new Boolean(Primitives.BOOLEAN_DEFAULT);
+			
+			/**
+			 * Represents the default {@link Byte} value.
+			 */
+			public static final Byte BYTE_DEFAULT = new Byte(Primitives.BYTE_DEFAULT);
+			
+			/**
+			 * Represents the default {@link Character} value.
+			 */
+			public static final Character CHARACTER_DEFAULT = new Character(Primitives.CHARACTER_DEFAULT);
+			
+			/**
+			 * Represents the default {@link Double} value.
+			 */
+			public static final Double DOUBLE_DEFAULT = new Double(Primitives.DOUBLE_DEFAULT);
+			
+			/**
+			 * Represents the default {@link Float} value.
+			 */
+			public static final Float FLOAT_DEFAULT = new Float(Primitives.FLOAT_DEFAULT);
+			
+			/**
+			 * Represents the default {@link Integer} value.
+			 */
+			public static final Integer INTEGER_DEFAULT = new Integer(Primitives.INTEGER_DEFAULT);
+			
+			/**
+			 * Represents the default {@link Long} value.
+			 */
+			public static final Long LONG_DEFAULT = new Long(Primitives.LONG_DEFAULT);
+			
+			/**
+			 * Represents the default {@link Short} value.
+			 */
+			public static final Short SHORT_DEFAULT = new Short(Primitives.SHORT_DEFAULT);
+			
+			/**
+			 * Represents the default (and only) {@link Void} value, {@code null}.
+			 */
+			public static final Void VOID_DEFAULT = null;
+		}
+	}
 	
 	private Object _default;
 	private Object _wrapperDefault;
@@ -88,30 +196,34 @@ public enum PrimitiveType {
 	}
 	
 	/**
-	 * Returns the default value for this primitive.
-	 * @return The default value for this primitive as an instance of the primitive class.
+	 * Returns the default value for this primitive. <b>This method should only be used if the {@code PrimitiveType} is not known at compile time.</b> If it is, the values in {@link DefaultValues} should be used in preference to this method.
+	 * @return The default value for this primitive as an instance of the wrapper class (as the returned value is an {@code Object}).
 	 */
 	public Object getDefaultValue(){
-		return getDefaultValue(false);
+		return _wrapperDefault;
 	}
 	
 	/**
 	 * Returns the default value for this primitive.
 	 * @param useWrapper Whether to express the returned value as an instance of the wrapper class ({@code true}) or of the primitive class ({@code false}).
 	 * @return The default value for this primitive.
+	 * @deprecated This method effectively ignores the parameter as the language runtime automatically boxes values to be of the wrapper type when returned as an {@code Object}. {@link #getDefaultValue()} is preferred.
 	 */
+	@Deprecated
 	public Object getDefaultValue(boolean useWrapper){
 		return useWrapper ? _wrapperDefault : _default;
 	}
 	
 	/**
-	 * @param clazz The PRIMITIVEs Class object.
+	 * @param primitive The primitive type.
+	 * @param ref The reference/wrapper type.
 	 */
-	private PrimitiveType(Class<?> clazz){
-		_primitiveClass = clazz;
-		_wrapperClass = Primitives.wrap(clazz);
-		_default = Defaults.defaultValue(_primitiveClass);
-		_wrapperDefault = _wrapperClass.cast(_default);
+	private PrimitiveType(Class<?> primitive, Class<?> ref){
+		_primitiveClass = primitive;
+		_wrapperClass = ref;
+		// Type defaults are NOT assigned here, they are assigned in static initializer
+		_default = null;
+		_wrapperDefault = null;
 	}
 	
 	static{
@@ -123,9 +235,47 @@ public enum PrimitiveType {
 			primitiveTypeToEnumBuilder.put(t.getPrimitive(), t);
 			wrapperTypeToEnumBuilder.put(t.getWrapper(), t);
 		}
+		
 		PRIMITIVE_TYPE_MAP = primitiveToWrapperBuilder.build();
 		_primitiveTypeToEnumValueMap = primitiveTypeToEnumBuilder.build();
 		_wrapperTypeToEnumValueMap = wrapperTypeToEnumBuilder.build();
+		
+		// This is really a hack
+		// Basically it gets all the default values which are declared as constants in the Primitives and Wrappers classes
+		// And it assigns the appropriate values in the enum type
+		for(Field field : DefaultValues.Primitives.class.getDeclaredFields()){
+			int mods = field.getModifiers();
+			if(Modifier.isPublic(mods) && Modifier.isStatic(mods) && Modifier.isFinal(mods)){
+				// Assume this field represents a "default" constant
+				PrimitiveType type = _primitiveTypeToEnumValueMap.get(field.getType());
+				if(type == null){
+					continue;
+				}
+				
+				try {
+					type._default = field.get(null);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		
+		for(Field field : DefaultValues.Wrappers.class.getDeclaredFields()){
+			int mods = field.getModifiers();
+			if(Modifier.isPublic(mods) && Modifier.isStatic(mods) && Modifier.isFinal(mods)){
+				// Assume this field represents a "default" constant
+				PrimitiveType type = _wrapperTypeToEnumValueMap.get(field.getType());
+				if(type == null){
+					continue;
+				}
+				
+				try {
+					type._wrapperDefault = field.get(null);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		}
 	}
 	
 	/**
@@ -152,9 +302,6 @@ public enum PrimitiveType {
 	 * @return The enum value representing the specified class, or {@code null} if not found.
 	 */
 	public static PrimitiveType getPrimitiveType(Class<?> clazz){
-		if(clazz == null){
-			return PrimitiveType.VOID;
-		}
 		
 		if(_primitiveTypeToEnumValueMap.containsKey(clazz)){
 			return _primitiveTypeToEnumValueMap.get(clazz);

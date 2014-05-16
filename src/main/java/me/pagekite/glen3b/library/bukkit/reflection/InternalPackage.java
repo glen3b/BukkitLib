@@ -92,11 +92,7 @@ public enum InternalPackage implements PackageClassSource{
 	 * @author Glen Husman
 	 */
 	public static enum SubPackage implements PackageClassSource{
-		
-		/**
-		 * Represents the main subpackage, which is not actually a subpackage, but is the main package.
-		 */
-		MAIN(null),
+
 		/**
 		 * Represents the subpackage containing block-related classes.
 		 */

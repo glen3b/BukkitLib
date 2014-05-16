@@ -455,8 +455,9 @@ public abstract class ParentCommand implements TabExecutor, PreprocessedCommandH
 					continue;
 				}
 				
-				_defaultParamValues.put(primitive.getPrimitive(), primitive.getDefaultValue(false));
-				_defaultParamValues.put(primitive.getWrapper(), primitive.getDefaultValue(true));
+				// Java should automatically do the boxing/unboxing
+				_defaultParamValues.put(primitive.getPrimitive(), primitive.getDefaultValue());
+				_defaultParamValues.put(primitive.getWrapper(), primitive.getDefaultValue());
 			}
 		}
 

@@ -142,7 +142,7 @@ public final class ReflectionUtilities {
 		 * @throws ClassNotFoundException If the class with the specified name is not found.
 		 * @see InternalPackage#getClass(String)
 		 */
-		public static Class<?> getNMSType(String name) throws ClassNotFoundException{
+		public static Class<?> getType(String name) throws ClassNotFoundException{
 			return InternalPackage.NET_MINECRAFT_SERVER.getClass(name);
 		}
 	}
@@ -154,6 +154,29 @@ public final class ReflectionUtilities {
 	public static final class CraftBukkit{
 		
 		private CraftBukkit(){}
+		
+		/**
+		 * Gets the OBC class with the specified name.
+		 * @param name The name of the class in the specified subpackage.
+		 * @param src The subpackage containing the class.
+		 * @return The class instance.
+		 * @throws ClassNotFoundException If the class with the specified name is not found.
+		 * @see SubPackage#getClass(String)
+		 */
+		public static Class<?> getType(SubPackage src, String name) throws ClassNotFoundException{
+			return src == null ? getType(name) : src.getClass(name);
+		}
+		
+		/**
+		 * Gets the OBC class with the specified name.
+		 * @param name The name of the class in the {@code prg.bukkit.craftbukkit} package.
+		 * @return The class instance.
+		 * @throws ClassNotFoundException If the class with the specified name is not found.
+		 * @see InternalPackage#getClass(String)
+		 */
+		public static Class<?> getType(String name) throws ClassNotFoundException{
+			return InternalPackage.ORG_BUKKIT_CRAFTBUKKIT.getClass(name);
+		}
 		
 		private static Map<Class<?>, Method> _getHandleMethods;
 
