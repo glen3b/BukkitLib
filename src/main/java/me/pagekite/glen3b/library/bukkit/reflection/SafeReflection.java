@@ -48,6 +48,19 @@ public final class SafeReflection {
 		return getFieldValue(clazz, instance, fieldName, true);
 	}
 
+	/**
+	 * Creates an instance of the specified type.
+	 * @param clazz The type for which to create the instance.
+	 * @param args The arguments to pass to the constructor.
+	 * @return The newly created instance, or {@code null} if an error occurs.
+	 */
+	public static <T> T createInstance(Class<T> clazz, Object... args){
+		try{
+			return ReflectionUtilities.createInstance(clazz, args);
+		}catch(Exception ex){
+			return null;
+		}
+	}
 
 
 	/**

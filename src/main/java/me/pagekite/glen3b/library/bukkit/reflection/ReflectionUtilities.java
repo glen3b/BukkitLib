@@ -1,5 +1,6 @@
 package me.pagekite.glen3b.library.bukkit.reflection;
 
+import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -58,6 +59,56 @@ public final class ReflectionUtilities {
 		}
 	}
 
+	/**
+	 * Creates an instance of the specified class.
+	 * @param clazz The {@code Class} for which to create an instance.
+	 * @param args The arguments to pass to the constructor.
+	 * @return An instance of the specified type created by the closest matching constructor.
+	 * @throws SecurityException If a {@link SecurityManager} blocks this operation.
+	 * @throws NoSuchMethodException If a constructor with the specified criteria does not exist.
+	 * @throws InvocationTargetException If an exception occurs during the invocation of the constructor.
+	 * @throws IllegalArgumentException If the incorrect number or type of arguments were specified.
+	 * @throws IllegalAccessException If the constructor cannot be accessed. Due to the call to {@link java.lang.reflect.Constructor#setAccessible(boolean) setAccessible}, this exception should never be thrown.
+	 * @throws InstantiationException If the specified type cannot be created, such as if it is an abstract class.
+	 * @see Constructor#newInstance(Object...)
+	 */
+	@SuppressWarnings("unchecked")
+	public static <T> T createInstance(Class<T> clazz, Object... args) throws NoSuchMethodException, SecurityException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException{
+		Validate.notNull(clazz, "The reflected type must be defined.");
+		if(args == null){
+			// Interpret as empty
+			args = new Object[0];
+		}
+		
+		Class<?>[] argTypes = new Class<?>[args.length];
+		
+		for(int i = 0; i < argTypes.length; i++){
+			argTypes[i] = args[i] == null ? Object.class : args[i].getClass();
+		}
+		
+		return (T) getConstructor(clazz, argTypes).newInstance(args);
+	}
+	
+	/**
+	 * Gets a constructor, which may be inaccessible to public viewers due to access modifiers, for the specified class.
+	 * @param clazz The {@code Class} for which to obtain the constructor.
+	 * @param cArgs The types of the arguments to pass to the constructor.
+	 * @return The constructor instance with the specified criteria.
+	 * @throws SecurityException If a {@link SecurityManager} blocks this operation.
+	 * @throws NoSuchMethodException If a constructor with the specified criteria does not exist.
+	 */
+	public static Constructor<?> getConstructor(Class<?> clazz, Class<?>... cArgs) throws NoSuchMethodException, SecurityException{
+		Validate.notNull(clazz, "The reflected type must be defined.");
+		if(cArgs == null){
+			// Interpret as empty
+			cArgs = new Class<?>[0];
+		}
+		
+		Constructor<?> ctor = clazz.getDeclaredConstructor(cArgs);
+		ctor.setAccessible(true);
+		return ctor;
+	}
+	
 	/**
 	 * Assumes caller synchronizes on the fieldCache properly.
 	 * @param clazz The class.
@@ -369,6 +420,11 @@ public final class ReflectionUtilities {
 		Validate.notNull(instance, "The specified object must not be null.");
 		Validate.notEmpty(fieldName, "The field name must be specified.");
 
+		if(instance.getClass().isArray() && fieldName.equals("length")){
+			// Throw custom error on attempting to reflect length fields
+			throw new IllegalAccessException("It is impossible to reflectively set the 'length' field of an array class.");
+		}
+		
 		Field field = getCachedFieldInstance(instance.getClass(), fieldName);
 		field.set(instance, value);
 	}
@@ -661,6 +717,11 @@ public final class ReflectionUtilities {
 		Validate.notNull(instance, "The specified object must not be null.");
 		Validate.notEmpty(fieldName, "The field name must be specified.");
 
+		if(instance.getClass().isArray() && fieldName.equals("length")){
+			// Reflect length fields
+			return Array.getLength(instance);
+		}
+		
 		Field field = getCachedFieldInstance(instance.getClass(), fieldName);
 		return field.get(instance);
 	}
