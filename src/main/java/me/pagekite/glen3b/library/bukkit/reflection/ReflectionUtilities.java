@@ -691,6 +691,30 @@ public final class ReflectionUtilities {
 	private static String _obcPkgVerStr = null;
 
 	/**
+	 * Gets a {@link Field} declared by a subtype of {@link Object} instance via reflection.
+	 * 
+	 * @param clazz
+	 *            The type containing the field.
+	 * @param fieldName
+	 *            The name of the {@link Field} to retrieve.
+	 * @return The object representing the reflectively obtained field.
+	 * @throws SecurityException
+	 *             If a {@link SecurityManager} blocks this operation.
+	 * @throws NoSuchFieldException
+	 *             If the specified field does not exist.
+	 * @see Class#getDeclaredField
+	 * @see Field
+	 */
+	public static Field getField(Class<?> clazz, String fieldName)
+			throws NoSuchFieldException, SecurityException {
+		Validate.notNull(clazz, "The specified class must not be null.");
+		Validate.notEmpty(fieldName, "The field name must be specified.");
+
+		
+		return getCachedFieldInstance(clazz, fieldName);
+	}
+	
+	/**
 	 * Gets the value of a field on an {@link Object} instance via reflection.
 	 * 
 	 * @param instance

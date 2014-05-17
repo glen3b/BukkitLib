@@ -447,6 +447,36 @@ public final class Utilities {
 
 			return null;
 		}
+		
+		/**
+		 * Gets a set of entities within a certain range.
+		 * <p>
+		 * <i>Implementation Note:</i> This method uses {@link Location#distanceSquared(Location)} for distance comparison to reduce the computational expense of this method.
+		 * This method will also only iterate through entities in the world specified by the center location.
+		 * @param center The centerpoint of the circular range.
+		 * @param range The radius of the circle representing the range. Negative values are treated as if they were positive.
+		 * @param clazz The type of the entities being found. This may be {@code Entity.class} for all entities.
+		 * @return A non-null list of all entities within the specified range from the specified location.
+		 */
+		public static <T extends Entity> List<T> getEntitiesInRange(Location center, double range, Class<T> clazz) {
+			Validate.notNull(center, "The center location must be defined.");
+			Validate.notNull(center.getWorld(), "The center location must be defined.");
+			
+			List<T> entities = new ArrayList<T>();
+			
+			if(range == 0){
+				// No point in searching
+				return entities;
+			}
+			
+			double squared = range * range;
+			for (T entity : center.getWorld().getEntitiesByClass(clazz)){
+				if (entity.getLocation().distanceSquared(center) <= squared){
+					entities.add(entity);
+				}
+			}
+			return entities;
+		}
 	}
 
 	/**
