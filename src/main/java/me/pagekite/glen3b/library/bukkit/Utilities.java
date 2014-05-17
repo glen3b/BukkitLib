@@ -20,11 +20,13 @@ package me.pagekite.glen3b.library.bukkit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import me.pagekite.glen3b.library.bukkit.command.CommandSenderType;
@@ -37,6 +39,7 @@ import org.apache.commons.lang.Validate;
 import org.bukkit.Bukkit;
 import org.bukkit.Color;
 import org.bukkit.DyeColor;
+import org.bukkit.EntityEffect;
 import org.bukkit.FireworkEffect;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -46,12 +49,15 @@ import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Firework;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Wolf;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.player.PlayerKickEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
@@ -72,6 +78,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
 /**
  * A static class housing common methods, constants, and utility functions.
@@ -105,6 +112,9 @@ public final class Utilities {
 		}
 
 		private Plugin _host;
+
+		// Kick event determiners
+		
 		private Map<UUID, String> _kickedPlayers = Maps.newHashMap();
 
 		public Map<UUID, String> getKickedPlayers(){
@@ -131,6 +141,32 @@ public final class Utilities {
 			Utilities.Scheduler.scheduleTickTask(_host, new KickRunner(event.getPlayer()));
 		}
 
+		// End kick event determiners
+		
+		
+		// Wolf spawn assurance
+		private Set<Location> _wolfSpawnLocs = Sets.newHashSet();
+		
+		public Set<Location> getWolfSpawnLocSet(){
+			return _wolfSpawnLocs;
+		}
+		
+		@SuppressWarnings("unused")
+		@EventHandler(priority = EventPriority.HIGHEST)
+		public void onEntitySpawn(final CreatureSpawnEvent event){
+			if(event.getEntityType() == EntityType.WOLF){
+				// Avoid a double iteration (a "contains" and "remove" call)
+				Iterator<Location> iter = getWolfSpawnLocSet().iterator();
+				
+				while(iter.hasNext()){
+					if(iter.next().equals(event.getLocation())){
+						event.setCancelled(false);
+						iter.remove();
+						return;
+					}
+				}
+			}
+		}
 	}
 
 	/**
@@ -679,6 +715,24 @@ public final class Utilities {
 			// Nothing!
 		}
 
+		/**
+		 * Play heart particles at the given location.
+		 * <p>
+		 * <i>Implementation note:</i> This method accomplishes the desired behavior by spawning a wolf, playing the {@linkplain EntityEffect#WOLF_HEART wolf heart} effect, and removing the wolf.
+		 * Event handlers at the highest priority level are registered that will uncancel the spawn of this wolf.
+		 * </p>
+		 * @param location The location at which to play the heart effect.
+		 */
+		public static void playHeartEffect(@Nonnull Location location){
+			Validate.notNull(location, "The location of the effect must not be null.");
+			Validate.notNull(location.getWorld(), "The location must not have a null world.");
+			
+			_eventListener.getWolfSpawnLocSet().add(location);
+			Wolf o = location.getWorld().spawn(location, Wolf.class);
+            o.playEffect(EntityEffect.WOLF_HEARTS);
+            o.remove();
+		}
+		
 		/**
 		 * <p>
 		 * This method provides a version independent way to instantly explode {@code FireworkEffect}s at a given location.
