@@ -1,9 +1,13 @@
 package me.pagekite.glen3b.library.bukkit.protocol;
 
+import me.pagekite.glen3b.library.bukkit.menu.sign.SignGUI;
+
+import org.bukkit.Bukkit;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.plugin.ServicePriority;
 
 import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.ProtocolLibrary;
@@ -27,6 +31,8 @@ import com.comphenix.protocol.wrappers.nbt.NbtFactory;
  */
 public final class ProtocolLibUtilImplementation implements ProtocolUtilities {
 
+	ProtocolLibSignGUI _signManager;
+	
 	/* (non-Javadoc)
 	 * @see me.pagekite.glen3b.library.bukkit.protocol.ProtocolUtilities#init(org.bukkit.plugin.Plugin)
 	 */
@@ -48,6 +54,10 @@ public final class ProtocolLibUtilImplementation implements ProtocolUtilities {
 						}
 					}
 				});
+		
+		_signManager = new ProtocolLibSignGUI(plugin);
+		
+		Bukkit.getServicesManager().register(SignGUI.class, _signManager, plugin, ServicePriority.Highest);
 	}
 
 	private static final Enchantment GLOW_ENCHANT_INDICATOR = Enchantment.LURE;
@@ -114,5 +124,6 @@ public final class ProtocolLibUtilImplementation implements ProtocolUtilities {
 	public void cleanup(Plugin plugin) {
 		// This class is expected to be responsible for all GBukkitLib protocol listeners
 		ProtocolLibrary.getProtocolManager().removePacketListeners(plugin);
+		_signManager.destroy();
 	}
 }
