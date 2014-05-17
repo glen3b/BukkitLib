@@ -75,13 +75,14 @@ public class CustomConfiguration {
     /**
 	 * Reloads the configuration file.
 	 */
+    @SuppressWarnings("deprecation")
     public void reloadConfig() {
         _cfg = YamlConfiguration.loadConfiguration(getPath());
      
         // Look for defaults in the jar
         InputStream defConfigStream = _backend.getResource("customConfig.yml");
         if (defConfigStream != null) {
-            YamlConfiguration defConfig = YamlConfiguration.loadConfiguration(defConfigStream);
+			YamlConfiguration defConfig = YamlConfiguration.loadConfiguration(defConfigStream);
             _cfg.setDefaults(defConfig);
         }
     }
