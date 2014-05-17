@@ -8,7 +8,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.logging.Level;
 
-import me.pagekite.glen3b.library.bukkit.reflection.PacketType;
 import me.pagekite.glen3b.library.bukkit.reflection.ReflectionUtilities;
 
 import org.apache.commons.lang.Validate;
@@ -226,7 +225,7 @@ public enum ParticleEffect {
 			NAME_MAP.put(p.name, p);
 		}
 		try {
-			packetPlayOutWorldParticles = ReflectionUtilities.getConstructor(PacketType.PLAY_OUT_WORLD_PARTICLES.getPacket(), String.class, float.class, float.class, float.class, float.class, float.class,
+			packetPlayOutWorldParticles = ReflectionUtilities.getConstructor(ReflectionUtilities.Minecraft.getType("PacketPlayOutWorldParticles"), String.class, float.class, float.class, float.class, float.class, float.class,
 					float.class, float.class, int.class);
 			playerConnection = ReflectionUtilities.getField(ReflectionUtilities.Minecraft.getType("EntityPlayer"), "playerConnection");
 			sendPacket = playerConnection.getType().getDeclaredMethod("sendPacket", ReflectionUtilities.Minecraft.getType("Packet"));
@@ -257,10 +256,10 @@ public enum ParticleEffect {
 	public static ParticleEffect fromName(String name) {
 		Validate.notEmpty(name, "A particle effect name must be specified.");
 
-			for (Entry<String, ParticleEffect> e : NAME_MAP.entrySet()){
-				if (e.getKey().equalsIgnoreCase(name)) return e.getValue();
-			}
-			
+		for (Entry<String, ParticleEffect> e : NAME_MAP.entrySet()){
+			if (e.getKey().equalsIgnoreCase(name)) return e.getValue();
+		}
+
 		return null;
 	}
 
@@ -321,7 +320,7 @@ public enum ParticleEffect {
 	 */
 	private static void sendPacket(Player p, Object packet) {
 		Validate.notNull(packet, "The packet must not be null.");
-		
+
 		try {
 			sendPacket.invoke(playerConnection.get(ReflectionUtilities.CraftBukkit.getNMSHandle(p)), packet);
 		} catch (Exception e) {
@@ -338,11 +337,11 @@ public enum ParticleEffect {
 			if(p == null){
 				throw new IllegalArgumentException("No null players may be specified as packet recipients.");
 			}
-			
+
 			sendPacket(p, packet);
 		}
 	}
-	
+
 	/**
 	 * Displays a particle effect which is only visible for players within a certain range of the centerpoint.
 	 *
@@ -357,15 +356,15 @@ public enum ParticleEffect {
 		Validate.notNull(center, "The center location must not be null.");
 		Validate.notNull(center.getWorld(), "The center location must not be null.");
 		Validate.notNull(offset, "The offset values must not be null.");
-		
+
 		// Really no point to enforcing, just don't use huge values
 		if (range > MAX_RANGE){
 			// Enforced server-side to promote efficiency
 			// throw new IllegalArgumentException("The range of particle recipients cannot exceed the maximum value of " + MAX_RANGE +", a limitation of the client.");
 			Bukkit.getLogger().log(Level.WARNING, "A particle is being displayed with the range set to " + range + ", higher than the recommended maximum of " + MAX_RANGE + ", which will potentially result in inefficiency.");
 		}
-		
-			sendPacket(Utilities.Entities.getEntitiesInRange(center, range, Player.class), instantiatePacket(name, center, (float)offset.getX(), (float)offset.getY(), (float)offset.getZ(), speed, amount));
+
+		sendPacket(Utilities.Entities.getEntitiesInRange(center, range, Player.class), instantiatePacket(name, center, (float)offset.getX(), (float)offset.getY(), (float)offset.getZ(), speed, amount));
 	}
 
 	/**
@@ -397,14 +396,14 @@ public enum ParticleEffect {
 		Validate.notNull(center.getWorld(), "The center location must not be null.");
 		Validate.notNull(offset, "The offset values must not be null.");
 		Validate.isTrue(item != null && !item.isBlock(), "The specified material is not a valid item.");
-		
+
 		// Really no point to enforcing, just don't use huge values
 		if (range > MAX_RANGE){
 			// Enforced server-side to promote efficiency
 			// throw new IllegalArgumentException("The range of particle recipients cannot exceed the maximum value of " + MAX_RANGE +", a limitation of the client.");
 			Bukkit.getLogger().log(Level.WARNING, "A particle is being displayed with the range set to " + range + ", higher than the recommended maximum of " + MAX_RANGE + ", which will potentially result in inefficiency.");
 		}
-		
+
 		sendPacket(Utilities.Entities.getEntitiesInRange(center, range, Player.class), instantiateIconCrackPacket(item.getId(), center, (float)offset.getX(), (float)offset.getY(), (float)offset.getZ(), speed, amount));
 	}
 
@@ -437,7 +436,7 @@ public enum ParticleEffect {
 		Validate.notNull(center.getWorld(), "The center location must not be null.");
 		Validate.notNull(offset, "The offset values must not be null.");
 		Validate.isTrue(data != null && data.getItemType().isBlock(), "The specified material is not a valid block.");
-		
+
 		// Really no point to enforcing, just don't use huge values
 		if (range > MAX_RANGE){
 			// Enforced server-side to promote efficiency
@@ -476,7 +475,7 @@ public enum ParticleEffect {
 		Validate.notNull(center.getWorld(), "The center location must not be null.");
 		Validate.notNull(offset, "The offset values must not be null.");
 		Validate.isTrue(data != null && data.getItemType().isBlock(), "The specified material is not a valid block.");
-		
+
 		// Really no point to enforcing, just don't use huge values
 		if (range > MAX_RANGE){
 			// Enforced server-side to promote efficiency
