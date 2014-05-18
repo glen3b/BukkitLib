@@ -57,7 +57,7 @@ public final class ReflectionUtilities {
 		for(SubPackage pkg : SubPackage.values()){
 			pkg.loadedClasses.clear();
 		}
-		
+
 		_obcPkgVerStr = null;
 	}
 
@@ -81,16 +81,16 @@ public final class ReflectionUtilities {
 			// Interpret as empty
 			args = new Object[0];
 		}
-		
+
 		Class<?>[] argTypes = new Class<?>[args.length];
-		
+
 		for(int i = 0; i < argTypes.length; i++){
 			argTypes[i] = args[i] == null ? Object.class : args[i].getClass();
 		}
-		
+
 		return (T) getConstructor(clazz, argTypes).newInstance(args);
 	}
-	
+
 	/**
 	 * Gets a constructor, which may be inaccessible to public viewers due to access modifiers, for the specified class.
 	 * @param clazz The {@code Class} for which to obtain the constructor.
@@ -105,12 +105,12 @@ public final class ReflectionUtilities {
 			// Interpret as empty
 			cArgs = new Class<?>[0];
 		}
-		
+
 		Constructor<?> ctor = clazz.getDeclaredConstructor(cArgs);
 		ctor.setAccessible(true);
 		return ctor;
 	}
-	
+
 	/**
 	 * Assumes caller synchronizes on the fieldCache properly.
 	 * @param clazz The class.
@@ -206,6 +206,48 @@ public final class ReflectionUtilities {
 	 * @author Glen Husman
 	 */
 	public static final class CraftBukkit{
+
+		private static Method _bukkitAPIItemStackToNMSStack;
+
+		/**
+		 * Returns a {@code CraftItemStack} instance representing the specified
+		 * instance. If reflective NBT operations are to be performed on this stack,
+		 * it is recommended to wrap the constructor in this call. If the
+		 * {@code ItemStack} instance is already a {@code CraftItemStack}, that
+		 * instance will be returned.
+		 * <p>
+		 * The return of this method will be {@code null} if any of the following
+		 * are true:
+		 * <ul>
+		 * <li>Reflective utilities are not compatible with this server.</li>
+		 * <li>An unexpected error occurs.</li>
+		 * </ul>
+		 * Due to this behavior, no exceptions except argument invalidity
+		 * exceptions will be thrown from this method.
+		 * </p>
+		 * 
+		 * @param instance
+		 *            The {@link ItemStack} instance to convert.
+		 * @return A {@code CraftItemStack} instance, which can hold NBT and NMS
+		 *         data.
+		 */
+		public static ItemStack getCraftStack(ItemStack instance) {
+			Validate.notNull(instance, "The ItemStack is null.");
+
+			try {
+				// Default util implementation ensures that this will work
+				return Utilities.getProtocolUtilityInstance().assureCraftItemStack(instance);
+
+			} catch (Exception except) {
+				// Unexpected error
+				// For the purposes of reflection, we don't want client code to have
+				// to deal with a reflection error
+				// The client just needs to know the item can't be converted
+				except.printStackTrace();
+
+			}
+			return null;
+		}
 
 		private CraftBukkit(){}
 
@@ -333,13 +375,8 @@ public final class ReflectionUtilities {
 					// Using CraftItemStack.asNMSCopy(ItemStack)
 					if (_bukkitAPIItemStackToNMSStack == null) {
 						try {
-							_bukkitAPIItemStackToNMSStack = Class.forName(
-									"org.bukkit.craftbukkit."
-											+ getPackageVersionString()
-											+ ".inventory.CraftItemStack", true,
-											Bukkit.getServer().getClass().getClassLoader())
-											.getMethod("asNMSCopy", ItemStack.class);
-							// Reasonably hacky :)
+							_bukkitAPIItemStackToNMSStack = ReflectionUtilities.CraftBukkit.getType(SubPackage.INVENTORY, "CraftItemStack")
+									.getMethod("asNMSCopy", ItemStack.class);
 						} catch (ClassNotFoundException e) {
 							// Unexpected reflective error
 							// The class should exist
@@ -426,7 +463,7 @@ public final class ReflectionUtilities {
 			// Throw custom error on attempting to reflect length fields
 			throw new IllegalAccessException("It is impossible to reflectively set the 'length' field of an array class.");
 		}
-		
+
 		Field field = getCachedFieldInstance(instance.getClass(), fieldName);
 		field.set(instance, value);
 	}
@@ -567,82 +604,7 @@ public final class ReflectionUtilities {
 		// Method handleMethod = object.getClass().getMethod(method);
 		// handleMethod.setAccessible(true);
 		// return handleMethod.invoke(object, args);
-	}
-
-	private static Method _bukkitAPIItemStackToNMSStack;
-	private static Method _nmsItemStackToCraftbukkitItemStack;
-	private static Class<?> _nmsItemStackClass;
-
-	/**
-	 * Returns a {@code CraftItemStack} instance representing the specified
-	 * instance. If reflective NBT operations are to be performed on this stack,
-	 * it is recommended to wrap the constructor in this call. If the
-	 * {@code ItemStack} instance is already a {@code CraftItemStack}, that
-	 * instance will be returned.
-	 * <p>
-	 * The return of this method will be {@code null} if any of the following
-	 * are true:
-	 * <ul>
-	 * <li>Reflective utilities are not compatible with this server.</li>
-	 * <li>An unexpected error occurs.</li>
-	 * </ul>
-	 * Due to this behavior, no exceptions except argument invalidity
-	 * exceptions will be thrown from this method.
-	 * </p>
-	 * 
-	 * @param instance
-	 *            The {@link ItemStack} instance to convert.
-	 * @return A {@code CraftItemStack} instance, which can hold NBT and NMS
-	 *         data.
-	 */
-	public static ItemStack getCraftStack(ItemStack instance) {
-		Validate.notNull(instance, "The ItemStack is null.");
-
-		try {
-			if (Utilities.getProtocolUtilityInstance() != null) {
-				return Utilities.getProtocolUtilityInstance().assureCraftItemStack(instance);
-
-			} else {
-				if (_bukkitAPIItemStackToNMSStack == null) {
-					_bukkitAPIItemStackToNMSStack = Class.forName(
-							"org.bukkit.craftbukkit."
-									+ getPackageVersionString()
-									+ ".inventory.CraftItemStack", true,
-									Bukkit.getServer().getClass().getClassLoader())
-									.getMethod("asNMSCopy", ItemStack.class); // Reasonably
-					// hacky
-					// :)
-				}
-
-				Object nmsItemStack = _bukkitAPIItemStackToNMSStack.invoke(
-						null, instance);
-				if (_nmsItemStackClass == null) {
-					_nmsItemStackClass = nmsItemStack.getClass();
-				}
-
-				if (_nmsItemStackToCraftbukkitItemStack == null) {
-					_nmsItemStackToCraftbukkitItemStack = Class.forName(
-							"org.bukkit.craftbukkit."
-									+ getPackageVersionString()
-									+ ".inventory.CraftItemStack", true,
-									Bukkit.getServer().getClass().getClassLoader())
-									.getMethod("asCraftMirror", _nmsItemStackClass);
-				}
-
-				// Next, actually build the stack
-				return (ItemStack) _nmsItemStackToCraftbukkitItemStack.invoke(
-						null, nmsItemStack);
-			}
-		} catch (Exception except) {
-			// Unexpected error
-			// For the purposes of reflection, we don't want client code to have
-			// to deal with a reflection error
-			// The client just needs to know the item can't be converted
-			except.printStackTrace();
-
-		}
-		return null;
-	}
+	}	
 
 	/**
 	 * Get an array of {@code Method} objects that have the specified name. If a
@@ -689,7 +651,7 @@ public final class ReflectionUtilities {
 		}
 		return _obcPkgVerStr;
 	}
-	
+
 	private static String _obcPkgVerStr = null;
 
 	/**
@@ -712,10 +674,10 @@ public final class ReflectionUtilities {
 		Validate.notNull(clazz, "The specified class must not be null.");
 		Validate.notEmpty(fieldName, "The field name must be specified.");
 
-		
+
 		return getCachedFieldInstance(clazz, fieldName);
 	}
-	
+
 	/**
 	 * Gets the value of a field on an {@link Object} instance via reflection.
 	 * 
@@ -747,7 +709,7 @@ public final class ReflectionUtilities {
 			// Reflect length fields
 			return Array.getLength(instance);
 		}
-		
+
 		Field field = getCachedFieldInstance(instance.getClass(), fieldName);
 		return field.get(instance);
 	}

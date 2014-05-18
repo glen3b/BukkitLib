@@ -40,8 +40,9 @@ public interface ProtocolUtilities {
 	 * @param stack
 	 *            The {@link ItemStack}.
 	 * @return {@code stack} represented as a {@code CraftItemStack}.
+	 * @throws Exception In the case of an error. 
 	 */
-	public abstract ItemStack assureCraftItemStack(ItemStack stack);
+	public abstract ItemStack assureCraftItemStack(ItemStack stack) throws Exception;
 
 	/**
 	 * Make a {@code CraftItemStack} "glow."

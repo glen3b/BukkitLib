@@ -9,8 +9,8 @@ package me.pagekite.glen3b.library.bukkit.protocol;
  */
 public enum ProtocolOperationResult {
 	/**
-	 * The protocol operation failed because a packet processing library was not
-	 * available to handle packet modification.
+	 * The protocol operation failed because an appropriate library was not
+	 * available to handle the necessary operations required for the operation's completion.
 	 */
 	LIBRARY_NOT_AVAILABLE(false),
 	/**
