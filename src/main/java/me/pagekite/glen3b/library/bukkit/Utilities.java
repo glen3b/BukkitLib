@@ -1414,8 +1414,9 @@ public final class Utilities {
 		 * {@link ProtocolOperationResult#LIBRARY_NOT_AVAILABLE}.
 		 * </p>
 		 * <p>
-		 * If this operation succeeds and no unexpected errors occur, the return value will be {@link ProtocolOperationResult#SUCCESS_QUEUED}. The reason for this is that this method merely sets an enchantment which will be parsed by packet interceptors. Protocol operations will display the item as glowing <i>when the appropriate packets are sent</i>. Therefore, the rendering of the glow is not instant, and will occur in the future, hence the indication of queued behavior.
+		 * <b>Implementation Note - ProtocolLib:</b> If this operation succeeds and no unexpected errors occur, the return value will be {@link ProtocolOperationResult#SUCCESS_QUEUED}. The reason for this is that this method merely sets an enchantment which will be parsed by packet interceptors. Protocol operations will display the item as glowing <i>when the appropriate packets are sent</i>. Therefore, the rendering of the glow is not instant, and will occur in the future, hence the indication of queued behavior.
 		 * </p>
+		 * <p>Other implementations of this method may set the item enchantment tag directly, rendering it unsafe for Bukkit API use. These implementations will return {@link ProtocolOperationResult#SUCCESS} upon operation success.</p>
 		 * <p>
 		 * If the {@code ItemStack} is not a {@code CraftItemStack}, the code will not function.
 		 * <br/>
