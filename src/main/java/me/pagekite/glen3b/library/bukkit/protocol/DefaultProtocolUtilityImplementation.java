@@ -19,7 +19,6 @@ public class DefaultProtocolUtilityImplementation implements ProtocolUtilities {
 	private Constructor<?> _nbtTagListConstructor;
 	private Method _nbtCompound_set;
 	private Method _nmsItemStackToCraftbukkitItemStack;
-	
 	@Override
 	public void init(Plugin plugin) {
 		try {
@@ -47,17 +46,17 @@ public class DefaultProtocolUtilityImplementation implements ProtocolUtilities {
 	}
 
 	@Override
-	public ProtocolOperationResult setGlowing(ItemStack stack, boolean glowing) {
-		if(_nbtTagListConstructor == null || _nbtCompound_set == null){
-			return ProtocolOperationResult.FAILURE;
+	public ProtocolOperationReturn<ItemStack> setGlowing(ItemStack stack, boolean glowing) {
+		if(_nbtTagListConstructor == null || _nbtCompound_set == null || _nmsItemStackToCraftbukkitItemStack == null){
+			return new ProtocolOperationReturn<ItemStack>(ProtocolOperationResult.FAILURE);
 		}
 		
 		if(stack == null){
-			return ProtocolOperationResult.FAILURE_INCORRECT_ARGUMENT_TYPE;
+			return new ProtocolOperationReturn<ItemStack>(ProtocolOperationResult.FAILURE_INCORRECT_ARGUMENT_TYPE);
 		}
 		
 		if(stack.getItemMeta().hasEnchants()){
-			return ProtocolOperationResult.FAILURE;
+			return new ProtocolOperationReturn<ItemStack>(ProtocolOperationResult.FAILURE);
 		}
 		
 		try{
@@ -72,11 +71,12 @@ public class DefaultProtocolUtilityImplementation implements ProtocolUtilities {
 		_nbtCompound_set.invoke(nmsStackDataTag, "ench", enchList);
 		
 		ReflectionUtilities.setValue(nmsStack, "tag", nmsStackDataTag);
+		return new ProtocolOperationReturn<ItemStack>(ProtocolOperationResult.SUCCESS, (ItemStack)_nmsItemStackToCraftbukkitItemStack.invoke(null, nmsStack));
 		}catch(Exception except){
-			return ProtocolOperationResult.FAILURE;
+			return new ProtocolOperationReturn<ItemStack>(ProtocolOperationResult.FAILURE, except);
 		}
 		
-		return ProtocolOperationResult.SUCCESS;
+		
 	}
 
 	@Override

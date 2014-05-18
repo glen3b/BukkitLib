@@ -79,31 +79,31 @@ public final class ProtocolLibUtilImplementation implements ProtocolUtilities {
 	 * @see me.pagekite.glen3b.library.bukkit.protocol.ProtocolUtilities#setGlowing(org.bukkit.inventory.ItemStack, boolean)
 	 */
 	@Override
-	public ProtocolOperationResult setGlowing(ItemStack stack, boolean glowing) {
+	public ProtocolOperationReturn<ItemStack> setGlowing(ItemStack stack, boolean glowing) {
 
 		if(!MinecraftReflection.isCraftItemStack(stack)){
-			return ProtocolOperationResult.FAILURE_INCORRECT_ARGUMENT_TYPE;
+			return new ProtocolOperationReturn<ItemStack>(ProtocolOperationResult.FAILURE_INCORRECT_ARGUMENT_TYPE);
 		}
 		
 		try{
 			ItemMeta m = stack.getItemMeta();
 			if(glowing){	
 				if(m.hasEnchants()){
-					return ProtocolOperationResult.FAILURE;
+					return new ProtocolOperationReturn<ItemStack>(ProtocolOperationResult.FAILURE);
 				}
 				m.addEnchant(GLOW_ENCHANT_INDICATOR, GLOW_ENCHANT_LEVEL, true);
 			}else{
 				if(stack.containsEnchantment(GLOW_ENCHANT_INDICATOR) && stack.getEnchantmentLevel(GLOW_ENCHANT_INDICATOR) == GLOW_ENCHANT_LEVEL){
 					m.removeEnchant(GLOW_ENCHANT_INDICATOR);
 				}else{
-					return ProtocolOperationResult.NOT_NEEDED;
+					return new ProtocolOperationReturn<ItemStack>(ProtocolOperationResult.NOT_NEEDED);
 				}
 			}
 			stack.setItemMeta(m);
-			return ProtocolOperationResult.SUCCESS_QUEUED;
+			return new ProtocolOperationReturn<ItemStack>(ProtocolOperationResult.SUCCESS_QUEUED, stack);
 		}catch(Exception ex){
 			ex.printStackTrace();
-			return ProtocolOperationResult.FAILURE;
+			return new ProtocolOperationReturn<ItemStack>(ProtocolOperationResult.FAILURE, ex);
 		}
 	}
 

@@ -51,9 +51,9 @@ public interface ProtocolUtilities {
 	 *            The {@code CraftItemStack} to make glow.
 	 * @param glowing
 	 *            Whether it should glow.
-	 * @return The result of the protocol operation.
+	 * @return The result of the protocol operation, which includes the modified stack.
 	 */
-	public abstract ProtocolOperationResult setGlowing(ItemStack stack,
+	public abstract ProtocolOperationReturn<ItemStack> setGlowing(ItemStack stack,
 			boolean glowing);
 
 	/**

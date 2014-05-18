@@ -37,6 +37,7 @@ import javax.annotation.Nullable;
 
 import me.pagekite.glen3b.library.bukkit.command.CommandSenderType;
 import me.pagekite.glen3b.library.bukkit.protocol.ProtocolOperationResult;
+import me.pagekite.glen3b.library.bukkit.protocol.ProtocolOperationReturn;
 import me.pagekite.glen3b.library.bukkit.protocol.ProtocolUtilities;
 import me.pagekite.glen3b.library.bukkit.reflection.ReflectionUtilities;
 import me.pagekite.glen3b.library.bukkit.teleport.QueuedTeleport;
@@ -1405,32 +1406,39 @@ public final class Utilities {
 		/**
 		 * <p>
 		 * Adds or removes glow to an {@link ItemStack}. This is accomplished by sending packets to the client
-		 * that contain an enchantments NBT list that is empty. A "magic enchant" stored on the server as a constant is used to accomplish this.
-		 * As with any packet-modifying operation, glitches may occur. Found bugs should be filed on the GBukkitLib project.
+		 * that contain an enchantments NBT list that is empty. As with any packet or NMS modifying operation, glitches may occur.
+		 * Found bugs should be filed on the GBukkitLib project.
 		 * </p>
 		 * <p>
 		 * For this operation to succeed, a protocol library is required on the server.
 		 * A lack of one will be indicated with a return value of
 		 * {@link ProtocolOperationResult#LIBRARY_NOT_AVAILABLE}.
+		 * However, the default reflective library is supported, therefore this method <i>should</i> always be capable of working.
 		 * </p>
 		 * <p>
-		 * <b>Implementation Note - ProtocolLib:</b> If this operation succeeds and no unexpected errors occur, the return value will be {@link ProtocolOperationResult#SUCCESS_QUEUED}. The reason for this is that this method merely sets an enchantment which will be parsed by packet interceptors. Protocol operations will display the item as glowing <i>when the appropriate packets are sent</i>. Therefore, the rendering of the glow is not instant, and will occur in the future, hence the indication of queued behavior.
+		 * <b>Implementation Note - ProtocolLib:</b> A "magic enchant" stored on the server as a constant "flag" is used to accomplish the no-enchant glow effect.
+		 * Packets which display enchantments are intercepted and rewritten before the client receives them.
+		 * If this operation succeeds and no unexpected errors occur, the return value will contain {@link ProtocolOperationResult#SUCCESS_QUEUED}.
+		 * The reason for this is that this method merely sets an enchantment which will be parsed by packet interceptors. Protocol operations will display the item as glowing <i>when the appropriate packets are sent</i>.
+		 * Therefore, the rendering of the glow is not instant, and will occur in the future, hence the indication of queued behavior.
 		 * </p>
-		 * <p>Other implementations of this method may set the item enchantment tag directly, rendering it unsafe for Bukkit API use. These implementations will return {@link ProtocolOperationResult#SUCCESS} upon operation success.</p>
+		 * <p><b>Implementation Note - Raw Reflection:</b> The item enchantment tag is set directly, rendering it <i>unsafe for Bukkit API use</i> after a call to this method.
+		 * This implementation will return a value containing {@link ProtocolOperationResult#SUCCESS} upon operation success because the NBT tags are set immediately.
+		 * However, for it to be effective, the returned {@code ItemStack} encapsulated in the {@link ProtocolOperationReturn} <b>must</b> be used.</p>
 		 * <p>
-		 * If the {@code ItemStack} is not a {@code CraftItemStack}, the code will not function.
+		 * If the {@code ItemStack} is not a {@code CraftItemStack}, the code is not guaranteed to function properly.
 		 * <br/>
-		 * This method will return {@link ProtocolOperationResult#FAILURE} if the {@code ItemStack} already has enchantments, as conflicts would be ultimately inevitable. In addition, if it has enchantments, it already glows.
+		 * This method will return a value containing {@link ProtocolOperationResult#FAILURE} if the {@code ItemStack} already has enchantments, as conflicts would be ultimately inevitable. In addition, if it has enchantments, it already glows.
 		 * </p>
 		 * @param stack The {@link ItemStack} to render as having no enchantments but having the effect.
 		 * @param isGlowing Whether to make the {@code ItemStack} artificially glow.
 		 * @return A non-null indicator of the success of this operation, as known by the server.
 		 */
-		public static ProtocolOperationResult setItemGlowing(ItemStack stack, boolean isGlowing){
+		public static ProtocolOperationReturn<ItemStack> setItemGlowing(ItemStack stack, boolean isGlowing){
 			Validate.notNull(stack, "The item to modify must not be null.");
 
 			if(_protocolLib == null){
-				return ProtocolOperationResult.LIBRARY_NOT_AVAILABLE;
+				return new ProtocolOperationReturn<ItemStack>(ProtocolOperationResult.LIBRARY_NOT_AVAILABLE);
 			}
 
 			return _protocolLib.setGlowing(stack, isGlowing);
