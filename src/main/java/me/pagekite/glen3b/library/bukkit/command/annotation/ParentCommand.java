@@ -147,7 +147,7 @@ public abstract class ParentCommand implements TabExecutor, PreprocessedCommandH
 				Annotation[] paramAnnot = paramsAnnotations[i];
 				String alias = "argument";
 				boolean optional = false;
-				if(!getSupportedParameterTypes().contains(_params[i])){
+				if(!getSupportedParameterTypes().contains(_params[i]) && !_params[i].isEnum()){
 					throw new IllegalStateException(_params[i].toString() + " is not a supported parameter type.");
 				}
 
@@ -270,7 +270,7 @@ public abstract class ParentCommand implements TabExecutor, PreprocessedCommandH
 			execute(sender, _params[0].isAssignableFrom(CommandInvocationContext.class) ? new CommandInvocationContext<>(sender, cmd, alias) : sender, args); // Only works due to generics not being safe in Java
 		}
 	}
-
+	
 	private boolean _subclassInitializedSets = false;
 	private boolean _inSetInitializer = false;
 	private Set<Class<?>> _supportedParamTypes;
@@ -284,6 +284,9 @@ public abstract class ParentCommand implements TabExecutor, PreprocessedCommandH
 	 * <p>
 	 * The default implementation of this method is <i>not</i> where the default supported types are added to the collections. Therefore, if extending {@code ParentCommand} directly, it is unneccesary to call the superclass method.
 	 * The default implementation of this method does nothing.
+	 * <p>
+	 * It is not necessary to add enum types to the sets directly in this method, as they are parsed automatically by the {@code ParentCommand} implementation of {@link #parseParameter(String, Class)}.
+	 * Enum types do not need to be added to this set, and parsing behavior for enum types can be overriden even without adding them to the set in the subclass implementation of {@link #parseParameter(String, Class)}.
 	 * <p>
 	 * Any call to {@link ParentCommand#getSupportedParameterTypes()} or {@link ParentCommand#getDefaultParameterValues()} within this method would result in infinite recursion, however a safeguard is in place against this.
 	 * Please use the parameters which represent these variables instead of using those methods.
@@ -484,10 +487,10 @@ public abstract class ParentCommand implements TabExecutor, PreprocessedCommandH
 	 * @param argument The argument in string form to parse. If this value is {@code null}, the default value in the Java compiler for fields of type {@code type} should be returned. This is {@code null} for reference types, {@code 0} for most numerical types, and {@code false} for booleans.
 	 * @param type The {@code Class} of the argument that is being parsed. If this value is equivalent to {@code String.class}, it is expected that the argument itself is returned.
 	 * @return {@code argument} represented as an instance of {@code type}.
-	 * @throws IllegalArgumentException If {@code argument} is not deserializable to an instance of type. This exception should <i>not</i> if {@code argument} is {@code null}, in which case {@code null} (or the approprate default) should be returned. However, it <i>must</i> be thrown if {@code type} is {@code null}.
+	 * @throws IllegalArgumentException If {@code argument} is not deserializable to an instance of type. This exception should <i>not</i> be thrown if {@code argument} is {@code null}, in which case {@code null} (or the appropriate default) should be returned. However, it <i>must</i> be thrown if {@code type} is {@code null}.
 	 * @throws UnsupportedOperationException If the specified {@code type} cannot be deserialized by this method.
 	 */
-	@SuppressWarnings("deprecation") // Needed to get players by name
+	@SuppressWarnings({ "deprecation", "unchecked" }) // Needed to get players by name and for enumerator value parsing
 	protected Object parseParameter(String argument, Class<?> type) throws IllegalArgumentException, UnsupportedOperationException {
 		if(type == null){
 			throw new IllegalArgumentException("The specified type is null.");
@@ -536,6 +539,8 @@ public abstract class ParentCommand implements TabExecutor, PreprocessedCommandH
 			return Bukkit.getPlayer(argument);
 		}else if(type == OfflinePlayer.class){
 			return Bukkit.getOfflinePlayer(argument);
+		}else if(type.isEnum()){
+			return Enum.valueOf(type.asSubclass(Enum.class), argument);
 		}
 
 		throw new UnsupportedOperationException("The type " + type.getName() + " could not be parsed as a parameter.");
