@@ -56,6 +56,10 @@ public class DefaultProtocolUtilityImplementation implements ProtocolUtilities {
 			return ProtocolOperationResult.FAILURE_INCORRECT_ARGUMENT_TYPE;
 		}
 		
+		if(stack.getItemMeta().hasEnchants()){
+			return ProtocolOperationResult.FAILURE;
+		}
+		
 		try{
 		
 		Object nmsStack = ReflectionUtilities.CraftBukkit.getNMSHandle(stack);
