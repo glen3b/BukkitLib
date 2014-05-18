@@ -974,7 +974,7 @@ public final class Utilities {
 				}
 				try{
 				loadReflectionObjects();
-				}catch(IllegalStateException ex){
+				}catch(Throwable ex){
 					Bukkit.getLogger().log(Level.WARNING, "Failed to load reflection required for particle effects.", ex);
 				}
 			}

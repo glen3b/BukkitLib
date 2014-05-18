@@ -20,7 +20,7 @@ public enum InternalPackage implements PackageClassSource{
 	/**
 	 * Represents the {@code net.minecraft.server} package, also known as NMS. This package contains vanilla minecraft server implementation classes.
 	 */
-	MINECRAFT_SERVER("net.minecraft.server." + ReflectionUtilities.getPackageVersionString()),
+	MINECRAFT_SERVER(null),
 	/**
 	 * Represents the {@code org.bukkit.craftbukkit} package, also known as OBC. This package contains CraftBukkit implementation classes of Bukkit interfaces and abstract classes.
 	 */
@@ -29,12 +29,29 @@ public enum InternalPackage implements PackageClassSource{
 	private String _package;
 	
 	private InternalPackage(String pkg){
-		Validate.notNull(pkg, "The loaded package cannot be null.");
+		loadedClasses = Maps.newHashMap();
+		_cachedClassView = Collections.unmodifiableCollection(loadedClasses.values());
+	}
+	
+	void initPackageName(){
+		if(_package != null){
+			return;
+		}
 		
-		_package = pkg;
+		switch(this){
+		case MINECRAFT_SERVER:
+			_package =  "net.minecraft.server." + ReflectionUtilities.getPackageVersionString();
+			break;
+			default:
+				break;
+		}
 	}
 	
 	public String getPackage(){
+		if(_package == null){
+			initPackageName();
+		}
+		
 		return _package;
 	}
 	
@@ -78,8 +95,8 @@ public enum InternalPackage implements PackageClassSource{
 		return retVal;
 	}
 
-	Map<String, Class<?>> loadedClasses = Maps.newHashMap(); // Package-private to allow for resetCache to work
-	private Collection<Class<?>> _cachedClassView = Collections.unmodifiableCollection(loadedClasses.values());
+	Map<String, Class<?>> loadedClasses; // Package-private to allow for resetCache to work
+	private Collection<Class<?>> _cachedClassView;
 	
 	@Override
 	public Collection<Class<?>> getCachedClasses() {
@@ -175,6 +192,8 @@ public enum InternalPackage implements PackageClassSource{
 		private SubPackage(String name){
 			_name = name;
 			_fullyQualifiedPackage = InternalPackage.CRAFTBUKKIT + "." + name;
+			loadedClasses = Maps.newHashMap();
+			_cachedClassView = Collections.unmodifiableCollection(loadedClasses.values());
 		}
 		
 		/**
@@ -247,8 +266,8 @@ public enum InternalPackage implements PackageClassSource{
 			return retVal;
 		}
 
-		Map<String, Class<?>> loadedClasses = Maps.newHashMap(); // Package-private to allow for resetCache to work
-		private Collection<Class<?>> _cachedClassView = Collections.unmodifiableCollection(loadedClasses.values());
+		Map<String, Class<?>> loadedClasses; // Package-private to allow for resetCache to work
+		private Collection<Class<?>> _cachedClassView;
 		
 		@Override
 		public Collection<Class<?>> getCachedClasses() {

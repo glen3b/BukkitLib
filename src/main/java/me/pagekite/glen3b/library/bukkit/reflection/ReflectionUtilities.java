@@ -57,6 +57,8 @@ public final class ReflectionUtilities {
 		for(SubPackage pkg : SubPackage.values()){
 			pkg.loadedClasses.clear();
 		}
+		
+		_obcPkgVerStr = null;
 	}
 
 	/**
