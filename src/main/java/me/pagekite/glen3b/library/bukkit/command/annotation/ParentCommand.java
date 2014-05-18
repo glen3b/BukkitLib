@@ -490,7 +490,7 @@ public abstract class ParentCommand implements TabExecutor, PreprocessedCommandH
 	 * @throws IllegalArgumentException If {@code argument} is not deserializable to an instance of type. This exception should <i>not</i> be thrown if {@code argument} is {@code null}, in which case {@code null} (or the appropriate default) should be returned. However, it <i>must</i> be thrown if {@code type} is {@code null}.
 	 * @throws UnsupportedOperationException If the specified {@code type} cannot be deserialized by this method.
 	 */
-	@SuppressWarnings({ "deprecation", "unchecked" }) // Needed to get players by name and for enumerator value parsing
+	@SuppressWarnings({ "deprecation", "unchecked" }) // Needed to get players by name and for enumeration value parsing
 	protected Object parseParameter(String argument, Class<?> type) throws IllegalArgumentException, UnsupportedOperationException {
 		if(type == null){
 			throw new IllegalArgumentException("The specified type is null.");
