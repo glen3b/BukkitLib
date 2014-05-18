@@ -83,7 +83,7 @@ public class ProtocolLibSignGUI extends AbstractSignGUIManager {
             	defaultText[i] = paramdefaultText[i] == null ? "" : paramdefaultText[i];
             }
         	
-        	for(int i = paramdefaultText.length - 1; i < defaultText.length; i++){
+        	for(int i = paramdefaultText.length; i < defaultText.length; i++){
         		defaultText[i] = "";
         	}
         	
