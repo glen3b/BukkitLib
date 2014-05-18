@@ -12,6 +12,7 @@ import com.google.common.collect.Maps;
 
 /**
  * Represents an internal minecraft package.
+ * As a general rule, fully-qualified references to types within any of these packages will not be a link, and they will not contain the version component of the package name.
  * @author Glen Husman
  */
 public enum InternalPackage implements PackageClassSource{
@@ -19,30 +20,27 @@ public enum InternalPackage implements PackageClassSource{
 	/**
 	 * Represents the {@code net.minecraft.server} package, also known as NMS. This package contains vanilla minecraft server implementation classes.
 	 */
-	NET_MINECRAFT_SERVER(Package.getPackage("net.minecraft.server." + ReflectionUtilities.getPackageVersionString())),
+	MINECRAFT_SERVER("net.minecraft.server." + ReflectionUtilities.getPackageVersionString()),
 	/**
 	 * Represents the {@code org.bukkit.craftbukkit} package, also known as OBC. This package contains CraftBukkit implementation classes of Bukkit interfaces and abstract classes.
-	 * As a general rule, fully-qualified references to types within this package will not be a link, and they will not contain the version component of the package name.
 	 */
-	ORG_BUKKIT_CRAFTBUKKIT(Bukkit.getServer().getClass().getPackage());
+	CRAFTBUKKIT(Bukkit.getServer().getClass().getPackage().getName());
 	
-	private Package _package;
+	private String _package;
 	
-	private InternalPackage(Package pkg){
+	private InternalPackage(String pkg){
+		Validate.notNull(pkg, "The loaded package cannot be null.");
+		
 		_package = pkg;
 	}
 	
-	/**
-	 * Get the {@link Package} represented by this instance.
-	 * @return The internally represented minecraft package.
-	 */
-	public Package getPackage(){
+	public String getPackage(){
 		return _package;
 	}
 	
 	@Override
 	public String toString(){
-		return _package.getName();
+		return getPackage();
 	}
 	
 	@Override
@@ -50,7 +48,7 @@ public enum InternalPackage implements PackageClassSource{
 		Validate.notEmpty(className, "The class name must be specified.");
 		
 		String cName = className.trim();
-		String fqcName = getPackage().getName() + ClassUtils.PACKAGE_SEPARATOR + cName;
+		String fqcName = getPackage() + ClassUtils.PACKAGE_SEPARATOR + cName;
 		
 		Class<?> retVal = null;
 		Exception errCause = null;
@@ -89,7 +87,7 @@ public enum InternalPackage implements PackageClassSource{
 	}
 	
 	/**
-	 * Represents a sub-package of {@link InternalPackage#ORG_BUKKIT_CRAFTBUKKIT org.bukkit.craftbukkit} which further divides that package into categories.
+	 * Represents a sub-package of {@link InternalPackage#CRAFTBUKKIT org.bukkit.craftbukkit} which further divides that package into categories.
 	 * @author Glen Husman
 	 */
 	public static enum SubPackage implements PackageClassSource{
@@ -167,25 +165,21 @@ public enum InternalPackage implements PackageClassSource{
 		 */
 		UTILITY("util");
 		
-		private Package _package;
+		private String _fullyQualifiedPackage;
 		private String _name;
 		
-		/**
-		 * Get the {@link Package} represented by this instance.
-		 * @return The internally represented minecraft package.
-		 */
-		public Package getPackage(){
-			return _package;
+		public String getPackage(){
+			return _fullyQualifiedPackage;
 		}
 		
 		private SubPackage(String name){
 			_name = name;
-			_package = Package.getPackage(InternalPackage.ORG_BUKKIT_CRAFTBUKKIT + (name == null ? "" : "." + name));
+			_fullyQualifiedPackage = InternalPackage.CRAFTBUKKIT + "." + name;
 		}
 		
 		/**
 		 * Gets the name of this subpackage.
-		 * @return The name of this subpackage (which is {@code null} for {@link SubPackage#MAIN MAIN}).
+		 * @return The name of this subpackage.
 		 */
 		public String getSubpackageName(){
 			return _name;
@@ -215,7 +209,7 @@ public enum InternalPackage implements PackageClassSource{
 		
 		@Override
 		public String toString(){
-			return _package.getName();
+			return _fullyQualifiedPackage;
 		}
 		
 		@Override
@@ -223,7 +217,7 @@ public enum InternalPackage implements PackageClassSource{
 			Validate.notEmpty(className, "The class name must be specified.");
 			
 			String cName = className.trim();
-			String fqcName = getPackage().getName() + ClassUtils.PACKAGE_SEPARATOR + cName;
+			String fqcName = getPackage() + ClassUtils.PACKAGE_SEPARATOR + cName;
 			
 			Class<?> retVal = null;
 			Exception errCause = null;

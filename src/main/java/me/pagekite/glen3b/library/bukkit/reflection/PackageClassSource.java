@@ -23,9 +23,9 @@ public interface PackageClassSource {
 	public Collection<Class<?>> getCachedClasses();
 	
 	/**
-	 * Gets the package that is represented.
+	 * Get the canonical name of the {@link Package} represented by this package class source.
 	 * @return The package represented by this instance.
 	 */
-	public Package getPackage();
+	public String getPackage();
 	
 }

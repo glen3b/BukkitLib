@@ -195,7 +195,7 @@ public final class ReflectionUtilities {
 		 * @see InternalPackage#getClass(String)
 		 */
 		public static Class<?> getType(String name) throws ClassNotFoundException{
-			return InternalPackage.NET_MINECRAFT_SERVER.getClass(name);
+			return InternalPackage.MINECRAFT_SERVER.getClass(name);
 		}
 	}
 
@@ -252,7 +252,7 @@ public final class ReflectionUtilities {
 		 * @see InternalPackage#getClass(String)
 		 */
 		public static Class<?> getType(String name) throws ClassNotFoundException{
-			return InternalPackage.ORG_BUKKIT_CRAFTBUKKIT.getClass(name);
+			return InternalPackage.CRAFTBUKKIT.getClass(name);
 		}
 
 		private static Map<Class<?>, Method> _getHandleMethods;
