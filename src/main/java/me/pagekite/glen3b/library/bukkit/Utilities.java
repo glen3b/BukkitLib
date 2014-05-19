@@ -644,6 +644,28 @@ public final class Utilities {
 		}
 
 	}
+	
+	/**
+	 * Utilities involving strings.
+	 */
+	public static final class Strings{
+		private Strings(){}
+		
+		/**
+		 * Creates a string of the specified length composed of purely the specified character.
+		 * @param length The length of the string.
+		 * @param character The character which the string will be composed of.
+		 * @return A new string, which is composed of purely the specified character.
+		 */
+		public static String getString(int length, char character){
+			StringBuilder builder = new StringBuilder(length);
+			for(int i = 0; i < length; i++){
+				builder.append(character);
+			}
+			
+			return builder.toString();
+		}
+	}
 
 	/**
 	 * @deprecated Use {@link Scheduler#runAfterTeleport(QueuedTeleport, Runnable...)}
