@@ -1,6 +1,7 @@
 package me.pagekite.glen3b.library.bukkit;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
@@ -17,7 +18,7 @@ public class TextCycler extends BukkitRunnable implements CharSequence {
 	protected final String _prefix;
 	protected final String _originalText;
 	protected final int _trimLength;
-	protected int _currentTrimTick = 0;
+	protected int _currentTrimTick = -1;
 	/**
 	 * The possible value of the text cycler, <em>including the prefix</em>. Should be created at load time.
 	 */
@@ -59,20 +60,37 @@ public class TextCycler extends BukkitRunnable implements CharSequence {
 		if(_trimPossibilities == null){
 		if(_originalText.length() + _prefix.length() <= _trimLength){
 				// Cache the single variable
-				_trimPossibilities = new String[]{_prefix + _originalText};
+				_trimPossibilities = new String[]{StringUtils.rightPad(_prefix + _originalText, _trimLength)};
 		}else{
 			int spaceCt = _trimLength - ((_originalText.length() + _prefix.length()) % _trimLength);
 			String spacedString = StringUtils.rightPad(_originalText, _originalText.length() + spaceCt);
 			List<String> entrySet = new ArrayList<String>();
+			entrySet.add(_prefix + _originalText.substring(0, _trimLength - _prefix.length()));
 			for(int i = 0; i < spacedString.length(); i++){
+				String added;
 				if(i + _trimLength - _prefix.length() < spacedString.length()){
-					entrySet.add(_prefix + spacedString.substring(i, i + _trimLength - _prefix.length()));
+					added = _prefix + spacedString.substring(i, i + _trimLength - _prefix.length());
 				}else{
-					entrySet.add(_prefix + spacedString.substring(i) + Utilities.Strings.getString((i + _trimLength - _prefix.length()) - spacedString.length(), ' '));
+					added = _prefix + spacedString.substring(i) + Utilities.Strings.getString((i + _trimLength - _prefix.length()) - spacedString.length(), ' ');
+				}
+				if(!entrySet.contains(added)){
+					entrySet.add(added);
 				}
 			}
-			for(int i = 0; i < spacedString.length(); i++){
-				entrySet.add(_prefix + Utilities.Strings.getString(_trimLength - i, ' ') + spacedString.substring(i));
+			for(int i = 0; i < _trimLength; i++){
+				String str = _prefix + Utilities.Strings.getString(_trimLength - i, ' ') + _originalText.substring(0, Math.max(i - _prefix.length(), 0));
+				if(!entrySet.contains(str)){
+					entrySet.add(str);
+				}
+			}
+			Iterator<String> listIter = entrySet.iterator();
+			boolean foundWhitespace = false;
+			while(listIter.hasNext()){
+				String value = listIter.next();
+				if(StringUtils.isWhitespace(value.substring(_prefix.length())) && (foundWhitespace || value.length() != _trimLength)){
+					listIter.remove();
+					foundWhitespace = true;
+				}
 			}
 			_trimPossibilities = entrySet.toArray(new String[0]);
 		}
