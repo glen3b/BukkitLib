@@ -49,6 +49,7 @@ public class TextCycler implements CharSequence {
 		_trimLength = trimLength;
 		_originalText = text.trim();
 		_prefix = prefix.trim();
+		tick(); // Initialize arrays
 	}
 	
 	/**

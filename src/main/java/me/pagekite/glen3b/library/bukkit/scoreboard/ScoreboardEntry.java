@@ -76,7 +76,7 @@ public final class ScoreboardEntry{
 	 * @return The untrimmed prefix of the scoreboard entry, which may be blank if there is no prefix.
 	 */
 	public String getPrefix(){
-		return _value;
+		return _prefix;
 	}
 
 	/**
