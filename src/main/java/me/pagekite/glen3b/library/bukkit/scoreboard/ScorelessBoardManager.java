@@ -43,42 +43,44 @@ public abstract class ScorelessBoardManager {
 	/**
 	 * A class containing entries intended for use as scoreboard spacers.
 	 * There are multiple values because scoreboard entries must be unique.
+	 * @deprecated This class will be replaced with a more vertasile system of dealing with duplicate values, rendering it pointless as 16 character spaced strings could be used.
 	 */
+	@Deprecated
 	public static final class Spacers{
 		private Spacers(){}
 		/**
-		 * A string representing 15 spaces. Intended for use as the first spacer.
+		 * A string representing 16 spaces. Intended for use as the first spacer.
 		 */
-		public static final String FIRST = "               ";
+		public static final String FIRST = "                ";
 		/**
-		 * A string representing a reset color code and 13 spaces. Intended for use as the second spacer.
+		 * A string representing a reset color code and 14 spaces. Intended for use as the second spacer.
 		 */
-		public static final String SECOND = ChatColor.RESET.toString() + "             ";
+		public static final String SECOND = ChatColor.RESET.toString() + "              ";
 		/**
-		 * A string representing two reset color codes and 11 spaces. Intended for use as the third spacer.
+		 * A string representing two reset color codes and 12 spaces. Intended for use as the third spacer.
 		 */
-		public static final String THIRD = ChatColor.RESET.toString() + ChatColor.RESET.toString() + "           ";
+		public static final String THIRD = ChatColor.RESET.toString() + ChatColor.RESET.toString() + "            ";
 		/**
-		 * A string representing three reset color codes and 9 spaces. Intended for use as the fourth spacer.
+		 * A string representing three reset color codes and 10 spaces. Intended for use as the fourth spacer.
 		 */
-		public static final String FOURTH = ChatColor.RESET.toString() + ChatColor.RESET.toString() + ChatColor.RESET.toString() + "         ";
+		public static final String FOURTH = ChatColor.RESET.toString() + ChatColor.RESET.toString() + ChatColor.RESET.toString() + "          ";
 		/**
-		 * A string representing four reset color codes and 7 spaces. Intended for use as the fifth spacer.
+		 * A string representing four reset color codes and 8 spaces. Intended for use as the fifth spacer.
 		 */
-		public static final String FIFTH = ChatColor.RESET.toString() + ChatColor.RESET.toString() + ChatColor.RESET.toString() + ChatColor.RESET.toString() + "       ";
+		public static final String FIFTH = ChatColor.RESET.toString() + ChatColor.RESET.toString() + ChatColor.RESET.toString() + ChatColor.RESET.toString() + "        ";
 		/**
-		 * A string representing five reset color codes and 5 spaces. Intended for use as the sixth spacer.
+		 * A string representing five reset color codes and 6 spaces. Intended for use as the sixth spacer.
 		 */
-		public static final String SIXTH = ChatColor.RESET.toString() + ChatColor.RESET.toString() + ChatColor.RESET.toString() + ChatColor.RESET.toString() + ChatColor.RESET.toString() + "     ";
+		public static final String SIXTH = ChatColor.RESET.toString() + ChatColor.RESET.toString() + ChatColor.RESET.toString() + ChatColor.RESET.toString() + ChatColor.RESET.toString() + "      ";
 
 		/**
-		 * A string representing 6 reset color codes and three spaces. Intended for use as the seventh spacer.
+		 * A string representing 6 reset color codes and four spaces. Intended for use as the seventh spacer.
 		 */
-		public static final String SEVENTH = ChatColor.RESET.toString() + ChatColor.RESET.toString() + ChatColor.RESET.toString() + ChatColor.RESET.toString() + ChatColor.RESET.toString() + ChatColor.RESET.toString() + "   ";
+		public static final String SEVENTH = ChatColor.RESET.toString() + ChatColor.RESET.toString() + ChatColor.RESET.toString() + ChatColor.RESET.toString() + ChatColor.RESET.toString() + ChatColor.RESET.toString() + "    ";
 		/**
-		 * A string representing 7 reset color codes and one space. Intended for use as the eighth spacer.
+		 * A string representing 7 reset color codes and two spaces. Intended for use as the eighth spacer.
 		 */
-		public static final String EIGHTH = ChatColor.RESET.toString() + ChatColor.RESET.toString() + ChatColor.RESET.toString() + ChatColor.RESET.toString() + ChatColor.RESET.toString() + ChatColor.RESET.toString() + ChatColor.RESET.toString() + " ";
+		public static final String EIGHTH = ChatColor.RESET.toString() + ChatColor.RESET.toString() + ChatColor.RESET.toString() + ChatColor.RESET.toString() + ChatColor.RESET.toString() + ChatColor.RESET.toString() + ChatColor.RESET.toString() + "  ";
 
 		/**
 		 * Gets the spacer with the specified number.
@@ -179,8 +181,12 @@ public abstract class ScorelessBoardManager {
 			@Override
 			public void run() {
 				for(ScoreboardEntry e : newBoard.getEntries()){
-					boardInstance.resetScores(entriesToCyclers.get(e).toString());
-					dummyObjective.getScore(entriesToCyclers.get(e).tick()).setScore(entriesToScores.get(e));
+					String oldVal = entriesToCyclers.get(e).toString();
+					String newVal = entriesToCyclers.get(e).tick();
+					if(oldVal != newVal /* Yes, this is a reference check. TextCycler should return the same reference for these situations. */){
+						boardInstance.resetScores(oldVal);
+						dummyObjective.getScore(newVal).setScore(entriesToScores.get(e));
+					}
 				}
 			}
 			

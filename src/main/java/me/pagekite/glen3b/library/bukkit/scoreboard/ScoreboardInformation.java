@@ -53,7 +53,7 @@ public final class ScoreboardInformation{
 		Validate.noNullElements(entries, "Null scoreboard entries are not allowed. Consider using the Spacers class.");
 		
 		_entries = Collections.unmodifiableList(entries);
-		_title = new TextCycler(prefix, title, 15);
+		_title = new TextCycler(prefix, title, 16);
 	}
 	
 	private List<ScoreboardEntry> _entries;

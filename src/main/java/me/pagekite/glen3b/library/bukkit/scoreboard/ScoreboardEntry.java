@@ -84,7 +84,7 @@ public final class ScoreboardEntry{
 	 * @return A new {@link TextCycler} instance, which cycles through scoreboard entry text.
 	 */
 	public TextCycler createCycler(){
-		return new TextCycler(getPrefix(), getValue(), 15);
+		return new TextCycler(getPrefix(), getValue(), 16);
 	}
 
 	@Override
