@@ -107,6 +107,15 @@ public abstract class ScorelessBoardManager {
 
 			return null;
 		}
+		
+		/**
+		 * Create a scoreboard entry for the given spacer.
+		 * @param spacer The spacer string.
+		 * @return A scoreboard entry representing that spacer.
+		 */
+		public static final ScoreboardEntry createEntry(String spacer){
+			return new ScoreboardEntry(spacer);
+		}
 
 	}
 
