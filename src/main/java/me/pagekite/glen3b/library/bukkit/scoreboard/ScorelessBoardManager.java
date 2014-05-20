@@ -1,7 +1,6 @@
 package me.pagekite.glen3b.library.bukkit.scoreboard;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
@@ -40,105 +39,6 @@ import com.google.common.collect.Maps;
  * @author Glen Husman
  */
 public abstract class ScorelessBoardManager {
-
-	/**
-	 * Represents a scoreboard manager entry.
-	 */
-	public static final class Entry{
-
-		private String _value;
-		private String _prefix;
-
-		/**
-		 * Creates a scoreboard entry with the specified textual value.
-		 * @param value The textual value.
-		 */
-		public Entry(String value){
-			this(null, value);
-		}
-
-		/**
-		 * Creates a scoreboard entry with the specified textual value and prefix.
-		 * @param prefix The textual value prefix, such as a color.
-		 * @param value The textual value.
-		 */
-		public Entry(String prefix, String value){
-			Validate.notNull(value, "A text value must be specified.");
-
-			_value = value;
-			_prefix = prefix == null ? "": prefix;
-		}
-
-		/**
-		 * Get the text of the scoreboard entry.
-		 * @return The untrimmed text of the scoreboard entry, excluding the prefix.
-		 */
-		public String getValue(){
-			return _value;
-		}
-
-		/**
-		 * Get the prefix of the scoreboard entry.
-		 * @return The untrimmed prefix of the scoreboard entry, which may be blank if there is no prefix.
-		 */
-		public String getPrefix(){
-			return _value;
-		}
-
-		/**
-		 * Creates and returns a new text cycler, which cycles through this scoreboard manager entry text value.
-		 * @return A new {@link TextCycler} instance, which cycles through scoreboard entry text.
-		 */
-		public TextCycler createCycler(){
-			return new TextCycler(getPrefix(), getValue(), 15);
-		}
-
-		@Override
-		public String toString(){
-			return getPrefix() + getValue();
-		}
-
-		@Override
-		public int hashCode() {
-			final int prime = 3119;
-			int result = 83;
-			result = prime * result
-					+ ((_prefix == null) ? 0 : _prefix.hashCode());
-			result = prime * result
-					+ ((_value == null) ? 0 : _value.hashCode());
-			return result;
-		}
-
-		@Override
-		public boolean equals(Object obj) {
-			if (this == obj) {
-				return true;
-			}
-			if (obj == null) {
-				return false;
-			}
-			if (!(obj instanceof Entry)) {
-				return false;
-			}
-			Entry other = (Entry) obj;
-			if (_prefix == null) {
-				if (other._prefix != null) {
-					return false;
-				}
-			} else if (!_prefix.equals(other._prefix)) {
-				return false;
-			}
-			if (_value == null) {
-				if (other._value != null) {
-					return false;
-				}
-			} else if (!_value.equals(other._value)) {
-				return false;
-			}
-			return true;
-		}
-
-	}
 
 	/**
 	 * A class containing entries intended for use as scoreboard spacers.
@@ -211,7 +111,7 @@ public abstract class ScorelessBoardManager {
 	}
 
 	/**
-	 * Resets the scoreboard of the specified player, causing it to be recreated upon next get.
+	 * Resets the scoreboard of the specified player, causing it to be recreated upon the next retrieval of that player's scoreboard.
 	 * A call to this method does not, without subclass implementation, guarantee that the player will immediately see any change in scoreboard.
 	 * @param player The player for whom to reset the scoreboard.
 	 */
@@ -226,19 +126,26 @@ public abstract class ScorelessBoardManager {
 	 * This method will return cached scoreboards if they exist, and create new ones if need be.
 	 * Note that this method will only display proper information after the first invocation of the {@code Runnable}s passed to {@link #schedule(Collection)}.
 	 * @param player The player who will own the scoreboard.
-	 * @return The scoreboard this manager owns for the specified player.
+	 * @return The scoreboard this manager owns for the specified player, or {@code null} if the player cannot be assigned a scoreboard.
 	 */
-	public Scoreboard getScoreboard(Player player){
+	public final Scoreboard getScoreboard(Player player){
 		Validate.notNull(player, "The player must not be null!");
 		
-		if(_trackedPlayerBoards.get(player.getUniqueId()) != null){
+		if(_trackedPlayerBoards.containsKey(player.getUniqueId())){
 			return _trackedPlayerBoards.get(player.getUniqueId());
 		}
 		
 		final ScoreboardInformation newBoard = prepareScoreboard(player);
+		
+		if(newBoard == null){
+			_trackedPlayerBoards.put(player.getUniqueId(), null);
+			return null;
+		}
+		
 		final Scoreboard boardInstance = Bukkit.getScoreboardManager().getNewScoreboard();
 		final Objective dummyObjective = boardInstance.registerNewObjective(SIDEBOARD_OBJECTIVE_NAME, "dummy");
 		dummyObjective.setDisplaySlot(DisplaySlot.SIDEBAR);
+		dummyObjective.setDisplayName(newBoard.getTitle().toString());
 		
 		List<Runnable> runnableCollection = Lists.newArrayListWithExpectedSize(2);
 		runnableCollection.add(new Runnable(){ // This one cycles the title
@@ -250,8 +157,8 @@ public abstract class ScorelessBoardManager {
 			
 		});
 		
-		final HashMap<Entry, TextCycler> entriesToCyclers = Maps.newHashMapWithExpectedSize(newBoard.getEntries().size());
-		final HashMap<Entry, Integer> entriesToScores = Maps.newHashMapWithExpectedSize(newBoard.getEntries().size());
+		final HashMap<ScoreboardEntry, TextCycler> entriesToCyclers = Maps.newHashMapWithExpectedSize(newBoard.getEntries().size());
+		final HashMap<ScoreboardEntry, Integer> entriesToScores = Maps.newHashMapWithExpectedSize(newBoard.getEntries().size());
 		
 		for(int i = newBoard.getEntries().size(); i > 0; i--){
 			entriesToCyclers.put(newBoard.getEntries().get(i - 1), newBoard.getEntries().get(i - 1).createCycler());
@@ -262,7 +169,7 @@ public abstract class ScorelessBoardManager {
 
 			@Override
 			public void run() {
-				for(Entry e : newBoard.getEntries()){
+				for(ScoreboardEntry e : newBoard.getEntries()){
 					boardInstance.resetScores(entriesToCyclers.get(e).toString());
 					dummyObjective.getScore(entriesToCyclers.get(e).tick()).setScore(entriesToScores.get(e));
 				}
@@ -271,6 +178,8 @@ public abstract class ScorelessBoardManager {
 		});
 		
 		schedule(runnableCollection);
+		
+		_trackedPlayerBoards.put(player.getUniqueId(), boardInstance);
 		
 		return boardInstance;
 	}
@@ -283,118 +192,6 @@ public abstract class ScorelessBoardManager {
 	 * The name of the sideboard objective which is displayed to the player.
 	 */
 	protected static final String SIDEBOARD_OBJECTIVE_NAME = "scoreboard";
-
-	/**
-	 * Represents information about a soon-to-be-created scoreboard.
-	 */
-	protected static final class ScoreboardInformation{
-		/**
-		 * Creates a scoreboard information instance.
-		 * @param title The title of the scoreboard.
-		 * @param entries The entries to include in the scoreboard, in order from top to bottom as they should appear.
-		 */
-		public ScoreboardInformation(String title, Entry... entries){
-			this(null, title, entries);
-		}
-
-		/**
-		 * Creates a scoreboard information instance.
-		 * @param prefix The prefix of the title of the scoreboard.
-		 * @param title The title of the scoreboard.
-		 * @param entries The entries to include in the scoreboard, in order from top to bottom as they should appear.
-		 */
-		public ScoreboardInformation(String prefix, String title, Entry... entries){
-			this(prefix, title, Lists.newArrayList(entries));
-		}
-
-		/**
-		 * Creates a scoreboard information instance.
-		 * @param title The title of the scoreboard.
-		 * @param entries The entries to include in the scoreboard, in order from top to bottom as they should appear.
-		 */
-		public ScoreboardInformation(String title, List<Entry> entries){
-			this(null, title, entries);
-		}
-
-		/**
-		 * Creates a scoreboard information instance.
-		 * @param prefix The prefix of the title of the scoreboard.
-		 * @param title The title of the scoreboard.
-		 * @param entries The entries to include in the scoreboard, in order from top to bottom as they should appear.
-		 */
-		public ScoreboardInformation(String prefix, String title, List<Entry> entries){
-			Validate.notNull(title, "The scoreboard title must not be null.");
-			Validate.noNullElements(entries, "Null scoreboard entries are not allowed. Consider using the Spacers class.");
-			
-			_entries = Collections.unmodifiableList(entries);
-			_title = new TextCycler(prefix, title, 15);
-		}
-		
-		private List<Entry> _entries;
-		private TextCycler _title;
-		
-		/**
-		 * Gets the single cycler reference held by this class which will cycle through the title.
-		 * @return A {@code TextCycler} that cycles through the scoreboard title.
-		 */
-		public TextCycler getTitle(){
-			return _title;
-		}
-		
-		/**
-		 * Gets an unmodifiable collection of existing scoreboard entries. This collection is guaranteed to iterate in the order (from top to bottom) that the entries should appear in to the player.
-		 * @return An unmodifiable collection of scoreboard entries.
-		 */
-		public List<Entry> getEntries(){
-			return _entries;	
-		}
-
-		@Override
-		public int hashCode() {
-			final int prime = 997;
-			int result = 31;
-			result = prime * result
-					+ ((_entries == null) ? 0 : _entries.hashCode());
-			result = prime * result
-					+ ((_title == null) ? 0 : _title.hashCode());
-			return result;
-		}
-
-		@Override
-		public boolean equals(Object obj) {
-			if (this == obj) {
-				return true;
-			}
-			if (obj == null) {
-				return false;
-			}
-			if (!(obj instanceof ScoreboardInformation)) {
-				return false;
-			}
-			ScoreboardInformation other = (ScoreboardInformation) obj;
-			if (_entries == null) {
-				if (other._entries != null) {
-					return false;
-				}
-			} else if (!_entries.equals(other._entries)) {
-				return false;
-			}
-			if (_title == null) {
-				if (other._title != null) {
-					return false;
-				}
-			} else if (!_title.equals(other._title)) {
-				return false;
-			}
-			return true;
-		}
-
-		@Override
-		public String toString() {
-			return "ScoreboardInformation [title=" + getTitle()
-					+ ", entries=" + getEntries() + "]";
-		}
-	}
 
 	/**
 	 * Schedules multiple tasks to run under a parent plugin. All tasks will be for scoreboard text cycling.
