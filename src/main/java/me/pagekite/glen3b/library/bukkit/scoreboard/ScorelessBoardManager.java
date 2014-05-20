@@ -169,9 +169,9 @@ public abstract class ScorelessBoardManager {
 		final HashMap<ScoreboardEntry, TextCycler> entriesToCyclers = Maps.newHashMapWithExpectedSize(newBoard.getEntries().size());
 		final HashMap<ScoreboardEntry, Integer> entriesToScores = Maps.newHashMapWithExpectedSize(newBoard.getEntries().size());
 		
-		for(int i = newBoard.getEntries().size(); i > 0; i--){
-			entriesToCyclers.put(newBoard.getEntries().get(i - 1), newBoard.getEntries().get(i - 1).createCycler());
-			entriesToScores.put(newBoard.getEntries().get(i - 1), i);
+		for(int i = newBoard.getEntries().size() - 1; i >= 0; i--){
+			entriesToCyclers.put(newBoard.getEntries().get(i), newBoard.getEntries().get(i).createCycler());
+			entriesToScores.put(newBoard.getEntries().get(i), newBoard.getEntries().size() - i);
 		}
 		
 		runnableCollection.add(new Runnable(){ // This one cycles each individual entry
