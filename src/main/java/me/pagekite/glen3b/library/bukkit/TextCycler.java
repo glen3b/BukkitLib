@@ -6,14 +6,13 @@ import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.Validate;
-import org.bukkit.scheduler.BukkitRunnable;
 
 /**
  * A class which rotates through text to keep it within a specific length limit.
  * All {@link CharSequence} methods are performed regarding the trimmed text.
  * @author Glen Husman
  */
-public class TextCycler extends BukkitRunnable implements CharSequence {
+public class TextCycler implements CharSequence {
 
 	protected final String _prefix;
 	protected final String _originalText;
@@ -121,12 +120,51 @@ public class TextCycler extends BukkitRunnable implements CharSequence {
 		return _trimPossibilities[_currentTrimTick % _trimPossibilities.length];
 	}
 
-	/**
-	 * Ticks the text cycler.
-	 */
 	@Override
-	public final void run() {
-		tick();
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + _currentTrimTick;
+		result = prime * result
+				+ ((_originalText == null) ? 0 : _originalText.hashCode());
+		result = prime * result + ((_prefix == null) ? 0 : _prefix.hashCode());
+		result = prime * result + _trimLength;
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		}
+		if (obj == null) {
+			return false;
+		}
+		if (!(obj instanceof TextCycler)) {
+			return false;
+		}
+		TextCycler other = (TextCycler) obj;
+		if (_currentTrimTick != other._currentTrimTick) {
+			return false;
+		}
+		if (_originalText == null) {
+			if (other._originalText != null) {
+				return false;
+			}
+		} else if (!_originalText.equals(other._originalText)) {
+			return false;
+		}
+		if (_prefix == null) {
+			if (other._prefix != null) {
+				return false;
+			}
+		} else if (!_prefix.equals(other._prefix)) {
+			return false;
+		}
+		if (_trimLength != other._trimLength) {
+			return false;
+		}
+		return true;
 	}
 
 }
