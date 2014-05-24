@@ -81,10 +81,13 @@ public final class ScoreboardEntry{
 
 	/**
 	 * Creates and returns a new text cycler, which cycles through this scoreboard manager entry text value.
+	 * <p>
+	 * The returned text cycler will <b>not</b> have a prefix set.
+	 * It is the responsibility of the scoreboard displayer to add the prefix, such as through a team.
 	 * @return A new {@link TextCycler} instance, which cycles through scoreboard entry text.
 	 */
 	public TextCycler createCycler(){
-		return new TextCycler(getPrefix(), getValue(), 16);
+		return new TextCycler(null, getValue(), 16);
 	}
 
 	@Override
@@ -96,10 +99,8 @@ public final class ScoreboardEntry{
 	public int hashCode() {
 		final int prime = 3119;
 		int result = 83;
-		result = prime * result
-				+ ((_prefix == null) ? 0 : _prefix.hashCode());
-		result = prime * result
-				+ ((_value == null) ? 0 : _value.hashCode());
+		result = prime * result + ((_prefix == null) ? 0 : _prefix.hashCode());
+		result = prime * result + ((_value == null) ? 0 : _value.hashCode());
 		return result;
 	}
 
@@ -131,5 +132,4 @@ public final class ScoreboardEntry{
 		}
 		return true;
 	}
-
 }

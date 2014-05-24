@@ -1,20 +1,23 @@
 package me.pagekite.glen3b.library.bukkit.scoreboard;
 
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.Map;
 import java.util.List;
 import java.util.UUID;
 
 import me.pagekite.glen3b.library.bukkit.TextCycler;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.Validate;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scoreboard.DisplaySlot;
 import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Scoreboard;
+import org.bukkit.scoreboard.Team;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -41,52 +44,76 @@ import com.google.common.collect.Maps;
 public abstract class ScorelessBoardManager {
 
 	/**
+	 * Represents a 16 character spacer string which can be used as a scoreboard entry.
+	 * Duplicate values will be dealt with in the new system.
+	 */
+	public static final String SPACER_ENTRY = "                ";
+	
+	/**
 	 * A class containing entries intended for use as scoreboard spacers.
 	 * There are multiple values because scoreboard entries must be unique.
-	 * @deprecated This class will be replaced with a more vertasile system of dealing with duplicate values, rendering it pointless as 16 character spaced strings could be used.
+	 * @deprecated This class will be replaced with a more vertasile system of dealing with duplicate values, rendering it pointless as {@link ScorelessBoardManager#SPACER_ENTRY} can be used.
 	 */
 	@Deprecated
 	public static final class Spacers{
 		private Spacers(){}
 		/**
 		 * A string representing 16 spaces. Intended for use as the first spacer.
+		 * @deprecated Use {@link ScorelessBoardManager#SPACER_ENTRY}.
 		 */
+		@Deprecated
 		public static final String FIRST = "                ";
 		/**
 		 * A string representing a reset color code and 14 spaces. Intended for use as the second spacer.
+		 * @deprecated Will not be used, being replaced with a more vertasile system of dealing with duplicate values.
 		 */
+		@Deprecated
 		public static final String SECOND = ChatColor.RESET.toString() + "              ";
 		/**
 		 * A string representing two reset color codes and 12 spaces. Intended for use as the third spacer.
+		 * @deprecated Will not be used, being replaced with a more vertasile system of dealing with duplicate values.
 		 */
+		@Deprecated
 		public static final String THIRD = ChatColor.RESET.toString() + ChatColor.RESET.toString() + "            ";
 		/**
 		 * A string representing three reset color codes and 10 spaces. Intended for use as the fourth spacer.
+		 * @deprecated Will not be used, being replaced with a more vertasile system of dealing with duplicate values.
 		 */
+		@Deprecated
 		public static final String FOURTH = ChatColor.RESET.toString() + ChatColor.RESET.toString() + ChatColor.RESET.toString() + "          ";
 		/**
 		 * A string representing four reset color codes and 8 spaces. Intended for use as the fifth spacer.
+		 * @deprecated Will not be used, being replaced with a more vertasile system of dealing with duplicate values.
 		 */
+		@Deprecated
 		public static final String FIFTH = ChatColor.RESET.toString() + ChatColor.RESET.toString() + ChatColor.RESET.toString() + ChatColor.RESET.toString() + "        ";
 		/**
 		 * A string representing five reset color codes and 6 spaces. Intended for use as the sixth spacer.
+		 * @deprecated Will not be used, being replaced with a more vertasile system of dealing with duplicate values.
 		 */
+		@Deprecated
 		public static final String SIXTH = ChatColor.RESET.toString() + ChatColor.RESET.toString() + ChatColor.RESET.toString() + ChatColor.RESET.toString() + ChatColor.RESET.toString() + "      ";
 
 		/**
 		 * A string representing 6 reset color codes and four spaces. Intended for use as the seventh spacer.
+		 * @deprecated Will not be used, being replaced with a more vertasile system of dealing with duplicate values.
 		 */
+		@Deprecated
 		public static final String SEVENTH = ChatColor.RESET.toString() + ChatColor.RESET.toString() + ChatColor.RESET.toString() + ChatColor.RESET.toString() + ChatColor.RESET.toString() + ChatColor.RESET.toString() + "    ";
 		/**
 		 * A string representing 7 reset color codes and two spaces. Intended for use as the eighth spacer.
+		 * @deprecated Will not be used, being replaced with a more vertasile system of dealing with duplicate values.
 		 */
+		@Deprecated
 		public static final String EIGHTH = ChatColor.RESET.toString() + ChatColor.RESET.toString() + ChatColor.RESET.toString() + ChatColor.RESET.toString() + ChatColor.RESET.toString() + ChatColor.RESET.toString() + ChatColor.RESET.toString() + "  ";
 
 		/**
 		 * Gets the spacer with the specified number.
 		 * @param number The number representing the occurence index of the spacer, base one (a value of {@code 1} will return the first spacer).
 		 * @return A spacer value, or {@code null} if not found for that number.
+		 * @deprecated Uses deprecated spacer fields, and is obselete due to the upcoming vertasile system of dealing with duplicate values.
 		 */
+		@Deprecated
 		public static final String getSpacer(int number){
 			switch(number){
 			case 1:
@@ -114,7 +141,9 @@ public abstract class ScorelessBoardManager {
 		 * Create a scoreboard entry for the given spacer.
 		 * @param spacer The spacer string.
 		 * @return A scoreboard entry representing that spacer.
+		 * @deprecated Will not be needed, use {@link ScoreboardEntry#ScoreboardEntry(String)} with {@link ScorelessBoardManager#SPACER_ENTRY}.
 		 */
+		@Deprecated
 		public static final ScoreboardEntry createEntry(String spacer){
 			return new ScoreboardEntry(spacer);
 		}
@@ -132,6 +161,41 @@ public abstract class ScorelessBoardManager {
 		_trackedPlayerBoards.remove(player.getUniqueId());
 	}
 	
+	private final class TitleCycler extends BukkitRunnable{
+		public UUID playerID;
+		public ScoreboardInformation scoreInfo;
+		
+		public void dispose(){
+			cancel();
+			playerID = null;
+			scoreInfo = null;
+		}
+		
+		@Override
+		public void run() {
+			if(_trackedPlayerBoards == null || playerID == null || scoreInfo == null){
+				dispose();
+				return;
+			}
+			
+			Scoreboard board = _trackedPlayerBoards.get(playerID);
+			
+			if(board == null){
+				dispose();
+				return;
+			}
+			
+			Objective objective = board.getObjective(SIDEBOARD_OBJECTIVE_NAME);
+			
+			if(objective == null){
+				dispose();
+				return;
+			}
+			
+			objective.setDisplayName(scoreInfo.getTitle().tick());
+		}
+	}
+	
 	/**
 	 * Gets a scoreboard for the specified player.
 	 * This method will return cached scoreboards if they exist, and create new ones if need be.
@@ -139,7 +203,7 @@ public abstract class ScorelessBoardManager {
 	 * @param player The player who will own the scoreboard.
 	 * @return The scoreboard this manager owns for the specified player, or {@code null} if the player cannot be assigned a scoreboard.
 	 */
-	public final Scoreboard getScoreboard(Player player){
+	public final Scoreboard getScoreboard(final Player player){
 		Validate.notNull(player, "The player must not be null!");
 		
 		if(_trackedPlayerBoards.containsKey(player.getUniqueId())){
@@ -158,34 +222,46 @@ public abstract class ScorelessBoardManager {
 		dummyObjective.setDisplaySlot(DisplaySlot.SIDEBAR);
 		dummyObjective.setDisplayName(newBoard.getTitle().toString());
 		
-		List<Runnable> runnableCollection = Lists.newArrayListWithExpectedSize(2);
-		runnableCollection.add(new Runnable(){ // This one cycles the title
-
-			@Override
-			public void run() {
-				dummyObjective.setDisplayName(newBoard.getTitle().tick());
-			}
-			
-		});
+		List<BukkitRunnable> runnableCollection = Lists.newArrayListWithExpectedSize(2);
+		TitleCycler title = new TitleCycler();
+		title.playerID = player.getUniqueId();
+		title.scoreInfo = newBoard;
+		runnableCollection.add(title);
 		
-		final HashMap<ScoreboardEntry, TextCycler> entriesToCyclers = Maps.newHashMapWithExpectedSize(newBoard.getEntries().size());
-		final HashMap<ScoreboardEntry, Integer> entriesToScores = Maps.newHashMapWithExpectedSize(newBoard.getEntries().size());
+		final Map<ScoreboardEntry, TextCycler> entriesToCyclers = Maps.newHashMapWithExpectedSize(newBoard.getEntries().size());
+		final Map<ScoreboardEntry, Integer> entriesToScores = Maps.newHashMapWithExpectedSize(newBoard.getEntries().size());
+		final Map<String, Team> prefixesToTeams = Maps.newHashMap();
+		
 		
 		for(int i = newBoard.getEntries().size() - 1; i >= 0; i--){
 			entriesToCyclers.put(newBoard.getEntries().get(i), newBoard.getEntries().get(i).createCycler());
 			entriesToScores.put(newBoard.getEntries().get(i), newBoard.getEntries().size() - i);
+			
+			if(!prefixesToTeams.containsKey(newBoard.getEntries().get(i).getPrefix())){
+				String teamName = StringUtils.trimToEmpty(newBoard.getEntries().get(i).getPrefix().replace(ChatColor.COLOR_CHAR, '&').replace(' ', '-'));
+				if(teamName.length() > 16){
+					teamName = teamName.substring(0, 16);
+				}
+				Team value = boardInstance.registerNewTeam(teamName);
+				value.setPrefix(newBoard.getEntries().get(i).getPrefix());
+				prefixesToTeams.put(newBoard.getEntries().get(i).getPrefix(), value);
+			}
 		}
 		
-		runnableCollection.add(new Runnable(){ // This one cycles each individual entry
+		runnableCollection.add(new BukkitRunnable(){ // This one cycles each individual entry
 
+			@SuppressWarnings("deprecation")
 			@Override
 			public void run() {
 				for(ScoreboardEntry e : newBoard.getEntries()){
-					String oldVal = entriesToCyclers.get(e).toString();
-					String newVal = entriesToCyclers.get(e).tick();
+					TextCycler cycler = entriesToCyclers.get(e);
+					String oldVal = cycler.toString();
+					String newVal = cycler.tick();
 					if(oldVal != newVal /* Yes, this is a reference check. TextCycler should return the same reference for these situations. */){
+						prefixesToTeams.get(e.getPrefix()).removePlayer(Bukkit.getOfflinePlayer(oldVal)); // Workaround for lack of API - getOfflinePlayer should not be used
+						prefixesToTeams.get(e.getPrefix()).addPlayer(Bukkit.getOfflinePlayer(newVal)); // Workaround for lack of API - getOfflinePlayer should not be used
 						boardInstance.resetScores(oldVal);
-						dummyObjective.getScore(newVal).setScore(entriesToScores.get(e));
+						dummyObjective.getScore(newVal).setScore(entriesToScores.get(e));						
 					}
 				}
 			}
@@ -200,9 +276,9 @@ public abstract class ScorelessBoardManager {
 	}
 	
 	/**
-	 * The mao of player UUIDs to prepared scoreboards.
+	 * The map of player UUIDs to prepared scoreboards that are owned by them.
 	 */
-	protected HashMap<UUID, Scoreboard> _trackedPlayerBoards = new HashMap<UUID, Scoreboard>();
+	protected final Map<UUID, Scoreboard> _trackedPlayerBoards = Maps.newHashMap();
 	/**
 	 * The name of the sideboard objective which is displayed to the player.
 	 */
