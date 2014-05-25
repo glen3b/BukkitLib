@@ -32,7 +32,7 @@ public final class ServerTransportManager implements PluginMessageListener {
 
 	private Plugin _plugin;
 
-	private Map<String, List<ResultReceived<String[]>>> _playerListReceivers = Collections.synchronizedMap(new HashMap<String, List<ResultReceived<String[]>>>());
+	private Map<String, List<ResultReceived<String, String[]>>> _playerListReceivers = Collections.synchronizedMap(new HashMap<String, List<ResultReceived<String, String[]>>>());
 
 	/**
 	 * Internal constructor. <b>Should not be called except by the GBukkitLib plugin instance.</b> This type is registered as a service.
@@ -63,15 +63,15 @@ public final class ServerTransportManager implements PluginMessageListener {
 	/**
 	 * Gets the array of players currently online on a server.
 	 * @param serverName The name of the server.
-	 * @param resultHandler The function to invoke upon receiving the result.
+	 * @param resultHandler The function to invoke upon receiving the result. The source parameter is the server name, the result is the player list.
 	 * @see ResultReceived
 	 */
-	public void getPlayers(String serverName, ResultReceived<String[]> resultHandler){
+	public void getPlayers(String serverName, ResultReceived<String, String[]> resultHandler){
 		Validate.notNull(resultHandler, "The result handler must not be null.");
 		Validate.notEmpty(serverName, "The server name must not be empty.");
 
 		if(!_playerListReceivers.containsKey(serverName.toLowerCase().trim())){
-			_playerListReceivers.put(serverName.toLowerCase().trim(), new ArrayList<ResultReceived<String[]>>(1));
+			_playerListReceivers.put(serverName.toLowerCase().trim(), new ArrayList<ResultReceived<String, String[]>>(1));
 		}
 
 		_playerListReceivers.get(serverName.toLowerCase().trim()).add(resultHandler);
@@ -177,12 +177,13 @@ public final class ServerTransportManager implements PluginMessageListener {
 			String subchannel = in.readUTF();
 			if (subchannel.equals("PlayerList")) {
 				synchronized(_playerListReceivers){
-					List<ResultReceived<String[]>> handlers = _playerListReceivers.get(in.readUTF().toLowerCase().trim());
+					String serverName = in.readUTF(); 
+					List<ResultReceived<String, String[]>> handlers = _playerListReceivers.get(serverName.toLowerCase().trim());
 					String[] playerList = in.readUTF().split(", ");
-					Iterator<ResultReceived<String[]>> handlerIterator = handlers.iterator();
+					Iterator<ResultReceived<String, String[]>> handlerIterator = handlers.iterator();
 					while(handlerIterator.hasNext()){
-						ResultReceived<String[]> handler = handlerIterator.next();
-						handler.onReceive(playerList);
+						ResultReceived<String, String[]> handler = handlerIterator.next();
+						handler.onReceive(serverName, playerList);
 						handlerIterator.remove();
 					}
 				}
