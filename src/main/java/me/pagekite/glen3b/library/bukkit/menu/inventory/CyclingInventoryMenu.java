@@ -170,7 +170,7 @@ public class CyclingInventoryMenu extends InventoryMenu {
 		protected int _itemIndex;
 
 		/**
-		 * Cycle number. Modulo is used by the class (to avoid runtime changes)
+		 * Cycle number, raw. Modulo is used by the class (to avoid runtime changes in array size).
 		 */
 		protected int _cycleNumber;
 
@@ -263,7 +263,37 @@ public class CyclingInventoryMenu extends InventoryMenu {
 		this.optionIcons = new ItemStack[size][];
 		this.cycleDelays = new Long[size];
 	}
+	
+	/**
+	 * @see #isSchedulerOptimizationEnabled()
+	 * @see #setSchedulerOptimizationEnabled(boolean)
+	 */
+	private boolean _optimizeCyclerScheduling = true;
 
+	/**
+	 * Determines whether cycler slot scheduling optimization is enabled.
+	 * Optimization is defined as <em>not</em> scheduling cycler tasks if the array size is one.
+	 * The default value of this is {@code true}.
+	 * @return A {@code boolean} representing the presence value of scheduler cycling.
+	 * @see #setSchedulerOptimizationEnabled(boolean)
+	 */
+	public boolean isSchedulerOptimizationEnabled(){
+		return _optimizeCyclerScheduling;
+	}
+	
+	/**
+	 * Sets the enabled status of scheduler optimization.
+	 * The only reason this should ever be set to {@code false} is if an item element at a given slot does not cycle,
+	 * but its value may change at runtime during inventory viewing (and the user will want to see this change).
+	 * With the optimizer enabled, the change from a single cycle item to another single cycle item will not be viewed by the user.
+	 * However, without the optimizer enabled, the user will see the change as soon as the cycler delay for that slot has elapsed.
+	 * @param value The new status of cycler scheduling optimization.
+	 * @see #isSchedulerOptimizationEnabled()
+	 */
+	public void setSchedulerOptimizationEnabled(boolean value){
+		_optimizeCyclerScheduling = value;
+	}
+	
 	/**
 	 * Removes the icon at the specified position.
 	 * 
@@ -281,6 +311,7 @@ public class CyclingInventoryMenu extends InventoryMenu {
 	public void destroy() {
 		super.destroy();
 		cycleDelays = null;
+		optionIcons = null;
 	}
 
 	/**
@@ -352,8 +383,19 @@ public class CyclingInventoryMenu extends InventoryMenu {
 		for (int i = 0; i < optionIcons.length; i++) {
 			if (optionIcons[i] != null && optionIcons[i].length > 0) {
 				inventory.setItem(i, optionIcons[i][0]);
-				if (optionIcons[i].length > 1 && cycleDelays[i] >= 0) {
-					new ItemCycler(i, inventory).schedule(cycleDelays[i]);
+				if(cycleDelays[i] <= 0){
+					// Invalid delay, invalid state
+					if(!isSchedulerOptimizationEnabled() || optionIcons[i].length > 1){ // If the item SHOULD be cycled
+						// Throw an illegal state exception
+						throw new IllegalStateException("An invalid cycler delay was specified for a slot which should be cycled. Delay value: " + cycleDelays[i]);
+					}
+					// Otherwise no scheduling is needed and we can ignore safely
+				}else{
+					// Valid delay
+					if (!isSchedulerOptimizationEnabled() || optionIcons[i].length > 1) {
+						// Schedule if needed
+						new ItemCycler(i, inventory).schedule(cycleDelays[i]);
+					}
 				}
 			}
 		}
@@ -429,7 +471,7 @@ public class CyclingInventoryMenu extends InventoryMenu {
 				position);
 		Validate.notEmpty(icons, "The icons array is null or empty.");
 		Validate.noNullElements(icons, "Some icons icons are null.");
-		Validate.isTrue(cycleDelay >= 0 || icons.length == 1,
+		Validate.isTrue(cycleDelay > 0 || icons.length == 1,
 				"The cycle delay must be at least one tick.");
 
 		if (name != null) {
