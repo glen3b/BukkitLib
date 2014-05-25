@@ -368,7 +368,23 @@ public class CyclingInventoryMenu extends InventoryMenu {
 			}
 		}
 	}
-
+	
+	/**
+	 * Gets the items currently set for the option at the specified position.
+	 * This method does not make any guarantees about the reference status of the returned object.
+	 * 
+	 * @param index
+	 *            The zero-based index of the item.
+	 */
+	public ItemStack[] getOption(int index){
+		Validate.isTrue(
+				index >= 0 && index < getSize(),
+				"The position is not within the bounds of the menu. Position: ",
+				index);
+		
+		return optionIcons[index] == null ? new ItemStack[0] : optionIcons[index];
+	}
+	
 	/**
 	 * Opens this inventory menu for the specified player.
 	 * 
