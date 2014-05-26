@@ -13,7 +13,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 
-import me.pagekite.glen3b.library.bukkit.GBukkitLibraryPlugin;
+import me.pagekite.glen3b.library.bukkit.GBukkitCorePlugin;
 import me.pagekite.glen3b.library.bukkit.Utilities;
 import me.pagekite.glen3b.library.bukkit.command.CommandInvocationContext;
 import me.pagekite.glen3b.library.bukkit.command.CommandSenderType;
@@ -400,21 +400,21 @@ public abstract class ParentCommand implements TabExecutor, PreprocessedCommandH
 		return null;
 	}
 
-	private GBukkitLibraryPlugin _plugin;
+	private GBukkitCorePlugin _plugin;
 
 	/**
-	 * Get the GBukkitLib plugin.
+	 * Get the GBukkitCore plugin.
 	 */
-	private GBukkitLibraryPlugin getPlugin(){
+	private GBukkitCorePlugin getPlugin(){
 		if(_plugin == null || !_plugin.isEnabled()){
-			_plugin = (GBukkitLibraryPlugin)Bukkit.getServer().getPluginManager().getPlugin("GBukkitLib");
+			_plugin = (GBukkitCorePlugin)Bukkit.getServer().getPluginManager().getPlugin("GBukkitCore");
 		}
 		
 		return _plugin;
 	}
 	
 	/**
-	 * Get the GBukkitLib config file.
+	 * Get the GBukkitCore config file.
 	 */
 	private FileConfiguration getConfig(){
 		return getPlugin().getConfig();

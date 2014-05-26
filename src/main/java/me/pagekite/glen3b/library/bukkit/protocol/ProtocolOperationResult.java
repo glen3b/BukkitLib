@@ -40,7 +40,7 @@ public enum ProtocolOperationResult {
 	 * Represents that a protocol operation cannot happen without conflicting
 	 * with existing data. This value will only be returned if the intended
 	 * result is already present without packet modification. Calling {@link
-	 * succeeded()} on this value will return {@code true}.
+	 * #succeeded()} on this value will return {@code true}.
 	 */
 	NOT_NEEDED(true);
 

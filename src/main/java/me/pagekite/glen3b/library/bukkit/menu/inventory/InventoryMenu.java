@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import me.pagekite.glen3b.library.bukkit.GBukkitLibraryPlugin;
+import me.pagekite.glen3b.library.bukkit.GBukkitCorePlugin;
 import me.pagekite.glen3b.library.bukkit.Utilities;
 
 import org.apache.commons.lang.Validate;
@@ -159,7 +159,7 @@ public class InventoryMenu implements Listener {
 
 	protected List<OptionClickEvent.Handler> _eventHandlers = new ArrayList<OptionClickEvent.Handler>();
 	
-	private GBukkitLibraryPlugin _plugin;
+	private GBukkitCorePlugin _plugin;
 	protected static final Set<String> _allNames = Sets.newHashSet("Chest");
 	
 	/**
@@ -202,9 +202,9 @@ public class InventoryMenu implements Listener {
 		_eventHandlers = null;
 	}
 	
-	protected GBukkitLibraryPlugin getPlugin(){
+	protected GBukkitCorePlugin getPlugin(){
 		if(_plugin == null || !_plugin.isEnabled()){
-			_plugin = (GBukkitLibraryPlugin)Bukkit.getServer().getPluginManager().getPlugin("GBukkitLib");
+			_plugin = (GBukkitCorePlugin)Bukkit.getServer().getPluginManager().getPlugin("GBukkitCore");
 		}
 		
 		return _plugin;

@@ -1,18 +1,18 @@
 /*
-   This file is part of GBukkitLib.
+   This file is part of GBukkitCore.
 
-    GBukkitLib is free software: you can redistribute it and/or modify
+    GBukkitCore is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    GBukkitLib is distributed in the hope that it will be useful,
+    GBukkitCore is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU Lesser General Public License for more details.
 
     You should have received a copy of the GNU Lesser General Public License
-    along with GBukkitLib.  If not, see <http://www.gnu.org/licenses/>.
+    along with GBukkitCore.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 package me.pagekite.glen3b.library.bukkit.datastore;
@@ -58,7 +58,7 @@ public final class AutoSaverScheduler {
 	/**
 	 * Internal constructor for service registration.
 	 * <br/><br/>
-	 * <b>This constructor should only be called by GBukkitLib to register this service.</b>
+	 * <b>This constructor should only be called by GBukkitCore to register this service.</b>
 	 * 
 	 * @param plugin The plugin to use to register autosave tasks.
 	 */
@@ -111,7 +111,7 @@ public final class AutoSaverScheduler {
 	private Map<Integer, AutosavedConfig> _taskIdsToExecutors = new HashMap<Integer, AutosavedConfig>();
 	
 	/**
-	 * Internally used method to save everything upon disabling. Should not be called except by the GBukkitLib plugin instance.
+	 * Internally used method to save everything upon disabling. Should not be called except by the GBukkitCore plugin instance.
 	 */
 	public void onDisable() {
 		for(Map.Entry<Integer, AutosavedConfig> task : _taskIdsToExecutors.entrySet()){

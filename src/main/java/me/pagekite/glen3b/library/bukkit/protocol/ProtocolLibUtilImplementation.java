@@ -19,8 +19,8 @@ import com.comphenix.protocol.wrappers.nbt.NbtCompound;
 import com.comphenix.protocol.wrappers.nbt.NbtFactory;
 
 /**
- * This internal class uses <a href="">ProtocolLib</a> to perform certain functions hard or
- * impossible with the Bukkit API.
+ * This internal class uses ProtocolLib to perform certain functions
+ * impossible with the Bukkit API. This class should be used in preference to the {@link DefaultProtocolUtilityImplementation}.
  * 
  * <p>
  * <b>This is an internally used class which should not be instantiated or called directly by client code.</b>
@@ -122,7 +122,7 @@ public final class ProtocolLibUtilImplementation implements ProtocolUtilities {
 
 	@Override
 	public void cleanup(Plugin plugin) {
-		// This class is expected to be responsible for all GBukkitLib protocol listeners
+		// This class is expected to be responsible for all GBukkitCore protocol listeners
 		ProtocolLibrary.getProtocolManager().removePacketListeners(plugin);
 		_signManager.destroy();
 	}

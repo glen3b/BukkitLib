@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import me.pagekite.glen3b.library.bukkit.GBukkitLibraryPlugin;
+import me.pagekite.glen3b.library.bukkit.GBukkitCorePlugin;
 import me.pagekite.glen3b.library.bukkit.Utilities;
 import me.pagekite.glen3b.library.bukkit.datastore.Message;
 
@@ -31,7 +31,7 @@ public final class BaseCommand implements TabExecutor, PreprocessedCommandHandle
 	private String _helpPageHeader = "Help (page %d):";
 	private ArrayList<SubCommand> _subCommands;
 	
-	private GBukkitLibraryPlugin _plugin;
+	private GBukkitCorePlugin _plugin;
 	
 	/**
 	 * Create a base command. For this class to execute a command, {@code register(getCommand("commandNameInPluginYaml"))} must be called.
@@ -67,8 +67,8 @@ public final class BaseCommand implements TabExecutor, PreprocessedCommandHandle
 	
 	private FileConfiguration getConfig(){
 		if(_plugin == null || !_plugin.isEnabled()){
-			// TODO: BaseCommand should not directly depend upon GBukkitLib, maybe global variable (not just message) service?
-			_plugin = (GBukkitLibraryPlugin)Bukkit.getServer().getPluginManager().getPlugin("GBukkitLib");
+			// TODO: BaseCommand should not directly depend upon GBukkitCore, maybe global variable (not just message) service?
+			_plugin = (GBukkitCorePlugin)Bukkit.getServer().getPluginManager().getPlugin("GBukkitCore");
 		}
 		
 		return _plugin.getConfig();

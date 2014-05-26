@@ -177,7 +177,7 @@ public final class DefaultServerTeleportationManager implements
 	private Plugin _instance;
 	
 	/**
-	 * Creates a server transport manager. <br/><br/><b>This constructor should only be invoked by the GBukkitLib plugin instance.</b>
+	 * Creates a server transport manager. <br/><br/><b>This constructor should only be invoked by the GBukkitCore plugin instance.</b>
 	 * @param instance The host plugin.
 	 */
 	public DefaultServerTeleportationManager(Plugin instance) {
@@ -216,7 +216,7 @@ public final class DefaultServerTeleportationManager implements
 		}
 		
 		//Check for no teleport delay
-		if(teleportDelay == 0 || player.hasPermission("gbukkitlib.tpdelay.bypass")){
+		if(teleportDelay == 0 || player.hasPermission("gbukkitcore.tpdelay.bypass")){
 			player.sendMessage(Message.get("teleporting"));
 		  	getServerTransporter().sendPlayer(player, targetServer);
 		  	return null;

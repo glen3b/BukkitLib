@@ -17,7 +17,7 @@ import org.bukkit.plugin.Plugin;
  * This is an internally used type which should not be instantiated,
  * implemented, or called directly by client code. Wrappers in the
  * {@code Utilities} class call this type for you. If you need support for a
- * protocol library not included wiht GBukkitLib, please file an issue ticket or
+ * protocol library not included with GBukkitCore, please file an issue ticket or
  * a pull request so we can take care of implementing it.
  * </p>
  * 

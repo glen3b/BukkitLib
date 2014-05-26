@@ -3,9 +3,9 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>me.pagekite.glen3b.library.bukkit</groupId>
-	<artifactId>GBukkitLib</artifactId>
+	<artifactId>GBukkitCore</artifactId>
 	<version>1.0.0</version>
-	<name>GBukkitLib</name>
+	<name>GBukkitCore</name>
 	<description>A library for commonly used Bukkit API functions and utilities</description>
 	<repositories>
 		<!-- Bukkit can be found at the following repository -->

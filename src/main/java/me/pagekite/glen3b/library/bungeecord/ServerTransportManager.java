@@ -35,8 +35,8 @@ public final class ServerTransportManager implements PluginMessageListener {
 	private Map<String, List<ResultReceived<String, String[]>>> _playerListReceivers = Collections.synchronizedMap(new HashMap<String, List<ResultReceived<String, String[]>>>());
 
 	/**
-	 * Internal constructor. <b>Should not be called except by the GBukkitLib plugin instance.</b> This type is registered as a service.
-	 * @param plugin The GBukkitLib plugin instance.
+	 * Internal constructor. <b>Should not be called except by the GBukkitCore plugin instance.</b> This type is registered as a service.
+	 * @param plugin The GBukkitCore plugin instance.
 	 */
 	public ServerTransportManager(Plugin plugin){
 		_plugin = plugin;

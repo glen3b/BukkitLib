@@ -1,18 +1,18 @@
 /*
-   This file is part of GBukkitLib.
+   This file is part of GBukkitCore.
 
-    GBukkitLib is free software: you can redistribute it and/or modify
+    GBukkitCore is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    GBukkitLib is distributed in the hope that it will be useful,
+    GBukkitCore is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU Lesser General Public License for more details.
 
     You should have received a copy of the GNU Lesser General Public License
-    along with GBukkitLib.  If not, see <http://www.gnu.org/licenses/>.
+    along with GBukkitCore.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 package me.pagekite.glen3b.library.bukkit;
@@ -180,7 +180,7 @@ public final class Utilities {
 
 	/**
 	 * Initializes the utilities class with event registrations and such. Internal method, not meant to be called by user code.
-	 * @param hostPlugin The GBukkitLib plugin instance.
+	 * @param hostPlugin The GBukkitCore plugin instance.
 	 */
 	static void initialize(Plugin hostPlugin){
 		synchronized(initializationSynclock){
@@ -207,7 +207,7 @@ public final class Utilities {
 	 * Clean up the mess.
 	 * @param hostPlugin The plugin creating the mess.
 	 */
-	static void cleanup(GBukkitLibraryPlugin hostPlugin){
+	static void cleanup(GBukkitCorePlugin hostPlugin){
 		synchronized(initializationSynclock){
 			if(_protocolLib != null){
 				_protocolLib.cleanup(hostPlugin);
@@ -732,7 +732,7 @@ public final class Utilities {
 
 	/**
 	 * Schedules a task to execute after one tick.
-	 * @param host The plugin under which to schedule this task. If this parameter is {@code null}, the GBukkitLib plugin instance as retrieved by the {@code PluginManager} will be used for scheduling. <b>Using this method with a {@code null} plugin argument is deprecated, and this functionality will be removed in a future release.</b>
+	 * @param host The plugin under which to schedule this task. If this parameter is {@code null}, the GBukkitCore plugin instance as retrieved by the {@code PluginManager} will be used for scheduling. <b>Using this method with a {@code null} plugin argument is deprecated, and this functionality will be removed in a future release.</b>
 	 * @param task The task to execute on the main server thread after one server tick. It must not be {@code null}.
 	 * @param Whether to run this task asynchronously. If this is true, the task will be executed on a separate thread from the main server thread. Asynchronous tasks should <b>never</b> access any Bukkit API other than the scheduler, which can be used to schedule a synchronous task. Synchronous tasks block the main server thread, but have the liberty of full Bukkit API access.
 	 * @return The scheduled task as returned by the bukkit scheduler.
@@ -744,14 +744,14 @@ public final class Utilities {
 	public static BukkitTask scheduleTickTask(@Nullable Plugin host, Runnable task, boolean async){
 		Validate.notNull(task, "The task must not be null.");
 
-		Plugin hostPl = host == null ? Bukkit.getServer().getPluginManager().getPlugin("GBukkitLib") : host;
+		Plugin hostPl = host == null ? Bukkit.getServer().getPluginManager().getPlugin("GBukkitCore") : host;
 
 		return async ? Bukkit.getScheduler().runTaskLater(hostPl, task, 1L) : Bukkit.getScheduler().runTaskLaterAsynchronously(hostPl, task, 1L);
 	}
 
 	/**
 	 * Schedules a task to execute on the main server thread after one tick.
-	 * @param host The plugin under which to schedule this task. If this parameter is {@code null}, the GBukkitLib plugin instance as retrieved by the {@code PluginManager} will be used for scheduling. <b>Using this method with a {@code null} plugin argument is deprecated, and this functionality will be removed in a future release.</b>
+	 * @param host The plugin under which to schedule this task. If this parameter is {@code null}, the GBukkitCore plugin instance as retrieved by the {@code PluginManager} will be used for scheduling. <b>Using this method with a {@code null} plugin argument is deprecated, and this functionality will be removed in a future release.</b>
 	 * @param task The task to execute on the main server thread after one server tick. It must not be {@code null}.
 	 * @return The ID of the scheduled task.
 	 * @see Utilities#scheduleTickTask(Plugin, Runnable, boolean)
@@ -1429,7 +1429,7 @@ public final class Utilities {
 		 * <p>
 		 * Adds or removes glow to an {@link ItemStack}. This is accomplished by sending packets to the client
 		 * that contain an enchantments NBT list that is empty. As with any packet or NMS modifying operation, glitches may occur.
-		 * Found bugs should be filed on the GBukkitLib project.
+		 * Found bugs should be filed on the GBukkitCore project.
 		 * </p>
 		 * <p>
 		 * For this operation to succeed, a protocol library is required on the server.

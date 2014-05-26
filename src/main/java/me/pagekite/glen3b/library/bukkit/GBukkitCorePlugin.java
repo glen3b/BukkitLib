@@ -1,18 +1,18 @@
 /*
-   This file is part of GBukkitLib.
+   This file is part of GBukkitCore.
 
-    GBukkitLib is free software: you can redistribute it and/or modify
+    GBukkitCore is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    GBukkitLib is distributed in the hope that it will be useful,
+    GBukkitCore is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU Lesser General Public License for more details.
 
     You should have received a copy of the GNU Lesser General Public License
-    along with GBukkitLib.  If not, see <http://www.gnu.org/licenses/>.
+    along with GBukkitCore.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 package me.pagekite.glen3b.library.bukkit;
@@ -53,10 +53,10 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitTask;
 
 /**
- * The plugin class for GBukkitLibrary. Contains many implementation classes of registered services.
+ * The plugin class for GBukkitCore. Contains many implementation classes of registered services.
  * @author Glen Husman
  */
-public final class GBukkitLibraryPlugin extends JavaPlugin {
+public final class GBukkitCorePlugin extends JavaPlugin {
 
 	private final class DefaultMessageProvider implements MessageProvider{
 
@@ -119,8 +119,8 @@ public final class GBukkitLibraryPlugin extends JavaPlugin {
 			private ScheduledDecrementRunner(final Player player, final int initialDelay, final Location target){
 				_remDelay = initialDelay;
 				_playerId = player.getUniqueId();
-				_ownTask = Bukkit.getServer().getScheduler().runTaskTimer(GBukkitLibraryPlugin.this, this, Constants.TICKS_PER_SECOND, Constants.TICKS_PER_SECOND);
-				Bukkit.getServer().getPluginManager().registerEvents(this, GBukkitLibraryPlugin.this);
+				_ownTask = Bukkit.getServer().getScheduler().runTaskTimer(GBukkitCorePlugin.this, this, Constants.TICKS_PER_SECOND, Constants.TICKS_PER_SECOND);
+				Bukkit.getServer().getPluginManager().registerEvents(this, GBukkitCorePlugin.this);
 				_target = target;
 
 				player.sendMessage(Message.get("teleportBegin").replace("%time%", Integer.toString(initialDelay)).replace("%units%", initialDelay == 1 ? "second" : "seconds"));
@@ -274,7 +274,7 @@ public final class GBukkitLibraryPlugin extends JavaPlugin {
 			}
 
 			//Check for no teleport delay
-			if(teleportDelay == 0 || player.hasPermission("gbukkitlib.tpdelay.bypass")){
+			if(teleportDelay == 0 || player.hasPermission("gbukkitcore.tpdelay.bypass")){
 				player.sendMessage(Message.get("teleporting"));
 				player.teleport(targetLoc);
 				return null;
@@ -321,7 +321,7 @@ public final class GBukkitLibraryPlugin extends JavaPlugin {
 //
 //				@Override
 //				public void run() {
-//					final Updater up = new Updater(GBukkitLibraryPlugin.this, /*<PLUGIN ID ON DEVBUKKIT>*/0, getFile(), true);
+//					final Updater up = new Updater(GBukkitCorePlugin.this, /*<PLUGIN ID ON DEVBUKKIT>*/0, getFile(), true);
 //					up.startThread(Updater.UpdateType.DEFAULT);
 //					Updater.UpdateResult res = up.getResult();
 //					Bukkit.getLogger().log(Level.FINE, "Update check result was " + res.toString());

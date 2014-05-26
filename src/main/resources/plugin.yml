@@ -1,24 +1,24 @@
- name: GBukkitLib
+ name: GBukkitCore
  version: ${project.version}
- description: This plugin is a library allowing uniform access to functions used by multiple plugins.
+ description: This plugin is a library allowing uniform access to Bukkit functions used by multiple plugins, as well as other miscellaneous utilities.
  author: glen3b
  softdepend: [ProtocolLib]
  
- main: me.pagekite.glen3b.library.bukkit.GBukkitLibraryPlugin
+ main: me.pagekite.glen3b.library.bukkit.GBukkitCorePlugin
  
  permissions:
-   gbukkitlib.*:
+   gbukkitcore.*:
      description: Allows all things
      children:
-       gbukkitlib.config: true
-       gbukkitlib.debug: true
-       gbukkitlib.tpdelay.bypass: true
-   gbukkitlib.tpdelay.bypass:
+       gbukkitcore.config: true
+       gbukkitcore.debug: true
+       gbukkitcore.tpdelay.bypass: true
+   gbukkitcore.tpdelay.bypass:
      description: Allows bypass of the teleportation delay
      default: op
-   gbukkitlib.debug:
+   gbukkitcore.debug:
      description: Allows debug feature access
      default: op
-   gbukkitlib.config:
+   gbukkitcore.config:
      description: Allows config editing in-game
      default: op
