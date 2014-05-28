@@ -79,6 +79,7 @@ import org.bukkit.permissions.Permissible;
 import org.bukkit.permissions.Permission;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
+import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitScheduler;
 import org.bukkit.scheduler.BukkitTask;
@@ -115,9 +116,12 @@ public final class Utilities {
 
 	private static UtilityEventListener _eventListener;
 
-	private static final class UtilityEventListener implements Listener{
+	/**
+	 * <b>Internally used event listener class. Not for consumption by API users. This class does not have a stable API.</b>
+	 */
+	public static final class UtilityEventListener implements Listener{
 
-		public UtilityEventListener(Plugin pl){
+		private UtilityEventListener(Plugin pl){
 			_host = pl;
 		}
 
@@ -144,7 +148,6 @@ public final class Utilities {
 			}
 		}
 
-		@SuppressWarnings("unused")
 		@EventHandler(priority = EventPriority.MONITOR)
 		public void onKick(final PlayerKickEvent event){
 			_kickedPlayers.put(event.getPlayer().getUniqueId(), event.getReason() == null ? "" : event.getReason());
@@ -161,7 +164,6 @@ public final class Utilities {
 			return _wolfSpawnLocs;
 		}
 
-		@SuppressWarnings("unused")
 		@EventHandler(priority = EventPriority.HIGHEST)
 		public void onEntitySpawn(final CreatureSpawnEvent event){
 			if(event.getEntityType() == EntityType.WOLF){
@@ -698,7 +700,7 @@ public final class Utilities {
 		}
 
 		/**
-		 * Attempt to parse {@code str} as a double=precision real number, returning a default value if it is not possible.
+		 * Attempt to parse {@code str} as a double-precision real number, returning a default value if it is not possible.
 		 * @param str The string to attempt to parse.
 		 * @param defaultVal The value to return if {@code str} cannot be parsed.
 		 * @return {@code str} as a {@code double} if it is a valid, parseable floating point number; {@code defaultVal} otherwise.
@@ -1311,6 +1313,7 @@ public final class Utilities {
 
 			_eventListener.getWolfSpawnLocSet().add(location);
 			Wolf o = location.getWorld().spawn(location, Wolf.class);
+			o.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, (int) Constants.TICKS_PER_MINUTE, 0));
 			o.playEffect(EntityEffect.WOLF_HEARTS);
 			o.remove();
 		}
