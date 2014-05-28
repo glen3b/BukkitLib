@@ -80,6 +80,7 @@ import org.bukkit.permissions.Permission;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.scheduler.BukkitScheduler;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
 
@@ -596,7 +597,9 @@ public final class Utilities {
 		 * @return The scheduled task as returned by the bukkit scheduler.
 		 * @see org.bukkit.scheduler.BukkitScheduler#runTaskLater(Plugin plugin, Runnable task, long delay)
 		 * @see org.bukkit.scheduler.BukkitScheduler#runTaskLaterAsynchronously(Plugin, Runnable, long)
+		 * @deprecated {@link BukkitScheduler#runTask(Plugin, Runnable)} and {@link BukkitScheduler#runTaskAsynchronously(Plugin, Runnable)} are preferred.
 		 */
+		@Deprecated
 		public static BukkitTask scheduleTickTask(Plugin host, Runnable task, boolean async){
 			Validate.notNull(task, "The task must not be null.");
 			Validate.isTrue(host != null && host.isEnabled(), "The host must be a non-null, enabled plugin.");
@@ -610,7 +613,9 @@ public final class Utilities {
 		 * @param task The task to execute on the main server thread after one server tick. It must not be {@code null}.
 		 * @return The ID of the scheduled task.
 		 * @see Utilities#scheduleTickTask(Plugin, Runnable, boolean)
+		 * @deprecated {@link BukkitScheduler#runTask(Plugin, Runnable)} is preferred.
 		 */
+		@Deprecated
 		public static int scheduleTickTask(Plugin host, Runnable task){
 			return scheduleTickTask(host, task, false).getTaskId();
 		}
