@@ -621,19 +621,24 @@ public final class Utilities {
 		}
 
 		/**
-		 * Run the specified tasks after the completion of the specified teleport. This method is intended to wrap calls to {@link TeleportationManager} methods which may return a {@code null} {@link QueuedTeleport}. If the method returns {@code null} and that value is passed into this method, the tasks will run instantly after the teleport, as was intended, without an additional {@code null} check in client code.
+		 * Run the specified tasks after the completion of the specified teleport.
+		 * <p>
+		 * This method is intended to wrap calls to {@link TeleportationManager} methods which may return a {@code null} {@link QueuedTeleport}. If the method returns {@code null} and that value is passed into this method, the tasks will run instantly after the teleport, as was intended, without an additional {@code null} check in client code.
 		 * @param <T> The type of the destination of the teleport.
 		 * @param teleport The teleport to scedule tasks for. If this is {@code null} or cancelled, the tasks will be run instantly.
 		 * @param tasks The tasks to run.
 		 * @return Whether the tasks were queued. The return value will be {@code false} if they ran instantly during the execution of this method and {@code true} if they were queued for execution and consequently have not yet run.
 		 * @see TeleportationManager#teleportPlayer(Player player, Location targetLoc)
+		 * @see QueuedTeleport#registerOnTeleport(Runnable)
 		 */
-		public static <T> boolean runAfterTeleport(@Nullable QueuedTeleport<T> teleport, Runnable... tasks){
-			Validate.noNullElements(tasks, "There must not be any null tasks.");
+		public static <T> boolean runAfterTeleport(@Nullable QueuedTeleport<T> teleport, @Nonnull Runnable... tasks){
+			Validate.notEmpty(tasks, "There must be tasks to execute.");
 
 			if(teleport == null || teleport.isCancelled()){
 				// Instant execution
 				for(Runnable task : tasks){
+					Validate.notNull(task, "There must not be any null tasks.");
+					
 					task.run();
 				}
 
@@ -641,6 +646,8 @@ public final class Utilities {
 			}else{
 				// Queue execution
 				for(Runnable task : tasks){
+					Validate.notNull(task, "There must not be any null tasks.");
+					
 					teleport.registerOnTeleport(task);
 				}
 
