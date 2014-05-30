@@ -27,9 +27,9 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.UUID;
-import java.util.Map.Entry;
 import java.util.logging.Level;
 
 import javax.annotation.Nonnull;
@@ -81,7 +81,6 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
-import org.bukkit.scheduler.BukkitScheduler;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
 
@@ -151,7 +150,7 @@ public final class Utilities {
 		@EventHandler(priority = EventPriority.MONITOR)
 		public void onKick(final PlayerKickEvent event){
 			_kickedPlayers.put(event.getPlayer().getUniqueId(), event.getReason() == null ? "" : event.getReason());
-			Utilities.Scheduler.scheduleTickTask(_host, new KickRunner(event.getPlayer()));
+			Bukkit.getScheduler().runTask(_host, new KickRunner(event.getPlayer()));
 		}
 
 		// End kick event determiners
@@ -270,19 +269,6 @@ public final class Utilities {
 		return Math.max(Math.min(value, maximum), minimum);
 	}
 
-
-	/**
-	 * @deprecated Use {@link Constants#TICKS_PER_SECOND}
-	 */
-	@Deprecated
-	public static final long TICKS_PER_SECOND = Constants.TICKS_PER_SECOND;
-
-	/**
-	 * @deprecated Use {@link Constants#TICKS_PER_MINUTE}
-	 */
-	@Deprecated
-	public static final long TICKS_PER_MINUTE = Constants.TICKS_PER_MINUTE;
-
 	/**
 	 * Utility predicates that apply to Bukkit.
 	 * @author Glen Husman
@@ -335,18 +321,8 @@ public final class Utilities {
 		 * @param type The type of the command sender.
 		 * @return A new predicate instance that will return {@code true} when the conditions above are satisfied.
 		 */
-		public static Predicate<Object> isOfSenderType(CommandSenderType type){
+		public static Predicate<? super CommandSender> isOfSenderType(CommandSenderType type){
 			return new InstanceofCommandSenderTypePredicate(type);
-		}
-
-		/**
-		 * Returns a predicate that will return {@code true} if and only if the {@link CommandSender} in question is a {@link Player} instance.
-		 * @return A new predicate instance that will return {@code true} when the conditions above are satisfied.
-		 * @deprecated The {@link Utilities.Predicates#isOfSenderType(CommandSenderType) isOfSenderType} method is preferred.
-		 */
-		@Deprecated
-		public static Predicate<Object> isPlayer(){
-			return new InstanceofCommandSenderTypePredicate(CommandSenderType.PLAYER);
 		}
 
 		/**
@@ -592,37 +568,6 @@ public final class Utilities {
 		}
 
 		/**
-		 * Schedules a task to execute after one tick.
-		 * @param host The plugin under which to schedule this task. This parameter may not be {@code null}.
-		 * @param task The task to execute after one server tick. It must not be {@code null}.
-		 * @param async Whether to run this task asynchronously. If this is true, the task will be executed on a separate thread from the main server thread. Asynchronous tasks should <b>never</b> access any Bukkit API other than the scheduler, which can be used to schedule a synchronous task. Synchronous tasks block the main server thread, but have the liberty of full Bukkit API access.
-		 * @return The scheduled task as returned by the bukkit scheduler.
-		 * @see org.bukkit.scheduler.BukkitScheduler#runTaskLater(Plugin plugin, Runnable task, long delay)
-		 * @see org.bukkit.scheduler.BukkitScheduler#runTaskLaterAsynchronously(Plugin, Runnable, long)
-		 * @deprecated {@link BukkitScheduler#runTask(Plugin, Runnable)} and {@link BukkitScheduler#runTaskAsynchronously(Plugin, Runnable)} are preferred.
-		 */
-		@Deprecated
-		public static BukkitTask scheduleTickTask(Plugin host, Runnable task, boolean async){
-			Validate.notNull(task, "The task must not be null.");
-			Validate.isTrue(host != null && host.isEnabled(), "The host must be a non-null, enabled plugin.");
-
-			return async ? Bukkit.getScheduler().runTaskLater(host, task, 1L) : Bukkit.getScheduler().runTaskLaterAsynchronously(host, task, 1L);
-		}
-
-		/**
-		 * Schedules a task to execute on the main server thread after one tick.
-		 * @param host The plugin under which to schedule this task. This parameter may not be {@code null}.
-		 * @param task The task to execute on the main server thread after one server tick. It must not be {@code null}.
-		 * @return The ID of the scheduled task.
-		 * @see Utilities#scheduleTickTask(Plugin, Runnable, boolean)
-		 * @deprecated {@link BukkitScheduler#runTask(Plugin, Runnable)} is preferred.
-		 */
-		@Deprecated
-		public static int scheduleTickTask(Plugin host, Runnable task){
-			return scheduleTickTask(host, task, false).getTaskId();
-		}
-
-		/**
 		 * Run the specified tasks after the completion of the specified teleport.
 		 * <p>
 		 * This method is intended to wrap calls to {@link TeleportationManager} methods which may return a {@code null} {@link QueuedTeleport}. If the method returns {@code null} and that value is passed into this method, the tasks will run instantly after the teleport, as was intended, without an additional {@code null} check in client code.
@@ -659,28 +604,6 @@ public final class Utilities {
 
 	}
 	
-	/**
-	 * Utilities involving strings.
-	 */
-	public static final class Strings{
-		private Strings(){}
-		
-		/**
-		 * Creates a string of the specified length composed of purely the specified character.
-		 * @param length The length of the string.
-		 * @param character The character which the string will be composed of.
-		 * @return A new string, which is composed of purely the specified character.
-		 */
-		public static String getString(int length, char character){
-			StringBuilder builder = new StringBuilder(length);
-			for(int i = 0; i < length; i++){
-				builder.append(character);
-			}
-			
-			return builder.toString();
-		}
-	}
-
 	/**
 	 * @deprecated Use {@link Scheduler#runAfterTeleport(QueuedTeleport, Runnable...)}
 	 */
@@ -734,46 +657,6 @@ public final class Utilities {
 				return defaultVal;
 			}
 		}
-	}
-
-	/**
-	 * @deprecated Use {@link Arguments#parseInt(String, int)}
-	 */
-	@Deprecated
-	public static int parseInt(String str, int defaultVal){
-		return Arguments.parseInt(str, defaultVal);
-	}
-
-	/**
-	 * Schedules a task to execute after one tick.
-	 * @param host The plugin under which to schedule this task. If this parameter is {@code null}, the GBukkitCore plugin instance as retrieved by the {@code PluginManager} will be used for scheduling. <b>Using this method with a {@code null} plugin argument is deprecated, and this functionality will be removed in a future release.</b>
-	 * @param task The task to execute on the main server thread after one server tick. It must not be {@code null}.
-	 * @param Whether to run this task asynchronously. If this is true, the task will be executed on a separate thread from the main server thread. Asynchronous tasks should <b>never</b> access any Bukkit API other than the scheduler, which can be used to schedule a synchronous task. Synchronous tasks block the main server thread, but have the liberty of full Bukkit API access.
-	 * @return The scheduled task as returned by the bukkit scheduler.
-	 * @see org.bukkit.scheduler.BukkitScheduler#runTaskLater(Plugin plugin, Runnable task, long delay)
-	 * @see org.bukkit.scheduler.BukkitScheduler#runTaskLaterAsynchronously(Plugin, Runnable, long)
-	 * @deprecated Use {@link Scheduler#scheduleTickTask(Plugin, Runnable, boolean)}. The new method disallows {@code null} plugin arguments.
-	 */
-	@Deprecated
-	public static BukkitTask scheduleTickTask(@Nullable Plugin host, Runnable task, boolean async){
-		Validate.notNull(task, "The task must not be null.");
-
-		Plugin hostPl = host == null ? Bukkit.getServer().getPluginManager().getPlugin("GBukkitCore") : host;
-
-		return async ? Bukkit.getScheduler().runTaskLater(hostPl, task, 1L) : Bukkit.getScheduler().runTaskLaterAsynchronously(hostPl, task, 1L);
-	}
-
-	/**
-	 * Schedules a task to execute on the main server thread after one tick.
-	 * @param host The plugin under which to schedule this task. If this parameter is {@code null}, the GBukkitCore plugin instance as retrieved by the {@code PluginManager} will be used for scheduling. <b>Using this method with a {@code null} plugin argument is deprecated, and this functionality will be removed in a future release.</b>
-	 * @param task The task to execute on the main server thread after one server tick. It must not be {@code null}.
-	 * @return The ID of the scheduled task.
-	 * @see Utilities#scheduleTickTask(Plugin, Runnable, boolean)
-	 * @deprecated Use {@link Scheduler#scheduleTickTask(Plugin, Runnable)}. The new method disallows {@code null} plugin arguments.
-	 */
-	@Deprecated
-	public static int scheduleTickTask(@Nullable Plugin host, Runnable task){
-		return scheduleTickTask(host, task, false).getTaskId();
 	}
 
 	/**
@@ -1684,35 +1567,6 @@ public final class Utilities {
 			nItem.setItemMeta(im);
 			return nItem;
 		}
-	}
-
-	/**
-	 * @deprecated Use {@link Items#setItemName(ItemStack, String)}, it has a less misleading name.
-	 */
-	@Deprecated
-	public static ItemStack setItemName(ItemStack item, String name) {
-		return Items.setItemName(item, name);
-	}
-
-	/**
-	 * Sets the display name of the specified item. It also removes any lore.
-	 * @param item The item to modify the data of.
-	 * @param name The new display name of the item.
-	 * @return The modified item.
-	 * @deprecated Use {@link Items#setItemName(ItemStack, String)}, it has a less misleading name.
-	 */
-	@Deprecated
-	public static ItemStack setItemNameAndLore(ItemStack item, String name) {
-		return setItemNameAndLore(item, name, new String[0]);
-	}
-
-	/**
-	 * @deprecated Use {@link Items#setItemNameAndLore(ItemStack, String, String[])}.
-	 */
-	@Deprecated
-	public static ItemStack setItemNameAndLore(ItemStack item, String name,
-			String[] lore) {
-		return Items.setItemNameAndLore(item, name, lore);
 	}
 
 	private Utilities(){

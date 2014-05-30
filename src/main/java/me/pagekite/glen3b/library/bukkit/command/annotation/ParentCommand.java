@@ -105,7 +105,7 @@ public abstract class ParentCommand implements TabExecutor, PreprocessedCommandH
 					anded.add(Utilities.Predicates.hasPermission(annotation.permission()));
 				}
 
-				List<Predicate<Object>> or = Lists.newArrayListWithCapacity(annotation.allowedSenders().length);
+				List<Predicate<? super CommandSender>> or = Lists.newArrayListWithCapacity(annotation.allowedSenders().length);
 
 				Class<? extends CommandSender> superclass = CommandSender.class;
 

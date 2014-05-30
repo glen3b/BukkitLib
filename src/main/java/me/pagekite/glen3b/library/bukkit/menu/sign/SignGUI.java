@@ -8,7 +8,6 @@ import org.bukkit.entity.Player;
 /**
  * Represents a manager of sign editor interfaces that can be used by plugins.
  * The instance of this interface can be retrieved via the {@linkplain org.bukkit.plugin.ServicesManager Bukkit service manager}.
- * @author <a href="http://forums.bukkit.org/members/nisovin.2980/">nisovian</a>
  */
 public interface SignGUI {
 

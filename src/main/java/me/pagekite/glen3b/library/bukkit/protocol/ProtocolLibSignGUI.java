@@ -23,6 +23,10 @@ import com.comphenix.protocol.events.PacketAdapter;
 import com.comphenix.protocol.events.PacketContainer;
 import com.comphenix.protocol.events.PacketEvent;
 
+/**
+ * The default implementation of the sign GUI manager. Not intended for direct use by client code.
+ * @author <a href="http://forums.bukkit.org/members/nisovin.2980/">nisovian</a>
+ */
 public class ProtocolLibSignGUI extends AbstractSignGUIManager {
 
 
