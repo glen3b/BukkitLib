@@ -39,8 +39,8 @@ public class ProtocolLibSignGUI extends AbstractSignGUIManager {
     
     public ProtocolLibSignGUI(Plugin plugin) {
         protocolManager = ProtocolLibrary.getProtocolManager();        
-        listeners = new ConcurrentHashMap<>();
-        signLocations = new ConcurrentHashMap<>();
+        listeners = new ConcurrentHashMap<UUID, SignSubmitListener>();
+        signLocations = new ConcurrentHashMap<UUID, Vector>();
         
 
         ProtocolLibrary.getProtocolManager().addPacketListener(

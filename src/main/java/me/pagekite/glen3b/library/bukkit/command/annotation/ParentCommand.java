@@ -4,7 +4,6 @@
 package me.pagekite.glen3b.library.bukkit.command.annotation;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -243,8 +242,7 @@ public abstract class ParentCommand implements TabExecutor, PreprocessedCommandH
 									// Interpret as a message
 									sender.sendMessage(returnVal.toString());
 								}
-							} catch (IllegalAccessException | IllegalArgumentException
-									| InvocationTargetException e) {
+							} catch (Exception e) {
 								// I've taken lots of safeguards, so this code SHOULD never be called
 								// However, if it is called, I want Bukkit to handle it
 								// Bukkit will log it properly and display the "An internal error occurred..." message
@@ -262,12 +260,12 @@ public abstract class ParentCommand implements TabExecutor, PreprocessedCommandH
 		
 		public void execute(CommandSender sender, Command cmd, String alias, String[] args){
 			// Assume predicate has been fulfilled
-			execute(sender, _params[0].isAssignableFrom(CommandInvocationContext.class) ? new CommandInvocationContext<>(sender, cmd, alias) : sender, args); // Only works due to generics not being safe in Java
+			execute(sender, _params[0].isAssignableFrom(CommandInvocationContext.class) ? new CommandInvocationContext<CommandSender, Command>(sender, cmd, alias) : sender, args); // Only works due to generics not being safe in Java
 		}
 			
 		public void execute(Player sender, PreprocessableCommand cmd, String alias, String[] args){
 			// Assume predicate has been fulfilled
-			execute(sender, _params[0].isAssignableFrom(CommandInvocationContext.class) ? new CommandInvocationContext<>(sender, cmd, alias) : sender, args); // Only works due to generics not being safe in Java
+			execute(sender, _params[0].isAssignableFrom(CommandInvocationContext.class) ? new CommandInvocationContext<CommandSender, PreprocessableCommand>(sender, cmd, alias) : sender, args); // Only works due to generics not being safe in Java
 		}
 	}
 	
@@ -564,13 +562,13 @@ public abstract class ParentCommand implements TabExecutor, PreprocessedCommandH
 			}else{
 				if(args.length == 1 && Utilities.Arguments.parseInt(args[0], -1) > 0){
 					// Assume help command
-					helpCommand(new CommandInvocationContext<>(sender, command, alias), Integer.parseInt(args[0]));
+					helpCommand(new CommandInvocationContext<CommandSender, Command>(sender, command, alias), Integer.parseInt(args[0]));
 				}else{
 					sender.sendMessage(Message.get("cmdUnknown"));
 				}
 			}
 		}else{
-			helpCommand(new CommandInvocationContext<>(sender, command, alias), 1);
+			helpCommand(new CommandInvocationContext<CommandSender, Command>(sender, command, alias), 1);
 		}
 		return true;
 	}
