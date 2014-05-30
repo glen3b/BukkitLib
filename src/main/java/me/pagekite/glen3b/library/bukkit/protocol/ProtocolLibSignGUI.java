@@ -75,11 +75,10 @@ public class ProtocolLibSignGUI extends AbstractSignGUIManager {
     public void open(Player player, String[] paramdefaultText, SignSubmitListener response) {
     	Validate.notNull(player, "The player must not be null.");
     	Validate.isTrue(paramdefaultText == null || paramdefaultText.length <= 4, "No more than 4 default lines may be specified.");
-    	
-        List<PacketContainer> packets = new ArrayList<PacketContainer>();
         
         int x = 0, y = 0, z = 0;
         String[] defaultText = paramdefaultText == null ? null : new String[4];
+        List<PacketContainer> packets = new ArrayList<PacketContainer>(defaultText == null ? 1 : 4);
         
         if (defaultText != null) {
         	
