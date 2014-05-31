@@ -1,13 +1,17 @@
 package me.pagekite.glen3b.library.bukkit;
 
+import java.awt.Color;
+
 import org.apache.commons.lang.Validate;
 import org.bukkit.ChatColor;
 
-import java.awt.Color;
+import com.google.common.collect.BiMap;
+import com.google.common.collect.ImmutableBiMap;
 
 /**
  * Represents the palette that {@link ChatColor} uses to represent colors. Allows attempted matching of {@link Color}s to {@link ChatColor}s.
  * @author codename_B
+ * @author Glen Husman
  */
 public final class ChatColorPalette {
 	// Internal mechanisms
@@ -34,6 +38,39 @@ public final class ChatColorPalette {
 		new Color(255, 255, 255),
 	};
 	
+	static{
+		ChatColor[] allValues = ChatColor.values();
+		if(allValues.length - 6 /* There are 6 format codes */ != colors.length || !allValues[0].equals(ChatColor.BLACK /* Assure order is the same */)){
+			System.err.println("The ChatColorPalette version installed does not match the Bukkit API ChatColor enumeration. ChatColorPalette is terminating execution, and API users may fail to function properly. Please contact glen3b and inform him of this error.");
+			CHAT_COLORS_TO_COLORS = null;
+		}else{
+			// Prepare the immutable map
+			ImmutableBiMap.Builder<ChatColor, Color> mapBuilder = ImmutableBiMap.<ChatColor, Color>builder();
+			for(int i = 0; i < colors.length; i++){
+				mapBuilder.put(allValues[i], colors[i]);
+			}
+			CHAT_COLORS_TO_COLORS = mapBuilder.build();
+		}
+		
+	}
+	
+	/**
+	 * An immutable map which maps {@link ChatColor}s to RGB colors, as known by this palette instance.
+	 * If this value is {@code null}, it indicates an unsupported change in the {@code ChatColor} enumeration order.
+	 * <p>
+	 * This map does not contain keys for {@code ChatColor}s which are for formatting only.
+	 * </p>
+	 * <p>
+	 * Attempts to modify this map will throw an {@code UnsupportedOperationException}.
+	 * </p>
+	 * <p>
+	 * Due to the nature of the Google Collections API, it is possible to retrieve the inverse of this map, which maps colors to chat colors.
+	 * This is an intended API feature, and can be used to map colors to chat colors <em>exactly</em>. Unless this is the indended result,
+	 * it is recommended that this class be used for color matching, as it implements fuzzy matches.
+	 * </p>
+	 */
+	public static final BiMap<ChatColor, Color> CHAT_COLORS_TO_COLORS;
+	
 	/**
 	 * The maximum tolerated difference in component levels by {@link ChatColorPalette#areIdentical(Color, Color) areIdentical}.
 	 */
@@ -58,13 +95,13 @@ public final class ChatColorPalette {
 	}
 
 	/**
-	 * Get the index of the closest matching color in the palette to the given
-	 * color.
+	 * Get the closest known matching {@code ChatColor} to the given color.
 	 *
 	 * @param r The red component of the color.
 	 * @param b The blue component of the color.
 	 * @param g The green component of the color.
-	 * @return The index in the palette.
+	 * @return The closest {@code ChatColor} in the palette.
+	 * @see #matchColor(Color)
 	 */
 	public static ChatColor matchColor(int r, int g, int b) {
 		return matchColor(new Color(r, g, b));
@@ -76,8 +113,9 @@ public final class ChatColorPalette {
 	public static final int MINIMUM_ALPHA = 128;
 	
 	/**
-	 * Get the index of the closest matching color in the palette to the given
-	 * color. If the alpha value of the color is less than {@linkplain ChatColorPalette#MINIMUM_ALPHA the minimum alpha value}, this method will return {@link ChatColor#BLACK}.
+	 * Get the closest matching {@code ChatColor} in this palette to the given
+	 * color. If the alpha value of the color is less than {@linkplain ChatColorPalette#MINIMUM_ALPHA the minimum alpha value},
+	 * this method will return {@link ChatColor#BLACK}.
 	 *
 	 * @param color The {@code Color} to match.
 	 * @return The closest {@code ChatColor} in the palette.
