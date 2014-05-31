@@ -1,6 +1,3 @@
-/**
- * 
- */
 package me.pagekite.glen3b.library.bukkit.command.annotation;
 
 import java.lang.annotation.Annotation;
@@ -353,7 +350,7 @@ public abstract class ParentCommand implements TabExecutor, PreprocessedCommandH
 						throw new IllegalStateException("There are no aliases for the command specified by " + m.toString());
 					}
 					for(String alias : annotation.aliases()){
-						if(alias == null){
+						if(alias == null){ // TODO: Support one null alias, which represents the base command
 							throw new IllegalStateException("An alias for the command specified by " + m.toString() + " is null.");
 						}
 
