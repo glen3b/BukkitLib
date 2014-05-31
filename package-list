@@ -1,0 +1,11 @@
+me.pagekite.glen3b.library.bukkit
+me.pagekite.glen3b.library.bukkit.command
+me.pagekite.glen3b.library.bukkit.command.annotation
+me.pagekite.glen3b.library.bukkit.datastore
+me.pagekite.glen3b.library.bukkit.logger
+me.pagekite.glen3b.library.bukkit.menu.inventory
+me.pagekite.glen3b.library.bukkit.menu.sign
+me.pagekite.glen3b.library.bukkit.protocol
+me.pagekite.glen3b.library.bukkit.reflection
+me.pagekite.glen3b.library.bukkit.teleport
+me.pagekite.glen3b.library.bungeecord
