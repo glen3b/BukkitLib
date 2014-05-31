@@ -43,7 +43,7 @@ public class ProtocolLibSignGUI extends AbstractSignGUIManager {
         signLocations = new ConcurrentHashMap<UUID, Vector>();
         
 
-        ProtocolLibrary.getProtocolManager().addPacketListener(
+        protocolManager.addPacketListener(
         packetListener =  new PacketAdapter(plugin, PacketType.Play.Client.UPDATE_SIGN) 
         {
             @Override

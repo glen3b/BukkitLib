@@ -12,6 +12,7 @@ import org.bukkit.plugin.Plugin;
 
 /**
  * Represents a fully independent, directly reflective implementation of protocol utilities.
+ * Not for direct use by client code.
  * @author Glen Husman
  */
 public class DefaultProtocolUtilityImplementation implements ProtocolUtilities {
@@ -26,6 +27,7 @@ public class DefaultProtocolUtilityImplementation implements ProtocolUtilities {
 			_nbtCompound_set = ReflectionUtilities.Minecraft.getType("NBTTagCompound").getDeclaredMethod("set", String.class, ReflectionUtilities.Minecraft.getType("NBTBase"));
 			_nmsItemStackToCraftbukkitItemStack = SubPackage.INVENTORY.getClass("CraftItemStack").getDeclaredMethod("asCraftMirror", 
 					ReflectionUtilities.Minecraft.getType("ItemStack"));
+			
 		} catch (Exception e) {
 			_nbtTagListConstructor = null;
 			_nbtCompound_set = null;
