@@ -557,8 +557,8 @@ public final class Utilities {
 		 * @param task The task to execute on the main server thread after one server tick. It must not be {@code null}.
 		 * @param async Whether to run this task asynchronously. If this is true, the task will be executed on a separate thread from the main server thread. Asynchronous tasks should <b>never</b> access any Bukkit API other than the scheduler, which can be used to schedule a synchronous task. Synchronous tasks block the main server thread, but have the liberty of full Bukkit API access.
 		 * @return The scheduled task as returned by the bukkit scheduler.
-		 * @see org.bukkit.scheduler.BukkitScheduler#runTaskTimer(Plugin plugin, Runnable task, long delay)
-		 * @see org.bukkit.scheduler.BukkitScheduler#runTaskTimerAsynchronously(Plugin, Runnable, long)
+		 * @see org.bukkit.scheduler.BukkitScheduler#runTaskTimer(Plugin, Runnable, long, long)
+		 * @see org.bukkit.scheduler.BukkitScheduler#runTaskTimerAsynchronously(Plugin, Runnable, long, long)
 		 */
 		public static BukkitTask scheduleOneSecondTimer(Plugin host, Runnable task, boolean async){
 			Validate.notNull(task, "The task must not be null.");
@@ -1023,7 +1023,6 @@ public final class Utilities {
 			 * @param offset A vector representing the maximum distance particles can fly away from the center location on each axis (independently).
 			 * @param speed "Speed" of the particles, a data value of sorts.
 			 * @param amount The number of particles to display.
-			 * @param players Receivers of the particle effect.
 			 */
 			public void display(Location center, double range, Vector offset, float speed, int amount) {
 				Validate.notNull(center, "The center location must not be null.");
@@ -1099,7 +1098,6 @@ public final class Utilities {
 			 * @param center The center location of the particle effect.
 			 * @param data The material data (which includes type) of the represented block. This value may not be {@code null}.
 			 * @param offset A vector representing the maximum distance particles can fly away from the center location on each axis (independently).
-			 * @param speed "Speed" of the particles, a data value of sorts.
 			 * @param amount The number of particles to display.
 			 * @param range The range which binds all players that will receive the packet.
 			 */
@@ -1125,7 +1123,6 @@ public final class Utilities {
 			 * @param center The center location of the particle effect.
 			 * @param data The material data (which includes type) of the represented block. This value may not be {@code null}.
 			 * @param offset A vector representing the maximum distance particles can fly away from the center location on each axis (independently).
-			 * @param speed "Speed" of the particles, a data value of sorts.
 			 * @param amount The number of particles to display.
 			 * @see #displayBlockCrack(Location, double, MaterialData, Vector, int)
 			 */
@@ -1185,7 +1182,7 @@ public final class Utilities {
 		/**
 		 * Play heart particles at the given location.
 		 * <p>
-		 * <i>Implementation note:</i> This method accomplishes the desired behavior by spawning a wolf, playing the {@linkplain EntityEffect#WOLF_HEART wolf heart} effect, and removing the wolf.
+		 * <i>Implementation note:</i> This method accomplishes the desired behavior by spawning a wolf, playing the {@linkplain EntityEffect#WOLF_HEARTS wolf heart} effect, and removing the wolf.
 		 * Event handlers at the highest priority level are registered that will uncancel the spawn of this wolf.
 		 * </p>
 		 * @param location The location at which to play the heart effect.
@@ -1208,7 +1205,6 @@ public final class Utilities {
 		 * </p>
 		 * @param location The location at which to display the firework effects.
 		 * @param effects The firework effects to render.
-		 * @author Glen Husman
 		 */
 		public static void playFirework(Location location, FireworkEffect... effects) {
 			Validate.notNull(location, "The location of the effect must not be null.");

@@ -329,7 +329,6 @@ public final class ReflectionUtilities {
 		 *            The bukkit object instance for which to retrieve the handle
 		 *            using the {@code getHandle()} method.
 		 * @return The NMS handle for the specified CraftBukkit object.
-		 * @author Glen Husman
 		 * @throws SecurityException
 		 *             If a {@link SecurityManager} blocks this operation.
 		 * @throws NoSuchMethodException
@@ -449,9 +448,6 @@ public final class ReflectionUtilities {
 	 *             If an argument is invalid.
 	 * @see Class#getDeclaredField
 	 * @see Field#set
-	 * @author <a
-	 *         href="https://forums.bukkit.org/members/microgeek.90705652/">microgeek
-	 *         </a>
 	 */
 	public static void setValue(Object instance, String fieldName, Object value)
 			throws NoSuchFieldException, SecurityException,
@@ -498,7 +494,6 @@ public final class ReflectionUtilities {
 	 *            The arguments to pass to the method. If this array is
 	 *            {@code null}, it will be treated as an empty array.
 	 * @return The result of the invoked method.
-	 * @author Glen Husman
 	 * @see Class#getMethod(String, Class...)
 	 * @see Method#setAccessible(boolean)
 	 * @see Method#invoke(Object, Object...)
@@ -642,7 +637,6 @@ public final class ReflectionUtilities {
 	 * implementation class of {@link Server}.
 	 * 
 	 * @return The version component of the NMS package running on this server.
-	 * @author Glen Husman
 	 */
 	public static synchronized String getPackageVersionString() {
 		if(_obcPkgVerStr == null){

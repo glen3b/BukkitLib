@@ -49,7 +49,7 @@ public abstract class SubCommand implements PermissionConstrainedCommand {
 	
 	/**
 	 * Returns all values in {@code possibilities} that start with or equal (ignoring case) the string {@code argument}.
-	 * This method eliminates possibilities that do not start with the argument as typed so far (disregarding case). The collection of CharSequence objects will have each element converted to a string using {@link CharSequence.toString()} before adding to the returned list.
+	 * This method eliminates possibilities that do not start with the argument as typed so far (disregarding case). The collection of CharSequence objects will have each element converted to a string using {@link CharSequence#toString()} before adding to the returned list.
 	 * @param argument The argument in the command as typed so far. May be {@code null}.
 	 * @param possibilities All possibilities for the argument, not accounting for the argument so far.
 	 * @return All possibilities for the argument, accounting for the argument as typed so far. The returned list is guaranteed to be modifiable.
@@ -129,7 +129,7 @@ public abstract class SubCommand implements PermissionConstrainedCommand {
 	 * @param sender The requester of tab completion options.
 	 * @param arguments The arguments passed to the command so far.
 	 * @return A list of strings which are possibilities for the tab completion argument.
-	 * @see SubCommand#getTabCompletions(List)
+	 * @see SubCommand#getTabCompletions(String, Collection)
 	 */
 	public List<String> tabComplete(CommandSender sender, String[] arguments){
 		// Get all online players, and return them as the list

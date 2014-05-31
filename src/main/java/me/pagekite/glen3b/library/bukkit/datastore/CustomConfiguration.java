@@ -26,7 +26,7 @@ public class CustomConfiguration {
 	/**
 	 * Creates a new custom configuration instance.
 	 * @param backingStore The plugin which contains this configuration.
-	 * @param name The file representing the configuration file.
+	 * @param file The file representing the configuration file.
 	 */
 	public CustomConfiguration(Plugin backingStore, File file){
 		Validate.notNull(file, "The file must not be null.");
