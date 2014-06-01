@@ -23,12 +23,11 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.UUID;
 import java.util.logging.Level;
 
@@ -859,7 +858,7 @@ public final class Utilities {
 			 */
 			HAPPY_VILLAGER("happyVillager");
 
-			private static final Map<String, Particle> NAME_MAP = new HashMap<String, Particle>();
+			private static final Map<String, Particle> NAME_MAP = new TreeMap<String, Particle>(String.CASE_INSENSITIVE_ORDER);
 			private static final double MAX_RANGE = 32; // More than 16 to give some breathing room
 			private static Constructor<?> packetPlayOutWorldParticles;
 			private static Field playerConnection;
@@ -893,7 +892,7 @@ public final class Utilities {
 					NAME_MAP.put(p.name, p);
 				}
 				try{
-				loadReflectionObjects();
+					loadReflectionObjects();
 				}catch(Throwable ex){
 					Bukkit.getLogger().log(Level.WARNING, "Failed to load reflection required for particle effects.", ex);
 				}
@@ -915,17 +914,22 @@ public final class Utilities {
 
 			/**
 			 * Gets a particle effect by minecraft protocol name.
+			 * The name parameter is case-insensitive.
 			 * @param name The name of the particle effect.
 			 * @return The particle effect if found, or {@code null} if it was not found.
+			 * @exception IllegalArgumentException If {@code name} is {@code null}.
+			 * @exception IllegalArgumentException If a particle effect with the specified name cannot be found.
 			 */
 			public static Particle fromName(String name) {
 				Validate.notEmpty(name, "A particle effect name must be specified.");
 
-				for (Entry<String, Particle> e : NAME_MAP.entrySet()){
-					if (e.getKey().equalsIgnoreCase(name)) return e.getValue();
+				Particle returnVal = NAME_MAP.get(name.trim()); // We use a TreeMap with case insensitive comparison, so efficient lookups can be used while maintaining case safety
+				
+				if(returnVal == null){
+					throw new IllegalArgumentException("A particle effect with the specified name could not be found.");
 				}
-
-				return null;
+				
+				return returnVal;
 			}
 
 			/**
