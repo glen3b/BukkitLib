@@ -11,6 +11,7 @@ import java.util.logging.Level;
 
 import me.pagekite.glen3b.library.bukkit.GBukkitCorePlugin;
 import me.pagekite.glen3b.library.bukkit.Utilities;
+import me.pagekite.glen3b.library.bukkit.Utilities.Effects.Particle;
 import me.pagekite.glen3b.library.bukkit.command.CommandInvocationContext;
 import me.pagekite.glen3b.library.bukkit.command.CommandSenderType;
 import me.pagekite.glen3b.library.bukkit.command.PreprocessableCommand;
@@ -21,6 +22,7 @@ import me.pagekite.glen3b.library.bukkit.reflection.PrimitiveType;
 import org.apache.commons.lang.Validate;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -202,70 +204,70 @@ public abstract class ParentCommand implements TabExecutor, PreprocessedCommandH
 
 		private void execute(CommandSender sender, Object arg0, String[] args){
 			// Assume predicate has been fulfilled
-						Object[] methodArgs = new Object[_params.length];
-						methodArgs[0] = arg0;
-						if((args.length <= methodArgs.length || _continualStringAtEnd) && args.length >= methodArgs.length - _optionalCt){
-							for(int i = 1; i < _params.length; i++){
-								try{
-									if(_continualStringAtEnd && i == _params.length - 1){
-										StringBuilder arg = new StringBuilder();
-										for(int j = i; j < args.length; j++){
-											arg.append(args[j]);
-											if(j != args.length - 1){
-												arg.append(' ');
-											}
-										}
-										methodArgs[i] = arg.toString();
-									}else{
-										methodArgs[i] = parseParameter(containsIndex(i, args) ? args[i] : null, _params[i]);
-									}
-
-									if(!containsIndex(i, args) && !_optionals[i]){
-										sender.sendMessage(Message.get("cmdNotEnoughArgs"));
-										break;
-									}
-								}catch(IllegalArgumentException except){
-									// Error parsing argument
-									Bukkit.getLogger().log(Level.FINE, "Couldn't parse an argument.", except);
-									sender.sendMessage(Message.get("cmdInvalidArg"));
-									break;
+			Object[] methodArgs = new Object[_params.length];
+			methodArgs[0] = arg0;
+			if((args.length <= methodArgs.length || _continualStringAtEnd) && args.length >= methodArgs.length - _optionalCt){
+				for(int i = 1; i < _params.length; i++){
+					try{
+						if(_continualStringAtEnd && i == _params.length - 1){
+							StringBuilder arg = new StringBuilder();
+							for(int j = i; j < args.length; j++){
+								arg.append(args[j]);
+								if(j != args.length - 1){
+									arg.append(' ');
 								}
 							}
-
-							// Method arguments have been computed, we are ready to execute!
-							try {
-								Object returnVal = getMethod().invoke(ParentCommand.this, methodArgs);
-								if(returnVal != null && returnVal instanceof CharSequence){
-									// Interpret as a message
-									sender.sendMessage(returnVal.toString());
-								}
-							} catch (Exception e) {
-								// I've taken lots of safeguards, so this code SHOULD never be called
-								// However, if it is called, I want Bukkit to handle it
-								// Bukkit will log it properly and display the "An internal error occurred..." message
-								// Which is the case: Unexpected internal error
-								// Therefore, proper behavior is to rethrow the exception
-								//
-								// Also, an InvocationTargetException means that the clients method threw the exceptiom
-								// Therefore it should be handed up to Bukkit (like we've previously been doing)
-								throw new RuntimeException("An error occured while reflecting a command method within ParentCommand.", e); // Bukkit will display the appropriate error message to the sender and will log the error
-							}
+							methodArgs[i] = arg.toString();
 						}else{
-							sender.sendMessage(Message.get("cmdNotEnoughArgs"));
+							methodArgs[i] = parseParameter(containsIndex(i, args) ? args[i] : null, _params[i]);
 						}
+
+						if(!containsIndex(i, args) && !_optionals[i]){
+							sender.sendMessage(Message.get("cmdNotEnoughArgs"));
+							break;
+						}
+					}catch(IllegalArgumentException except){
+						// Error parsing argument
+						Bukkit.getLogger().log(Level.FINE, "Couldn't parse an argument.", except);
+						sender.sendMessage(Message.get("cmdInvalidArg"));
+						break;
 					}
-		
+				}
+
+				// Method arguments have been computed, we are ready to execute!
+				try {
+					Object returnVal = getMethod().invoke(ParentCommand.this, methodArgs);
+					if(returnVal != null && returnVal instanceof CharSequence){
+						// Interpret as a message
+						sender.sendMessage(returnVal.toString());
+					}
+				} catch (Exception e) {
+					// I've taken lots of safeguards, so this code SHOULD never be called
+					// However, if it is called, I want Bukkit to handle it
+					// Bukkit will log it properly and display the "An internal error occurred..." message
+					// Which is the case: Unexpected internal error
+					// Therefore, proper behavior is to rethrow the exception
+					//
+					// Also, an InvocationTargetException means that the clients method threw the exceptiom
+					// Therefore it should be handed up to Bukkit (like we've previously been doing)
+					throw new RuntimeException("An error occured while reflecting a command method within ParentCommand.", e); // Bukkit will display the appropriate error message to the sender and will log the error
+				}
+			}else{
+				sender.sendMessage(Message.get("cmdNotEnoughArgs"));
+			}
+		}
+
 		public void execute(CommandSender sender, Command cmd, String alias, String[] args){
 			// Assume predicate has been fulfilled
 			execute(sender, _params[0].isAssignableFrom(CommandInvocationContext.class) ? new CommandInvocationContext<CommandSender, Command>(sender, cmd, alias) : sender, args); // Only works due to generics not being safe in Java
 		}
-			
+
 		public void execute(Player sender, PreprocessableCommand cmd, String alias, String[] args){
 			// Assume predicate has been fulfilled
 			execute(sender, _params[0].isAssignableFrom(CommandInvocationContext.class) ? new CommandInvocationContext<CommandSender, PreprocessableCommand>(sender, cmd, alias) : sender, args); // Only works due to generics not being safe in Java
 		}
 	}
-	
+
 	private boolean _subclassInitializedSets = false;
 	private boolean _inSetInitializer = false;
 	private Set<Class<?>> _supportedParamTypes;
@@ -281,7 +283,7 @@ public abstract class ParentCommand implements TabExecutor, PreprocessedCommandH
 	 * The default implementation of this method does nothing.
 	 * <p>
 	 * It is not necessary to add enum types to the sets directly in this method, as they are parsed automatically by the {@code ParentCommand} implementation of {@link #parseParameter(String, Class)}.
-	 * Enum types do not need to be added to this set, and parsing behavior for enum types can be overriden even without adding them to the set in the subclass implementation of {@link #parseParameter(String, Class)}.
+	 * Enum types do not need to be added to this set, however if parsing behavior for enum types is overriden in the subclass implementation of {@link #parseParameter(String, Class)}, it is expected that the type will be found in the set.
 	 * <p>
 	 * Any call to {@link ParentCommand#getSupportedParameterTypes()} or {@link ParentCommand#getDefaultParameterValues()} within this method would result in infinite recursion, however a safeguard is in place against this.
 	 * Please use the parameters which represent these variables instead of using those methods.
@@ -291,7 +293,7 @@ public abstract class ParentCommand implements TabExecutor, PreprocessedCommandH
 	protected void initializeParameterTypes(Set<Class<?>> paramTypes, Map<Class<?>, Object> defaultParams){
 		// Default to doing nothing
 	}
-	
+
 	/**
 	 * Represents the default subcommand, which displays command help. This method is always implemented by the {@code ParentCommand} class for consistency. It is also required that {@code ParentCommand} implements this method because it requires raw access to the list of registered subcommands.
 	 */
@@ -404,10 +406,10 @@ public abstract class ParentCommand implements TabExecutor, PreprocessedCommandH
 		if(_plugin == null || !_plugin.isEnabled()){
 			_plugin = (GBukkitCorePlugin)Bukkit.getServer().getPluginManager().getPlugin("GBukkitCore");
 		}
-		
+
 		return _plugin;
 	}
-	
+
 	/**
 	 * Get the GBukkitCore config file.
 	 */
@@ -439,7 +441,7 @@ public abstract class ParentCommand implements TabExecutor, PreprocessedCommandH
 					Double.class, double.class, boolean.class, Boolean.class,
 					float.class, Float.class, char.class, Character.class,
 					long.class, Long.class, short.class, Short.class,
-					Player.class, OfflinePlayer.class);
+					Player.class, OfflinePlayer.class, Material.class, Particle.class);
 		}
 
 		if(_defaultParamValues == null){
@@ -452,7 +454,7 @@ public abstract class ParentCommand implements TabExecutor, PreprocessedCommandH
 					// We don't need to put too many nulls in the map
 					continue;
 				}
-				
+
 				// Java should automatically do the boxing/unboxing
 				_defaultParamValues.put(primitive.getPrimitive(), primitive.getDefaultValue());
 				_defaultParamValues.put(primitive.getWrapper(), primitive.getDefaultValue());
@@ -485,7 +487,7 @@ public abstract class ParentCommand implements TabExecutor, PreprocessedCommandH
 	 * @throws IllegalArgumentException If {@code argument} is not deserializable to an instance of type. This exception should <i>not</i> be thrown if {@code argument} is {@code null}, in which case {@code null} (or the appropriate default) should be returned. However, it <i>must</i> be thrown if {@code type} is {@code null}.
 	 * @throws UnsupportedOperationException If the specified {@code type} cannot be deserialized by this method.
 	 */
-	@SuppressWarnings({ "deprecation", "unchecked" }) // Needed to get players by name and for enumeration value parsing
+	@SuppressWarnings({ "deprecation", "unchecked" }) // Needed to get players by name, for enumeration value parsing, and for material match by ID (matchMaterial is not deprecated, but using it for ID match is)
 	protected Object parseParameter(String argument, Class<?> type) throws IllegalArgumentException, UnsupportedOperationException {
 		if(type == null){
 			throw new IllegalArgumentException("The specified type is null.");
@@ -534,6 +536,14 @@ public abstract class ParentCommand implements TabExecutor, PreprocessedCommandH
 			return Bukkit.getPlayer(argument);
 		}else if(type == OfflinePlayer.class){
 			return Bukkit.getOfflinePlayer(argument);
+		}else if(type == Particle.class){
+			return Particle.fromName(argument);
+		}else if(type == Material.class){
+			Material returnValue = Material.matchMaterial(argument.trim().replace('-', '_'));
+			if(returnValue != null){
+				return returnValue;
+			}
+			throw new IllegalArgumentException("The specified argument does not represent a material.");
 		}else if(type.isEnum()){
 			return Enum.valueOf(type.asSubclass(Enum.class), argument);
 		}
