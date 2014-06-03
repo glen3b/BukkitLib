@@ -61,7 +61,7 @@ public enum InternalPackage implements PackageClassSource{
 	}
 	
 	@Override
-	public Class<?> getClass(String className) throws ClassNotFoundException {
+	public synchronized Class<?> getClass(String className) throws ClassNotFoundException {
 		Validate.notEmpty(className, "The class name must be specified.");
 		
 		String cName = className.trim();
@@ -232,7 +232,7 @@ public enum InternalPackage implements PackageClassSource{
 		}
 		
 		@Override
-		public Class<?> getClass(String className) throws ClassNotFoundException {
+		public synchronized Class<?> getClass(String className) throws ClassNotFoundException {
 			Validate.notEmpty(className, "The class name must be specified.");
 			
 			String cName = className.trim();

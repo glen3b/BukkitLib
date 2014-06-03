@@ -289,6 +289,11 @@ public final class ReflectionUtilities {
 		 * @return The cached {@code org.bukkit.craftbukkit.entity.CraftPlayer} {@link Class} instance, or {@code null} if it could not be found.
 		 */
 		public static synchronized Class<? extends org.bukkit.entity.Player> getCraftPlayerType(){
+			/*
+			 * We cache the Class instance separately due to the asSubclass call.
+			 * The SubPackages will cache it, but thye do not cache the Bukkit interfaces explicitly.
+			 */
+			
 			if(!_hasCachedCraftPlayer){
 				Class<?> cachedPl = null;
 				try{
