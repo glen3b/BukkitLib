@@ -20,6 +20,7 @@ import org.apache.commons.lang.ClassUtils;
 import org.apache.commons.lang.Validate;
 import org.bukkit.Bukkit;
 import org.bukkit.Server;
+import org.bukkit.entity.Item;
 import org.bukkit.inventory.ItemStack;
 
 import com.google.common.base.Function;
@@ -249,6 +250,23 @@ public final class ReflectionUtilities {
 			return null;
 		}
 
+		/**
+		 * Sets the number of ticks that an item entity has lived. This call uses reflection to access NMS, as the exposed API methods do not allow changing of this value.
+		 * @param entity The item entity for which to set the age.
+		 * @param age The new age, in ticks, of the item.
+		 * @throws InvocationTargetException If an error occurs while reflectively obtaining the NMS handle.
+		 * @throws IllegalAccessException If a security error occurs while reflectively obtaining the NMS handle.
+		 * @throws NoSuchMethodException If an error occurs while reflectively obtaining the NMS handle.
+		 * @throws IllegalArgumentException If an illegal argument is specified to this method.
+		 * @throws SecurityException If a security error occurs while reflectively obtaining the NMS handle.
+		 * @throws NoSuchFieldException If an error occurs while reflectively setting the age of the NMS item entity such that the appropriate field is not found.
+		 */
+		public static void setItemAge(Item entity, int age) throws SecurityException, IllegalArgumentException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, NoSuchFieldException{
+			Validate.isTrue(entity != null && entity.isValid() && !entity.isDead() && entity.getWorld() != null, "The specified object does not represent a valid item entity.");
+			Object nmsItem = getNMSHandle(entity);
+			setValue(nmsItem, "age", age);
+		}
+		
 		private CraftBukkit(){}
 
 		/**
@@ -319,6 +337,10 @@ public final class ReflectionUtilities {
 		 * <td>A copy of the {@code ItemStack} as a {@code net.minecraft.server.ItemStack}, as retrieved by static methods in the {@code CraftItemStack} implementation class.
 		 * </tr>
 		 * <tr>
+		 * <td>{@code Item}</td>
+		 * <td>The underlying {@code EntityItem} instance, as known by the specialized {@code item} field in the {@code CraftItem} entity implementation class.
+		 * </tr>
+		 * <tr>
 		 * <td>Any CraftBukkit type (with a {@code getHandle} method)</td>
 		 * <td>The return value of that type's {@code getHandle} method on that instance.</td>
 		 * </tr>
@@ -357,6 +379,16 @@ public final class ReflectionUtilities {
 					throw (NoSuchMethodException) new NoSuchMethodException(
 							"The specified object does not have a getHandle method.")
 					.initCause(npe);
+				}
+			}
+			
+			if(entity instanceof Item){
+				// IMPORTANT: Do this BEFORE attempting the getHandle call but AFTER reading caches
+				// Use the specialized "item" field instance
+				try {
+					return getValue(entity, "item");
+				} catch (NoSuchFieldException e) {
+					// Ignore exception, let the instance fall through to the getHandle fallback check
 				}
 			}
 
