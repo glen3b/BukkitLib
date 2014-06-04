@@ -32,13 +32,9 @@ import com.comphenix.protocol.wrappers.nbt.NbtFactory;
 public final class ProtocolLibUtilImplementation implements ProtocolUtilities {
 
 	ProtocolLibSignGUI _signManager;
-	
-	/* (non-Javadoc)
-	 * @see me.pagekite.glen3b.library.bukkit.protocol.ProtocolUtilities#init(org.bukkit.plugin.Plugin)
-	 */
+
 	@Override
 	public void init(Plugin plugin) {
-		// Prevents ghost step sounds and particles (testing needs to be done)
 		ProtocolLibrary.getProtocolManager().addPacketListener(
 				new PacketAdapter(PacketAdapter
 						.params(plugin, PacketType.Play.Server.SET_SLOT,
@@ -60,8 +56,9 @@ public final class ProtocolLibUtilImplementation implements ProtocolUtilities {
 		Bukkit.getServicesManager().register(SignGUI.class, _signManager, plugin, ServicePriority.Highest);
 	}
 
-	private static final Enchantment GLOW_ENCHANT_INDICATOR = Enchantment.LURE;
-	private static final int GLOW_ENCHANT_LEVEL = 31762;
+	// Package-private: Allow other providers using similiar methods to use the same constant values
+	static final Enchantment GLOW_ENCHANT_INDICATOR = Enchantment.LURE;
+	static final int GLOW_ENCHANT_LEVEL = 31762;
 
 
 	/* (non-Javadoc)

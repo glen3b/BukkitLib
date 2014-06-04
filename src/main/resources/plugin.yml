@@ -2,7 +2,7 @@
  version: ${project.version}
  description: This plugin is a library allowing uniform access to Bukkit functions used by multiple plugins, as well as other miscellaneous utilities.
  author: glen3b
- softdepend: [ProtocolLib]
+ softdepend: [ProtocolLib, PacketAPI]
  
  main: me.pagekite.glen3b.library.bukkit.GBukkitCorePlugin
  

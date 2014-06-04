@@ -46,6 +46,18 @@ public class DefaultProtocolUtilityImplementation implements ProtocolUtilities {
 		return (ItemStack) _nmsItemStackToCraftbukkitItemStack.invoke(
 				null, nmsItemStack);
 	}
+	
+	Object setGlowing(Object nmsStack, boolean glowing) throws Exception {
+		Object nmsStackDataTag = ReflectionUtilities.getValue(nmsStack, "tag");
+		if(nmsStackDataTag == null){
+			nmsStackDataTag = ReflectionUtilities.createInstance(ReflectionUtilities.Minecraft.getType("NBTTagCompound"));
+		}
+		Object enchList = glowing ? _nbtTagListConstructor.newInstance() : null;
+		_nbtCompound_set.invoke(nmsStackDataTag, "ench", enchList);
+		ReflectionUtilities.setValue(nmsStack, "tag", nmsStackDataTag);
+		return nmsStack;
+		
+	}
 
 	@Override
 	public ProtocolOperationReturn<ItemStack> setGlowing(ItemStack stack, boolean glowing) {
@@ -62,18 +74,7 @@ public class DefaultProtocolUtilityImplementation implements ProtocolUtilities {
 		}
 		
 		try{
-		
-		Object nmsStack = ReflectionUtilities.CraftBukkit.getNMSHandle(stack);
-		Object nmsStackDataTag = ReflectionUtilities.getValue(nmsStack, "tag");
-		if(nmsStackDataTag == null){
-			nmsStackDataTag = ReflectionUtilities.createInstance(ReflectionUtilities.Minecraft.getType("NBTTagCompound"));
-		}
-		Object enchList = glowing ? _nbtTagListConstructor.newInstance() : null;
-		
-		_nbtCompound_set.invoke(nmsStackDataTag, "ench", enchList);
-		
-		ReflectionUtilities.setValue(nmsStack, "tag", nmsStackDataTag);
-		return new ProtocolOperationReturn<ItemStack>(ProtocolOperationResult.SUCCESS, (ItemStack)_nmsItemStackToCraftbukkitItemStack.invoke(null, nmsStack));
+			return new ProtocolOperationReturn<ItemStack>(ProtocolOperationResult.SUCCESS, (ItemStack)_nmsItemStackToCraftbukkitItemStack.invoke(null, setGlowing(ReflectionUtilities.CraftBukkit.getNMSHandle(stack), glowing)));
 		}catch(Exception except){
 			return new ProtocolOperationReturn<ItemStack>(ProtocolOperationResult.FAILURE, except);
 		}

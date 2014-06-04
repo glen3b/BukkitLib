@@ -28,6 +28,7 @@ import me.pagekite.glen3b.library.bukkit.datastore.Message;
 import me.pagekite.glen3b.library.bukkit.datastore.MessageProvider;
 import me.pagekite.glen3b.library.bukkit.datastore.SerializableLocation;
 import me.pagekite.glen3b.library.bukkit.protocol.DefaultProtocolUtilityImplementation;
+import me.pagekite.glen3b.library.bukkit.protocol.PacketAPIUtilityImplementation;
 import me.pagekite.glen3b.library.bukkit.protocol.ProtocolLibUtilImplementation;
 import me.pagekite.glen3b.library.bukkit.protocol.ProtocolUtilities;
 import me.pagekite.glen3b.library.bukkit.teleport.QueuedTeleport;
@@ -309,10 +310,15 @@ public final class GBukkitCorePlugin extends JavaPlugin {
 		ConfigurationSerialization.registerClass(SerializableLocation.class);
 		Plugin protocol = getServer().getPluginManager().getPlugin("ProtocolLib");
 		if(protocol != null && protocol.isEnabled()){
-			this.getServer().getServicesManager().register(ProtocolUtilities.class, new ProtocolLibUtilImplementation(), this, ServicePriority.Highest);
+			getServer().getServicesManager().register(ProtocolUtilities.class, new ProtocolLibUtilImplementation(), this, ServicePriority.Highest);
 		}
-			// TODO: Support more protocol libraries
-			this.getServer().getServicesManager().register(ProtocolUtilities.class, new DefaultProtocolUtilityImplementation(), this, ServicePriority.Lowest); // Purely reflective implementation
+		Plugin packet = getServer().getPluginManager().getPlugin("PacketAPI");
+		if(packet != null && packet.isEnabled()){
+			getServer().getServicesManager().register(ProtocolUtilities.class, new PacketAPIUtilityImplementation(), this, ServicePriority.Normal);
+		}
+		DefaultProtocolUtilityImplementation reflectUtils = new DefaultProtocolUtilityImplementation();
+		getServer().getServicesManager().register(ProtocolUtilities.class, reflectUtils, this, ServicePriority.Lowest); // Purely reflective implementation
+		getServer().getServicesManager().register(DefaultProtocolUtilityImplementation.class, reflectUtils, this, ServicePriority.Highest); // Purely reflective implementation for calling unwrapped methods
 		Utilities.initialize(this);
 		saveDefaultConfig();
 
