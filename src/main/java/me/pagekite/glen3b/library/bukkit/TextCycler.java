@@ -1,10 +1,7 @@
 package me.pagekite.glen3b.library.bukkit;
 
-import java.util.logging.Level;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.Validate;
-import org.bukkit.Bukkit;
 
 /**
  * A class which rotates through text to keep it within a specific length limit.
@@ -163,7 +160,7 @@ public final class TextCycler {
 		// Add prefix if needed
 		if(_prefix.length() > 0){
 			int newLen = _trimLength - _prefix.length();
-			Bukkit.getLogger().log(Level.INFO, "New length: " + newLen + ", existing display len: " + display.length() + "(val = '" + display.toString() + "')");
+			//Bukkit.getLogger().log(Level.INFO, "New length: " + newLen + ", existing display len: " + display.length() + "(val = '" + display.toString() + "')");
 			display.replace(newLen, display.length(), "");
 			display.insert(0, _prefix);
 		}
