@@ -11,7 +11,8 @@ import com.google.common.collect.Lists;
 
 /**
  * Represents information about a soon-to-be-created scoreboard.
- * This type is intended for returning information that 
+ * This type is intended for returning information that will be used to create a dynamically cycling scoreboard.
+ * No length limits exist.
  */
 public final class ScoreboardInformation{
 	/**

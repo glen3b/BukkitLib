@@ -1,28 +1,22 @@
 package me.pagekite.glen3b.library.bukkit;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.logging.Level;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.Validate;
-import org.bukkit.Bukkit;
 
 /**
  * A class which rotates through text to keep it within a specific length limit.
- * All {@link CharSequence} methods are performed regarding the trimmed text.
  * @author Glen Husman
  */
-public class TextCycler implements CharSequence {
+public final class TextCycler {
 
 	protected final String _prefix;
 	protected final String _originalText;
 	protected final int _trimLength;
-	protected int _currentTrimTick = -1;
+	protected int _currentTrimIndex = 0;
 	/**
-	 * The possible value of the text cycler, <em>including the prefix</em>. Should be created at load time.
+	 * Used to cache the string instance, which (if constant and applicabgle) will be used instead of rebuilding the builder each tick.
 	 */
-	protected String[] _trimPossibilities = null;
+	private String _cachedValue = null;
 
 	/**
 	 * Creates a text cycler with the given text.
@@ -32,9 +26,21 @@ public class TextCycler implements CharSequence {
 	public TextCycler(String text, int trimLength){
 		this(null, text, trimLength);
 	}
+	
+	/**
+	 * Gets the length to which text is trimmed by this cycler.
+	 * @return The trim length of this text cycler instance.
+	 */
+	public int getTrimLength(){
+		return _trimLength;
+	}
 
 	/**
 	 * Creates a text cycler with the given text and an uncycled prefix.
+	 * <p>
+	 * Note that the text cycler does not automatically append spacing to the body text string.
+	 * The caller may wish to do so, such as via a call to {@link StringUtils#leftPad(String, int)}.
+	 * If this is called with the desired pad length on the input string, the padding affect will occur.
 	 * @param prefix The constant prefix of the text.
 	 * @param text The untrimmed text of the cycler.
 	 * @param trimLength The length of the trimmed text.
@@ -48,11 +54,13 @@ public class TextCycler implements CharSequence {
 		Validate.isTrue(trimLength > 0, "The length to trim to must be positive.");
 
 		_trimLength = trimLength;
-		_originalText = text.trim();
+		_originalText = text;
 		_prefix = prefix.trim();
-		tick(); // Initialize arrays
+		if (_originalText.length() <= _trimLength - _prefix.length()) {
+			_cachedValue = _prefix + _originalText;
+		}
 	}
-	
+
 	/**
 	 * Gets the untrimmed constant prefix to the text in this cycler.
 	 * @return A non-null string representing the prefix to the cycled text.
@@ -60,7 +68,7 @@ public class TextCycler implements CharSequence {
 	public String getPrefix(){
 		return _prefix;
 	}
-	
+
 	/**
 	 * Gets the untrimmed text in this cycler which is cycled.
 	 * @return A non-null string representing the original text.
@@ -71,69 +79,23 @@ public class TextCycler implements CharSequence {
 
 	/**
 	 * Ticks the text cycler, incrementing the start position of the text.
-	 * @return The <em>new</em> value of the text cycler, including the prefix. This value is also assigned to the appropriate variables, and can be retrieved by the appropriate methods.
+	 * @return The <em>old</em> value of the text cycler, including the prefix. This value can also be retrieved by the appropriate methods, however its computation is not cached.
 	 */
 	public String tick(){
-		if(_trimPossibilities == null){
-			if(_originalText.length() + _prefix.length() <= _trimLength){
-				// Cache the single variable
-				_trimPossibilities = new String[]{StringUtils.rightPad(_prefix + _originalText, _trimLength)};
-			}else{
-				List<String> entrySet = new ArrayList<String>(); // This list does NOT contain prefixes
-				int unprefixedLen = _trimLength - _prefix.length();
-				int index = 0;
-				do{
-					if(index + unprefixedLen <= _originalText.length()){
-						entrySet.add(_originalText.substring(index, index + unprefixedLen));
-					}else if(index <= _originalText.length()){
-						entrySet.add(StringUtils.rightPad(_originalText.substring(index), unprefixedLen));
-					}else if(index - unprefixedLen < _originalText.length()){
-						entrySet.add(StringUtils.leftPad(_originalText.substring(0, index - unprefixedLen), unprefixedLen));
-					}else{
-						break;
-					}
-					index++;
-				}while(/*entrySet.size() < 2 || !entrySet.get(entrySet.size() - 1).equals(entrySet.get(0))*/true);
-				_trimPossibilities = new String[entrySet.size()];
-				for(int i = 0; i < _trimPossibilities.length; i++){
-					_trimPossibilities[i] = _prefix + entrySet.get(i);
-					if(_trimPossibilities[i].length() > _trimLength){
-						Bukkit.getLogger().log(Level.WARNING, "[TextCycler: Debug] String has length greater than maximum! Value: \"" + _trimPossibilities[i] + "\" Index: " + i + " Maxlength:  " + _trimLength);
-					}
-				}
-			}
-		}
-		//	_originalText.substring(_currentTrimIndex, _currentTrimIndex + (_trimLength - _prefix.length()));
-
-
-		return _trimPossibilities[++_currentTrimTick % _trimPossibilities.length];
+		String val = toString();
+		
+		// Increment counter
+		_currentTrimIndex = (_currentTrimIndex + 1) % (_originalText.length());
+		
+		return val;
 	}
 
-	@Override
-	public int length() {
-		return _trimLength;
-	}
-
-	@Override
-	public char charAt(int index) {
-		return _trimPossibilities[_currentTrimTick % _trimPossibilities.length].charAt(index);
-	}
-
-	@Override
-	public CharSequence subSequence(int start, int end) {
-		return _trimPossibilities[_currentTrimTick % _trimPossibilities.length].subSequence(start, end);
-	}
-
-	@Override
-	public String toString(){
-		return _trimPossibilities[_currentTrimTick % _trimPossibilities.length];
-	}
-
+	
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + _currentTrimTick;
+		result = prime * result + _currentTrimIndex;
 		result = prime * result
 				+ ((_originalText == null) ? 0 : _originalText.hashCode());
 		result = prime * result + ((_prefix == null) ? 0 : _prefix.hashCode());
@@ -153,7 +115,7 @@ public class TextCycler implements CharSequence {
 			return false;
 		}
 		TextCycler other = (TextCycler) obj;
-		if (_currentTrimTick != other._currentTrimTick) {
+		if (_currentTrimIndex != other._currentTrimIndex) {
 			return false;
 		}
 		if (_originalText == null) {
@@ -174,6 +136,35 @@ public class TextCycler implements CharSequence {
 			return false;
 		}
 		return true;
+	}
+	
+	/**
+	 * Computes the current value of this text cycler instance.
+	 * @return The current trimmed text value.
+	 */
+	@Override
+	public String toString(){
+		if (_cachedValue != null) {
+			// No need to toString twice
+			return _cachedValue;
+		}
+
+		StringBuilder display = new StringBuilder(_originalText.substring(_currentTrimIndex, Math.min(_currentTrimIndex + _trimLength, _originalText.length())));
+
+		if (display.length() < _trimLength && _originalText.length() > _trimLength)
+		{
+			int add = _trimLength - display.length();
+			display.append(_originalText.substring(0, add));
+		}
+
+		// Add prefix if needed
+		if(_prefix.length() > 0){
+			int newLen = _trimLength - _prefix.length();
+			display.replace(newLen, display.length(), "");
+			display.insert(0, _prefix);
+		}
+		
+		return display.toString();
 	}
 
 }
