@@ -21,6 +21,5 @@
 			<attribute name="maven.pomderived" value="true"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="libs/PacketAPI_V1.5_for_1.7.9.jar"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>
