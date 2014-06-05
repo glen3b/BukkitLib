@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.List;
 import java.util.UUID;
+import java.util.logging.Level;
 
 import me.pagekite.glen3b.library.bukkit.TextCycler;
 
@@ -166,7 +167,12 @@ public abstract class ScorelessBoardManager {
 		public ScoreboardInformation scoreInfo;
 		
 		public void dispose(){
-			cancel();
+			try{
+				cancel();
+			}catch(IllegalStateException except){
+				// Why?
+				Bukkit.getLogger().log(Level.FINE, "Weird IllegalStateException thrown in TitleCycler. Probably means task isn't running, but is running anyways.", except);
+			}
 			playerID = null;
 			scoreInfo = null;
 		}
@@ -192,7 +198,14 @@ public abstract class ScorelessBoardManager {
 				return;
 			}
 			
-			objective.setDisplayName(scoreInfo.getTitle().tick());
+			String oldTitle = scoreInfo.getTitle().tick();
+			String newTitle = scoreInfo.getTitle().toString();
+			
+			if(objective.getDisplayName() != oldTitle && objective.getDisplayName() != newTitle){
+				objective.setDisplayName(newTitle);
+			}else if(oldTitle != newTitle /* Don't change the title unless we really have to*/){
+				objective.setDisplayName(newTitle);
+			}
 		}
 	}
 	
@@ -255,8 +268,8 @@ public abstract class ScorelessBoardManager {
 			public void run() {
 				for(ScoreboardEntry e : newBoard.getEntries()){
 					TextCycler cycler = entriesToCyclers.get(e);
-					String oldVal = cycler.toString();
-					String newVal = cycler.tick();
+					String oldVal = cycler.tick();
+					String newVal = cycler.toString();
 					if(oldVal != newVal /* Yes, this is a reference check. TextCycler should return the same reference for these situations. */){
 						prefixesToTeams.get(e.getPrefix()).removePlayer(Bukkit.getOfflinePlayer(oldVal)); // Workaround for lack of API - getOfflinePlayer should not be used
 						prefixesToTeams.get(e.getPrefix()).addPlayer(Bukkit.getOfflinePlayer(newVal)); // Workaround for lack of API - getOfflinePlayer should not be used
