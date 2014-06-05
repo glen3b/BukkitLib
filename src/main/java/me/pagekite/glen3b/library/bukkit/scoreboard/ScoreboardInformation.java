@@ -54,17 +54,50 @@ public final class ScoreboardInformation{
 		Validate.noNullElements(entries, "Null scoreboard entries are not allowed. Consider using the Spacers class.");
 		
 		_entries = Collections.unmodifiableList(entries);
-		_title = new TextCycler(prefix, title, 32);
+		_titleText = title;
+		_prefix = prefix;
+	}
+	
+	private String _prefix;
+	private String _titleText;
+	private int _len = 32;
+	private TextCycler _title; // Lazily initialized
+	
+	/**
+	 * Sets the length to which the title cycler will trim text.
+	 * <p>
+	 * Due to restrictions of Minecraft, this value must be a natural number less than or equal to 32.
+	 * @param len The new length of the cycler
+	 * @exception IllegalStateException If the cycler has already been initialized.
+	 */
+	public void setCyclerLength(int len){
+		if(_title != null){
+			throw new IllegalStateException("The TextCycler instance has already been initialized, and its properties can no longer change.");
+		}
+		
+		if(len <= 0){
+			throw new IllegalArgumentException("The length must be greater than zero.");
+		}else if(len > 32){
+			throw new IllegalArgumentException("The length must not be greater than 32.");
+		}
+		
+		_len = len;
 	}
 	
 	private List<ScoreboardEntry> _entries;
-	private TextCycler _title;
+	
 	
 	/**
-	 * Gets the single cycler reference held by this class which will cycle through the title.
+	 * Gets the <b>single cycler reference held by this class</b> which will cycle through the title.
 	 * @return A {@code TextCycler} that cycles through the scoreboard title.
 	 */
 	public TextCycler getTitle(){
+		if(_title == null){
+			// Lazy initializer allows setting cycler length
+			// But, now it is time to stop being lazy and actually initialize it
+			_title = new TextCycler(_prefix, _titleText, _len);
+		}
+		
 		return _title;
 	}
 	
