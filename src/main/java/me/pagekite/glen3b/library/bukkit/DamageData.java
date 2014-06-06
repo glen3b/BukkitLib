@@ -15,7 +15,14 @@ public final class DamageData implements Cloneable {
 	private Object _source;
 	private double _amount;
 	private DamageCause _cause;
-	private long _time = System.currentTimeMillis();
+	long _time = System.currentTimeMillis();
+	
+	/**
+	 * Internal method provided to get the raw source object.
+	 */
+	Object getRawSource(){
+		return _source;
+	}
 	
 	/**
 	 * Gets the time at which the damage occurred.

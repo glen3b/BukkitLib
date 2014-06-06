@@ -218,18 +218,37 @@ public final class Utilities {
 			}
 			
 		}
+		
+		private static final boolean equals(Object left, Object right){
+			return left == null ? right == null : left.equals(right);
+		}
 
 		@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
 		public void onHealthLoss(final EntityDamageEvent event){
 			Deque<DamageData> damagers = getDeque(event.getEntity().getUniqueId());
-			DamageData info = new DamageData();
-			info.setCause(event.getCause());
-			info.setDamageAmount(event.getDamage());
+			
+			Object dmgSrc = null;
 			if(event instanceof EntityDamageByEntityEvent){
-				info.setSource(((EntityDamageByEntityEvent)event).getDamager());
+				dmgSrc = ((EntityDamageByEntityEvent)event).getDamager();
 			}else if(event instanceof EntityDamageByBlockEvent){
-				info.setSource(((EntityDamageByBlockEvent)event).getDamager());
+				dmgSrc = ((EntityDamageByBlockEvent)event).getDamager();
 			}
+			
+			DamageData info;
+			DamageData currentHead = damagers.peekFirst();
+			if(currentHead != null && equals(currentHead.getRawSource(), dmgSrc) && equals(currentHead.getCause(), event.getCause())){
+				// If possible, use the same object for multiple hits
+				info = currentHead;
+			}else{
+				info = new DamageData();
+				info.setDamageAmount(0);
+				info.setCause(event.getCause());
+			}
+			
+			// Update the time accordingly, just in case we're using a similiar object
+			info._time = System.currentTimeMillis();
+			info.setDamageAmount(info.getDamageAmount() + event.getDamage());
+			
 			damagers.addFirst(info);
 		}
 	}
