@@ -206,13 +206,15 @@ public final class Utilities {
 			while(regainAmountTicker > 0 && damagers.size() > 0){
 				DamageData leastRecentDamage = damagers.getLast();
 				if(leastRecentDamage.getDamageAmount() > regainAmountTicker){
+					// Remove damage attribution from a specific source
 					leastRecentDamage.setDamageAmount(leastRecentDamage.getDamageAmount() - regainAmountTicker);
 					regainAmountTicker = 0;
-				}else if(leastRecentDamage.getDamageAmount() == regainAmountTicker){
+				}else if(equals(leastRecentDamage.getDamageAmount(), regainAmountTicker)){
+					// Just enough to remove the damage source
 					damagers.removeLast();
 					regainAmountTicker = 0;
 				}else{
-					// Damage amount of source is less than regain amount ticker
+					// Damage amount of source is less than regain amount ticker, therefore we remove the last damage source and we decrement the regainer ticker
 					regainAmountTicker -= damagers.removeLast().getDamageAmount();
 				}
 			}
@@ -221,6 +223,10 @@ public final class Utilities {
 		
 		private static final boolean equals(Object left, Object right){
 			return left == null ? right == null : left.equals(right);
+		}
+		
+		private static final boolean equals(double left, double right){
+			return Double.doubleToLongBits(left) == Double.doubleToLongBits(right);
 		}
 
 		@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)

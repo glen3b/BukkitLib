@@ -113,15 +113,20 @@ public final class DamageData implements Cloneable {
 	}
 
 	/**
-	 * Sets the final amount of damage dealt by this source, as known by the store. This value may be decreased if health is regenerated.
+	 * Sets the final amount of damage dealt by this source, as known by the store.
+	 * <p>
+	 * This value is intended to be decreased by using this setter if health lost by this damage event is regenerated.
+	 * <p>
+	 * This setter method will round incoming values to the nearest 100th decimal place.
 	 * @param amount The new amount.
+	 * @see Math#rint(double)
 	 */
 	public void setDamageAmount(double amount) {
 		if(amount < 0){
 			throw new IllegalArgumentException("The damage amount must be positive.");
 		}
 		
-		this._amount = amount;
+		this._amount = Math.rint(amount * 100.0) / 100.0; // Round to hundredth decimal place
 	}
 
 	/**
