@@ -3,10 +3,10 @@ package me.pagekite.glen3b.library.bukkit.command.annotation;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.logging.Level;
 
 import me.pagekite.glen3b.library.bukkit.GBukkitCorePlugin;
@@ -339,7 +339,7 @@ public abstract class ParentCommand implements TabExecutor, PreprocessedCommandH
 	 * Creates a parent command instance. For this class to successfully execute a command, {@link ParentCommand#register(PluginCommand)} must be invoked. This constructor will iterate through all methods on the runtime class of this instance to determine which ones represent a subcommand, as determined by the {@link CommandMethod} annotation.
 	 */
 	public ParentCommand() {
-		_aliasesToCommands = new HashMap<String, AnnotatedCommandInfo>();
+		_aliasesToCommands = new TreeMap<String, AnnotatedCommandInfo>(String.CASE_INSENSITIVE_ORDER);
 		_commands = new ArrayList<AnnotatedCommandInfo>();
 		// Loop so if client class A extends ParentCommand and client class B extends A, then all command methods inherited from A are registered in B
 		for (Class<?> clazz = getClass(); clazz != null; clazz = clazz.getSuperclass())
@@ -356,7 +356,7 @@ public abstract class ParentCommand implements TabExecutor, PreprocessedCommandH
 							throw new IllegalStateException("An alias for the command specified by " + m.toString() + " is null.");
 						}
 
-						AnnotatedCommandInfo prevVal = _aliasesToCommands.put(alias.toLowerCase(), info);
+						AnnotatedCommandInfo prevVal = _aliasesToCommands.put(alias, info);
 
 						if(prevVal != null){
 							throw new IllegalStateException("The alias '" + alias + "' for the command specified by " + m.toString() + " conflicts with the alias of the same name speciifed by " + prevVal.getMethod().toString());
