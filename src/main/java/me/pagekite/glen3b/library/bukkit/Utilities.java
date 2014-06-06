@@ -20,9 +20,11 @@ package me.pagekite.glen3b.library.bukkit;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -65,6 +67,10 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.CreatureSpawnEvent;
+import org.bukkit.event.entity.EntityDamageByBlockEvent;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.EntityRegainHealthEvent;
 import org.bukkit.event.player.PlayerKickEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
@@ -86,6 +92,7 @@ import org.bukkit.util.Vector;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
@@ -176,6 +183,54 @@ public final class Utilities {
 					}
 				}
 			}
+		}
+
+		//Killassists
+		
+		private Map<UUID, Deque<DamageData>> _mobsToDamageInformation = Maps.newHashMapWithExpectedSize(50);
+		
+		public Deque<DamageData> getDeque(UUID mob){
+			Validate.notNull(mob);
+			
+			if(!_mobsToDamageInformation.containsKey(mob)){
+				_mobsToDamageInformation.put(mob, new ArrayDeque<DamageData>(5));
+			}
+			
+			return _mobsToDamageInformation.get(mob);
+		}
+		
+		@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+		public void onHealthRegain(final EntityRegainHealthEvent event){
+			double regainAmountTicker = event.getAmount();
+			Deque<DamageData> damagers = getDeque(event.getEntity().getUniqueId());
+			while(regainAmountTicker > 0 && damagers.size() > 0){
+				DamageData leastRecentDamage = damagers.getLast();
+				if(leastRecentDamage.getDamageAmount() > regainAmountTicker){
+					leastRecentDamage.setDamageAmount(leastRecentDamage.getDamageAmount() - regainAmountTicker);
+					regainAmountTicker = 0;
+				}else if(leastRecentDamage.getDamageAmount() == regainAmountTicker){
+					damagers.removeLast();
+					regainAmountTicker = 0;
+				}else{
+					// Damage amount of source is less than regain amount ticker
+					regainAmountTicker -= damagers.removeLast().getDamageAmount();
+				}
+			}
+			
+		}
+
+		@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+		public void onHealthLoss(final EntityDamageEvent event){
+			Deque<DamageData> damagers = getDeque(event.getEntity().getUniqueId());
+			DamageData info = new DamageData();
+			info.setCause(event.getCause());
+			info.setDamageAmount(event.getDamage());
+			if(event instanceof EntityDamageByEntityEvent){
+				info.setSource(((EntityDamageByEntityEvent)event).getDamager());
+			}else if(event instanceof EntityDamageByBlockEvent){
+				info.setSource(((EntityDamageByBlockEvent)event).getDamager());
+			}
+			damagers.addFirst(info);
 		}
 	}
 
@@ -464,6 +519,49 @@ public final class Utilities {
 			}
 			return entities;
 		}
+		
+		/**
+		 * Gets the list of recent damagers of the entity with the specified ID, as tracked by the utility event listener.
+		 * <p>
+		 * The sum of the damage amounts of the values in the list should equal the current health of the entity.
+		 * <p>
+		 * The list of damage information values is copied, such that modifications to the returned list will not affect the internal data store.
+		 * <p>
+		 * The returned list is sorted such that the first element will represent the most recent damage source and the last element will represent the last damage source that has still played a part in entity damage.
+		 * <p>
+		 * Due to the returned list being cloned, this reference is not necessarily valid for multiple server ticks.
+		 * @param entityId The UUID of the entity for which to retrieve damager data.
+		 * @return A mutable list of damage information about the specified entity.
+		 */
+		public static List<DamageData> getDamagers(UUID entityId){
+			Validate.notNull(entityId, "The entity for which information is being retrieved must not be null.");
+			Deque<DamageData> info = _eventListener.getDeque(entityId);
+			if(info.size() == 0){
+				return Lists.newArrayListWithExpectedSize(0);
+			}
+			List<DamageData> returnedList = Lists.newArrayListWithExpectedSize(info.size());
+			for(DamageData data : info){
+				// The iterator, according to docs, iterates from head to tail
+				// This is consistent with our docs, which puts the most recent damage cause first
+				try {
+					returnedList.add(data.clone());
+				} catch (CloneNotSupportedException e) {
+					throw new RuntimeException("Damager information for this entity could not be cloned from the internal data store.", e);
+				}
+			}
+			return returnedList;
+		}
+		
+		/**
+		 * Gets the list of recent damagers of the specified entity, as tracked by the utility event listener.
+		 * @param entity The entity for which to retrieve damager data.
+		 * @return A list of damage information about the specified entity.
+		 * @see #getDamagers(UUID)
+		 */
+		public static List<DamageData> getDamagers(Entity entity){
+			Validate.notNull(entity, "The entity for which information is being retrieved must not be null.");
+			return getDamagers(entity.getUniqueId());
+		}
 	}
 
 	/**
@@ -584,7 +682,7 @@ public final class Utilities {
 				// Instant execution
 				for(Runnable task : tasks){
 					Validate.notNull(task, "There must not be any null tasks.");
-					
+
 					task.run();
 				}
 
@@ -593,7 +691,7 @@ public final class Utilities {
 				// Queue execution
 				for(Runnable task : tasks){
 					Validate.notNull(task, "There must not be any null tasks.");
-					
+
 					teleport.registerOnTeleport(task);
 				}
 
@@ -602,7 +700,7 @@ public final class Utilities {
 		}
 
 	}
-	
+
 	/**
 	 * @deprecated Use {@link Scheduler#runAfterTeleport(QueuedTeleport, Runnable...)}
 	 */
@@ -886,7 +984,7 @@ public final class Utilities {
 			private static boolean isReflectionInitialized(){
 				return packetPlayOutWorldParticles != null && playerConnection != null && sendPacket != null;
 			}
-			
+
 			static {
 				for (Particle p : values()){
 					NAME_MAP.put(p.name, p);
@@ -924,11 +1022,11 @@ public final class Utilities {
 				Validate.notEmpty(name, "A particle effect name must be specified.");
 
 				Particle returnVal = NAME_MAP.get(name.trim()); // We use a TreeMap with case insensitive comparison, so efficient lookups can be used while maintaining case safety
-				
+
 				if(returnVal == null){
 					throw new IllegalArgumentException("A particle effect with the specified name could not be found.");
 				}
-				
+
 				return returnVal;
 			}
 
@@ -950,7 +1048,7 @@ public final class Utilities {
 				if(!isReflectionInitialized()){
 					loadReflectionObjects();
 				}
-				
+
 				try {
 					return packetPlayOutWorldParticles.newInstance(name, (float) center.getX(), (float) center.getY(), (float) center.getZ(), offsetX, offsetY, offsetZ, speed, amount);
 				} catch (Exception e) {
@@ -997,7 +1095,7 @@ public final class Utilities {
 				if(!isReflectionInitialized()){
 					loadReflectionObjects();
 				}
-				
+
 				try {
 					sendPacket.invoke(playerConnection.get(ReflectionUtilities.CraftBukkit.getNMSHandle(p)), packet);
 				} catch (Exception e) {
