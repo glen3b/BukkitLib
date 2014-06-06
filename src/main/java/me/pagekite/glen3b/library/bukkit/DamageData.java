@@ -28,6 +28,13 @@ public final class DamageData implements Cloneable {
 	}
 	
 	/**
+	 * Internal method provided to set the raw source object.
+	 */
+	void setRawSource(Object source){
+		_source = source;
+	}
+	
+	/**
 	 * Gets the time at which the damage occurred.
 	 * @return The time at which the damage occurred, in milliseconds.
 	 * @see System#currentTimeMillis()

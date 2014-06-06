@@ -61,6 +61,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Firework;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Projectile;
 import org.bukkit.entity.Wolf;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -70,6 +71,7 @@ import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.EntityDamageByBlockEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityRegainHealthEvent;
 import org.bukkit.event.player.PlayerKickEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
@@ -86,6 +88,7 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.projectiles.BlockProjectileSource;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
 
@@ -200,6 +203,12 @@ public final class Utilities {
 		}
 		
 		@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+		public void onDeath(final EntityDeathEvent event){
+			// An entity died, so its previous damagers no longer can do anything
+			getDeque(event.getEntity().getUniqueId()).clear();
+		}
+		
+		@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
 		public void onHealthRegain(final EntityRegainHealthEvent event){
 			double regainAmountTicker = event.getAmount();
 			Deque<DamageData> damagers = getDeque(event.getEntity().getUniqueId());
@@ -209,7 +218,7 @@ public final class Utilities {
 					// Remove damage attribution from a specific source
 					leastRecentDamage.setDamageAmount(leastRecentDamage.getDamageAmount() - regainAmountTicker);
 					regainAmountTicker = 0;
-				}else if(equals(leastRecentDamage.getDamageAmount(), regainAmountTicker)){
+				}else if(Utilities.equals(leastRecentDamage.getDamageAmount(), regainAmountTicker)){
 					// Just enough to remove the damage source
 					damagers.removeLast();
 					regainAmountTicker = 0;
@@ -220,19 +229,14 @@ public final class Utilities {
 			}
 			
 		}
-		
-		private static final boolean equals(Object left, Object right){
-			return left == null ? right == null : left.equals(right);
-		}
-		
-		private static final boolean equals(double left, double right){
-			return Double.doubleToLongBits(left) == Double.doubleToLongBits(right);
-		}
 
 		@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
 		public void onHealthLoss(final EntityDamageEvent event){
 			Deque<DamageData> damagers = getDeque(event.getEntity().getUniqueId());
 			
+//			//LOGGING
+//			Bukkit.getLogger().log(Level.INFO, "GBukkitLib listener: Received " + event.getEventName() + " for a mob. Let's see what happens!");
+//			//END LOGGING
 			Object dmgSrc = null;
 			if(event instanceof EntityDamageByEntityEvent){
 				dmgSrc = ((EntityDamageByEntityEvent)event).getDamager();
@@ -240,22 +244,33 @@ public final class Utilities {
 				dmgSrc = ((EntityDamageByBlockEvent)event).getDamager();
 			}
 			
+//			//LOGGING
+//			Bukkit.getLogger().log(Level.INFO, "GBukkitLib listener: Received " + event.getEventName() + " for a mob. We've determined the source to be..... " + dmgSrc + " w/ cause of " + event.getCause());
+//			if(dmgSrc instanceof Entity){
+//				Bukkit.getLogger().log(Level.INFO, "Entity ID: " + ((Entity)dmgSrc).getEntityId());
+//			}
+//			//END LOGGING
+			
 			DamageData info;
 			DamageData currentHead = damagers.peekFirst();
-			if(currentHead != null && equals(currentHead.getRawSource(), dmgSrc) && equals(currentHead.getCause(), event.getCause())){
+			boolean useExistingHead = currentHead != null && Utilities.equals(currentHead.getRawSource() instanceof Projectile ? ((Projectile)currentHead.getRawSource()).getShooter() : currentHead.getRawSource(), dmgSrc instanceof Projectile ? ((Projectile)dmgSrc).getShooter() : dmgSrc);
+			if(useExistingHead){
 				// If possible, use the same object for multiple hits
 				info = currentHead;
 			}else{
 				info = new DamageData();
 				info.setDamageAmount(0);
-				info.setCause(event.getCause());
 			}
 			
-			// Update the time accordingly, just in case we're using a similiar object
+			// Update the time accordingly, just in case we're using a "similiar object"
+			info.setCause(event.getCause());
+			info.setRawSource(dmgSrc);
 			info._time = System.currentTimeMillis();
 			info.setDamageAmount(info.getDamageAmount() + event.getDamage());
 			
-			damagers.addFirst(info);
+			if(!useExistingHead){
+				damagers.addFirst(info);
+			}
 		}
 	}
 
@@ -284,6 +299,88 @@ public final class Utilities {
 		}
 	}
 
+	/**
+	 * Determines if two objects are equal.
+	 * @param left The left object.
+	 * @param right The right object.
+	 * @return True if and only if the two objects are equal.
+	 * @see Object#equals(Object)
+	 */
+	public static final boolean equals(Object left, Object right){
+		if(left == null){
+			return right == null;
+		}
+		
+		if(right == null){
+			return left == null;
+		}
+		
+		if(left instanceof Entity){
+			if(!(right instanceof Entity)){
+				return false;
+			}
+			
+			// I've had problems with this, so I will implement it again
+			int leftId = ((Entity)left).getEntityId();
+			int rightId = ((Entity)right).getEntityId();
+			
+			if(left.equals(right)){
+				// CraftBukkit: Your last chance to work
+				return true;
+			}
+			
+			return leftId == rightId;
+		}else if(left instanceof ItemMeta){
+			if(!(right instanceof ItemMeta)){
+				return false;
+			}
+			return Bukkit.getItemFactory().equals((ItemMeta)left, (ItemMeta)right);
+		}else if(left instanceof Block){
+			if(!(right instanceof Block)){
+				return false;
+			}
+			// I've had problems with this, so I will implement it again
+			Location leftId = ((Block)left).getLocation();
+			Location rightId = ((Block)right).getLocation();
+			
+			if(left.equals(right)){
+				// CraftBukkit: Your last chance to work
+				return true;
+			}
+			
+			return leftId.equals(rightId);
+		}else if(left instanceof BlockProjectileSource){
+			if(!(right instanceof BlockProjectileSource)){
+				return false;
+			}
+			return Utilities.equals(((BlockProjectileSource)left).getBlock(), ((BlockProjectileSource)right).getBlock());
+		}
+		
+		return left.equals(right);
+	}
+	
+	/**
+	 * Determines if two objects are equal.
+	 * @param left The left object.
+	 * @param right The right object.
+	 * @return True if and only if the two objects are equal.
+	 * @see Double#doubleToLongBits(double)
+	 */
+	public static final boolean equals(double left, double right){
+		return Double.doubleToLongBits(left) == Double.doubleToLongBits(right);
+	}
+	
+	/**
+	 * Determines if two objects are equal.
+	 * @param left The left object.
+	 * @param right The right object.
+	 * @return True if and only if the two objects are equal.
+	 * @see Float#floatToIntBits(float)
+	 */
+	public static final boolean equals(float left, float right){
+		return Float.floatToIntBits(left) == Float.floatToIntBits(right);
+	}
+	
 	/**
 	 * Clean up the mess.
 	 * @param hostPlugin The plugin creating the mess.
