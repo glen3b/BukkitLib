@@ -21,6 +21,7 @@ import org.apache.commons.lang.Validate;
 import org.bukkit.Bukkit;
 import org.bukkit.Server;
 import org.bukkit.entity.Item;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import com.google.common.base.Function;
@@ -282,8 +283,45 @@ public final class ReflectionUtilities {
 		}
 
 		private static boolean _hasCachedCraftPlayer = false;
-		private static Class<? extends org.bukkit.entity.Player> _cachedCraftPlayerType = null;
+		private static Class<? extends Player> _cachedCraftPlayerType = null;
+		private static Method _nmsPlayer_playerConnection_sendPacketMethod = null;
 
+		/**
+		 * Sends an NMS packet instance to a specific player.
+		 * @param player The player who will receive the packet.
+		 * @param packet The NMS packet object.
+		 * @exception IllegalArgumentException If player is {@code null}.
+		 * @exception IllegalArgumentException If packet is {@code null}.
+		 * @exception IllegalArgumentException If packet is not an instance of the NMS packet type.
+		 */
+		public static void sendPacket(Player player, Object packet){
+			Validate.notNull(player, "The player must not be null.");
+			Validate.notNull(packet, "The packet instance must not be null.");
+			Class<?> packetType = null;
+			try {
+				packetType = Minecraft.getType("Packet");
+			} catch (Exception e) {
+				throw new RuntimeException("An error occurred during the process of reflectively sending the specified packet to the specified player.", e);
+			}
+			
+			Validate.isTrue(packetType.isInstance(packet), "The packet instance must be assignable to the NMS packet type.");
+			
+			try {
+				// EntityPlayer instance
+				Object nmsPlayer = getNMSHandle(player);
+				// PlayerConnection for this player
+				Object networkingHandle = getValue(nmsPlayer, "playerConnection");
+				if(_nmsPlayer_playerConnection_sendPacketMethod == null){
+					_nmsPlayer_playerConnection_sendPacketMethod = networkingHandle.getClass().getDeclaredMethod("sendPacket", packetType);
+					_nmsPlayer_playerConnection_sendPacketMethod.setAccessible(true);
+				}
+				// Send the packet to the player in question
+				_nmsPlayer_playerConnection_sendPacketMethod.invoke(networkingHandle, packet);
+			} catch (Exception e) {
+				throw new RuntimeException("An error occurred during the process of reflectively sending the specified packet to the specified player.", e);
+			}
+		}
+		
 		/**
 		 * Gets the {@link Class} instance representing the {@code org.bukkit.craftbukkit.entity.CraftPlayer} implementation class.
 		 * @return The cached {@code org.bukkit.craftbukkit.entity.CraftPlayer} {@link Class} instance, or {@code null} if it could not be found.
@@ -291,7 +329,7 @@ public final class ReflectionUtilities {
 		public static synchronized Class<? extends org.bukkit.entity.Player> getCraftPlayerType(){
 			/*
 			 * We cache the Class instance separately due to the asSubclass call.
-			 * The SubPackages will cache it, but thye do not cache the Bukkit interfaces explicitly.
+			 * The SubPackages will cache it, but they do not cache the Bukkit interfaces explicitly.
 			 */
 			
 			if(!_hasCachedCraftPlayer){

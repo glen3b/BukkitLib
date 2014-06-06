@@ -18,8 +18,6 @@
 package me.pagekite.glen3b.library.bukkit;
 
 import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -1081,17 +1079,12 @@ public final class Utilities {
 			private static final Map<String, Particle> NAME_MAP = new TreeMap<String, Particle>(String.CASE_INSENSITIVE_ORDER);
 			private static final double MAX_RANGE = 32; // More than 16 to give some breathing room
 			private static Constructor<?> packetPlayOutWorldParticles;
-			private static Field playerConnection;
-			private static Method sendPacket;
 			private final String name;
 
 			private static void loadReflectionObjects(){
 				try {
 					packetPlayOutWorldParticles = ReflectionUtilities.getConstructor(ReflectionUtilities.Minecraft.getType("PacketPlayOutWorldParticles"), String.class, float.class, float.class, float.class, float.class, float.class,
 							float.class, float.class, int.class);
-					playerConnection = ReflectionUtilities.getField(ReflectionUtilities.Minecraft.getType("EntityPlayer"), "playerConnection");
-					sendPacket = playerConnection.getType().getDeclaredMethod("sendPacket", ReflectionUtilities.Minecraft.getType("Packet"));
-					sendPacket.setAccessible(true);
 				}catch (Exception e) {
 					throw new IllegalStateException("Reflective object initialization failed.", e);
 				}
@@ -1099,12 +1092,10 @@ public final class Utilities {
 
 			private static void flushReflectionCache(){
 				packetPlayOutWorldParticles = null;
-				playerConnection = null;
-				sendPacket = null;
 			}
 
 			private static boolean isReflectionInitialized(){
-				return packetPlayOutWorldParticles != null && playerConnection != null && sendPacket != null;
+				return packetPlayOutWorldParticles != null;
 			}
 
 			static {
@@ -1206,28 +1197,8 @@ public final class Utilities {
 			}
 
 			/**
-			 * Using reflection, injects a packet into the players connection so that the client receives it.
-			 *
-			 * @param p Receiver of the packet. <i>Must</i> be an instance of {@code CraftPlayer}.
-			 * @param packet Packet that is sent.
-			 */
-			private static void sendPacket(Player p, Object packet) {
-				Validate.notNull(packet, "The packet must not be null.");
-
-				if(!isReflectionInitialized()){
-					loadReflectionObjects();
-				}
-
-				try {
-					sendPacket.invoke(playerConnection.get(ReflectionUtilities.CraftBukkit.getNMSHandle(p)), packet);
-				} catch (Exception e) {
-					throw new RuntimeException("Failed to send a packet to the player '" + p.getName() + "' reflectively.", e);
-				}
-			}
-
-			/**
 			 * Sends a packet through reflection to a collection of players.
-			 * @see #sendPacket(Player, Object)
+			 * @see ReflectionUtilities.CraftBukkit#sendPacket(Player, Object)
 			 */
 			private static void sendPacket(Iterable<Player> players, Object packet) {
 				for (Player p : players){
@@ -1235,7 +1206,7 @@ public final class Utilities {
 						throw new IllegalArgumentException("No null players may be specified as packet recipients.");
 					}
 
-					sendPacket(p, packet);
+					ReflectionUtilities.CraftBukkit.sendPacket(p, packet);
 				}
 			}
 
