@@ -2,7 +2,10 @@ package me.pagekite.glen3b.library.bukkit;
 
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.Projectile;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
+import org.bukkit.projectiles.BlockProjectileSource;
+import org.bukkit.projectiles.ProjectileSource;
 
 import com.google.common.base.Preconditions;
 
@@ -34,25 +37,56 @@ public final class DamageData implements Cloneable {
 	}
 
 	/**
-	 * Get the source of the damage done as an entity.
+	 * Get the source of the damage done as an instance of {@link Entity}.
+	 * <p>
+	 * If the damager related to this data is an instance of {@link Projectile},
+	 * this method will return the <em>shooter of</em> that projectile, assuming it is an instance of {@code Entity}.
+	 * To get the projectile instance itself, use {@link #getSourceAsProjectile()}.
 	 * @return The source of damage, or {@code null} if it is not an entity that dealt the damage.
 	 */
-	public Entity getEntitySource(){
-		if(_source == null || !(_source instanceof Entity)){
+	public Entity getSourceAsEntity(){
+		if(_source == null || !(_source instanceof Entity /* One check because Projectile extends Entity */)){
 			return null;
 		}
-		return (Entity)_source;
+		Projectile proj = getSourceAsProjectile();
+		ProjectileSource shooter = proj == null ? null : proj.getShooter();
+		if(shooter instanceof Entity){
+			return (Entity)shooter;
+		}else{
+			return (Entity)_source;
+		}
 	}
 	
 	/**
-	 * Get the source of the damage done as a nlock.
+	 * Get the source of the damage done as an instance of {@link Block}.
+	 * <p>
+	 * If the damager related to this data is an instance of {@link Projectile},
+	 * this method will return the <em>block represented by the shooter of</em> that projectile, assuming it is an instance of {@code BlockProjectileSource}.
+	 * To get the projectile instance itself, use {@link #getSourceAsProjectile()}.
 	 * @return The source of damage, or {@code null} if it is not a block that dealt the damage.
 	 */
-	public Block getBlockSource(){
-		if(_source == null || !(_source instanceof Block)){
+	public Block getSourceAsBlock(){
+		if(_source == null || (!(_source instanceof Block) && !(_source instanceof Projectile))){
 			return null;
 		}
-		return (Block)_source;
+		Projectile proj = getSourceAsProjectile();
+		ProjectileSource shooter = proj == null ? null : proj.getShooter();
+		if(shooter instanceof BlockProjectileSource){
+			return ((BlockProjectileSource)shooter).getBlock();
+		}else{
+			return (Block)_source;
+		}
+	}
+	
+	/**
+	 * Get the source of the damage done as an instance of {@link Projectile}.
+	 * @return The source of damage, or {@code null} if it is not a projectile that dealt the damage.
+	 */
+	public Projectile getSourceAsProjectile(){
+		if(_source == null || !(_source instanceof Projectile)){
+			return null;
+		}
+		return (Projectile)_source;
 	}
 	
 	/**
