@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.logging.Level;
 
+import me.pagekite.glen3b.library.ResultReceived;
 import me.pagekite.glen3b.library.bukkit.Constants;
 
 import org.apache.commons.lang.Validate;

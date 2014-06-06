@@ -1,4 +1,4 @@
-package me.pagekite.glen3b.library.bungeecord;
+package me.pagekite.glen3b.library;
 
 /**
  * Represents a handler of a received result.

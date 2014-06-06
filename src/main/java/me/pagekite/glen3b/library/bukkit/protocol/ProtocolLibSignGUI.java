@@ -7,8 +7,8 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+import me.pagekite.glen3b.library.ResultReceived;
 import me.pagekite.glen3b.library.bukkit.menu.sign.AbstractSignGUIManager;
-import me.pagekite.glen3b.library.bukkit.menu.sign.SignSubmitListener;
 
 import org.apache.commons.lang.Validate;
 import org.bukkit.Bukkit;
@@ -32,14 +32,14 @@ public class ProtocolLibSignGUI extends AbstractSignGUIManager {
 
     protected ProtocolManager protocolManager;
     protected PacketAdapter packetListener;
-    protected Map<UUID, SignSubmitListener> listeners;
+    protected Map<UUID, ResultReceived<Player, String[]>> listeners;
     protected Map<UUID, Vector> signLocations;
 
     
     
     public ProtocolLibSignGUI(Plugin plugin) {
         protocolManager = ProtocolLibrary.getProtocolManager();        
-        listeners = new ConcurrentHashMap<UUID, SignSubmitListener>();
+        listeners = new ConcurrentHashMap<UUID, ResultReceived<Player, String[]>>();
         signLocations = new ConcurrentHashMap<UUID, Vector>();
         
 
@@ -58,12 +58,12 @@ public class ProtocolLibSignGUI extends AbstractSignGUIManager {
                 if (list.get(2) != v.getBlockZ()) return;
                 
                 final String[] lines = event.getPacket().getStringArrays().getValues().get(0);
-                final SignSubmitListener response = listeners.remove(event.getPlayer().getUniqueId());
+                final ResultReceived<Player, String[]> response = listeners.remove(event.getPlayer().getUniqueId());
                 if (response != null) {
                     event.setCancelled(true);
                     Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, new Runnable() {
                         public void run() {
-                            response.onEditComplete(player, lines);
+                            response.onReceive(player, lines);
                         }
                     });
                 }
@@ -72,7 +72,7 @@ public class ProtocolLibSignGUI extends AbstractSignGUIManager {
     }
     
     @Override
-    public void open(Player player, String[] paramdefaultText, SignSubmitListener response) {
+    public void open(Player player, String[] paramdefaultText, ResultReceived<Player, String[]> response) {
     	Validate.notNull(player, "The player must not be null.");
     	Validate.isTrue(paramdefaultText == null || paramdefaultText.length <= 4, "No more than 4 default lines may be specified.");
         
