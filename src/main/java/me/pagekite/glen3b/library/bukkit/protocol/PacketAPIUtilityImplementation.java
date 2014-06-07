@@ -11,12 +11,14 @@ import me.bigteddy98.packetapi.PacketAPI;
 import me.bigteddy98.packetapi.api.PacketHandler;
 import me.bigteddy98.packetapi.api.PacketListener;
 import me.bigteddy98.packetapi.api.PacketSendEvent;
+import me.pagekite.glen3b.library.bukkit.menu.sign.SignGUI;
 import me.pagekite.glen3b.library.bukkit.reflection.ReflectionUtilities;
 
 import org.bukkit.Bukkit;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.plugin.ServicePriority;
 
 /**
  * A wrapper for <em>some</em> protocol abilities in PacketAPI. Little wrapper classes exist in the library in question, so reflection is still required.
@@ -41,7 +43,7 @@ public class PacketAPIUtilityImplementation implements ProtocolUtilities, Packet
 	 * It feels like reimplementing ProtocolLib's fabulous "fuzzy reflection," but hackier.
 	 */
 
-	private void initializeWindowItemCache(){
+	private synchronized void initializeWindowItemCache(){
 		if(_windowItemsStackArray == null){
 			try {
 				for(Field possible : ReflectionUtilities.Minecraft.getType("PacketPlayOutWindowItems").getDeclaredFields()){
@@ -62,7 +64,7 @@ public class PacketAPIUtilityImplementation implements ProtocolUtilities, Packet
 	private Field _windowItemsStackArray;
 	private Field _setSlotItemStack;
 
-	private void initializeSetSlotCache(){
+	private synchronized void initializeSetSlotCache(){
 		if(_setSlotItemStack == null){
 			try {
 				for(Field possible : ReflectionUtilities.Minecraft.getType("PacketPlayOutSetSlot").getDeclaredFields()){
@@ -82,6 +84,8 @@ public class PacketAPIUtilityImplementation implements ProtocolUtilities, Packet
 
 	// End fuzzy match initializers
 
+	private PacketAPISignGUI _signListener;
+	
 	@Override
 	public void init(Plugin plugin) {
 		_purelyReflectiveImplementation = Bukkit.getServicesManager().getRegistration(DefaultProtocolUtilityImplementation.class).getProvider();
@@ -91,6 +95,10 @@ public class PacketAPIUtilityImplementation implements ProtocolUtilities, Packet
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+		
+		_signListener = new PacketAPISignGUI(plugin);
+
+		Bukkit.getServicesManager().register(SignGUI.class, _signListener, plugin, ServicePriority.Normal);
 	}
 	
 	@SuppressWarnings("deprecation") // Enchantment ID retrieval
@@ -172,6 +180,7 @@ public class PacketAPIUtilityImplementation implements ProtocolUtilities, Packet
 	public void cleanup(Plugin plugin) {
 		// PacketAPI does not support unregistering listeners :/
 		// I hope it takes care of that for us
+		_signListener.destroy();
 	}
 
 }
