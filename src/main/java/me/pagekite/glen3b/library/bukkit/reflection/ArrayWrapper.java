@@ -9,7 +9,7 @@ import org.apache.commons.lang.Validate;
  * Represents a wrapper around an array class of an arbitrary reference type,
  * which implements hash code and equality functions that work based on the vale of the array in question.
  * <p>
- * This class is intended for use as a key to a keyed collection, such as a {@link Map}.
+ * This class is intended for use as a key to a keyed collection, such as a {@link java.util.Map Map}.
  * </p>
  * @author Glen Husman
  * @param <E> The type of elements in the array.
