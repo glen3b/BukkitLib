@@ -108,6 +108,17 @@ public class CyclingInventoryMenu extends InventoryMenu {
 		}
 		
 		/**
+		 * Toggles the status of scheduler optimization as if by calling {@link CyclingInventoryMenu#setSchedulerOptimizationEnabled(boolean)}.
+		 * @param value The new state of scheduler optimization.
+		 * @return This instance.
+		 */
+		public Builder setSchedulerOptimization(boolean value){
+			((CyclingInventoryMenu)_wrapped).setSchedulerOptimizationEnabled(value);
+			
+			return this;
+		}
+		
+		/**
 		 * Sets the option at the specified position to the specified item.
 		 * The item will have the specified name and lore. All strings must be color-formatted by the caller.
 		 * @param position The zero-based index of the item.
