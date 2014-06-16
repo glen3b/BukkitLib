@@ -42,7 +42,7 @@ import com.google.common.collect.Sets;
  * Represents a parent command, which can encompass ase commands.
  * @author Glen Husman
  */
-public abstract class ParentCommand implements TabExecutor, PreprocessedCommandHandler {
+public abstract class ParentCommand implements TabExecutor, PreprocessedCommandHandler, SubcommandAnnotatedObject {
 
 	private Map<String, AnnotatedCommandInfo> _aliasesToCommands;
 	private List<AnnotatedCommandInfo> _commands;
@@ -334,36 +334,64 @@ public abstract class ParentCommand implements TabExecutor, PreprocessedCommandH
 	protected String getHelpHeader(){
 		return ChatColor.AQUA + "Help (page %d):";
 	}
-
 	/**
 	 * Creates a parent command instance. For this class to successfully execute a command, {@link ParentCommand#register(PluginCommand)} must be invoked. This constructor will iterate through all methods on the runtime class of this instance to determine which ones represent a subcommand, as determined by the {@link CommandMethod} annotation.
+	 * The created instance (which may be of a subclassed type) will be the object containing commands.
 	 */
 	public ParentCommand() {
-		_aliasesToCommands = new TreeMap<String, AnnotatedCommandInfo>(String.CASE_INSENSITIVE_ORDER);
-		_commands = new ArrayList<AnnotatedCommandInfo>();
-		// Loop so if client class A extends ParentCommand and client class B extends A, then all command methods inherited from A are registered in B
-		for (Class<?> clazz = getClass(); clazz != null; clazz = clazz.getSuperclass())
-		{
-			for(Method m: clazz.getDeclaredMethods()) {
-				if(m.isAnnotationPresent(CommandMethod.class)) {
-					AnnotatedCommandInfo info = new AnnotatedCommandInfo(m);
-					CommandMethod annotation = m.getAnnotation(CommandMethod.class);
-					if(annotation.aliases().length == 0){
-						throw new IllegalStateException("There are no aliases for the command specified by " + m.toString());
+		initMethodMap(getClass());
+	}
+	
+	private void initMethodMap(Class<? extends SubcommandAnnotatedObject> clazz){
+		Set<String> aliasesUsed = Sets.newHashSet();
+		
+		for(Method m: clazz.getDeclaredMethods()) {
+			if(m.isAnnotationPresent(CommandMethod.class)) {
+				AnnotatedCommandInfo info = new AnnotatedCommandInfo(m);
+				CommandMethod annotation = m.getAnnotation(CommandMethod.class);
+				if(annotation.aliases().length == 0){
+					throw new IllegalStateException("There are no aliases for the command specified by " + m.toString());
+				}
+				
+				boolean isRegistered = false;
+				for(String alias : annotation.aliases()){
+					if(alias == null){ // TODO: Support one null alias, which represents the base command
+						throw new IllegalStateException("An alias for the command specified by " + m.toString() + " is null.");
 					}
-					for(String alias : annotation.aliases()){
-						if(alias == null){ // TODO: Support one null alias, which represents the base command
-							throw new IllegalStateException("An alias for the command specified by " + m.toString() + " is null.");
-						}
 
-						AnnotatedCommandInfo prevVal = _aliasesToCommands.put(alias, info);
-
-						if(prevVal != null){
-							throw new IllegalStateException("The alias '" + alias + "' for the command specified by " + m.toString() + " conflicts with the alias of the same name speciifed by " + prevVal.getMethod().toString());
-						}
+					
+					if(!aliasesUsed.add(alias)){
+						// The alias was already used BY THIS CLASS
+						throw new IllegalStateException("The alias '" + alias + "' for the command specified by " + m.toString() + " conflicts with an alias of the same name in the same class declaration.");
+					}else if(_aliasesToCommands.containsKey(alias)){
+						// The alias was already used, but not by this class
+						// Due to loop order, it was by a subclass
+						// Therefore, we assume that this alias has been taken, and we do NOT register the superclassier command under this alias
+					}else{
+						_aliasesToCommands.put(alias, info);
+						isRegistered = true;
 					}
+				}
+				
+				if(isRegistered){
+					// If no aliases were available but no exceptions were thrown, command shouldn't be in the list (which is used for help page generation)
 					_commands.add(info);
 				}
+			}
+		}
+	}
+	
+	/**
+	 * Creates a parent command instance. For this class to successfully execute a command, {@link ParentCommand#register(PluginCommand)} must be invoked. This constructor will iterate through all methods on the runtime class of this instance to determine which ones represent a subcommand, as determined by the {@link CommandMethod} annotation.
+	 * @param objects The objects which contain the commands to execute.
+	 */
+	public ParentCommand(SubcommandAnnotatedObject... objects) {
+		_aliasesToCommands = new TreeMap<String, AnnotatedCommandInfo>(String.CASE_INSENSITIVE_ORDER);
+		_commands = new ArrayList<AnnotatedCommandInfo>();
+		for(SubcommandAnnotatedObject object : objects){
+			for (Class<? extends SubcommandAnnotatedObject> clazz = object.getClass(); clazz != null && SubcommandAnnotatedObject.class.isAssignableFrom(clazz); clazz = clazz.getSuperclass().asSubclass(SubcommandAnnotatedObject.class))
+			{
+				initMethodMap(clazz);
 			}
 		}
 	}
