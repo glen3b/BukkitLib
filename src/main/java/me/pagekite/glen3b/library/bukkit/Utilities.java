@@ -59,7 +59,6 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Firework;
 import org.bukkit.entity.Player;
-import org.bukkit.entity.Projectile;
 import org.bukkit.entity.Wolf;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -190,11 +189,11 @@ public final class Utilities {
 		
 		private Map<UUID, Deque<DamageData>> _mobsToDamageInformation = Maps.newHashMapWithExpectedSize(50);
 		
-		public Deque<DamageData> getDeque(UUID mob){
+		public Deque<DamageData> getDamageInformationDeque(UUID mob){
 			Validate.notNull(mob);
 			
 			if(!_mobsToDamageInformation.containsKey(mob)){
-				_mobsToDamageInformation.put(mob, new ArrayDeque<DamageData>(5));
+				_mobsToDamageInformation.put(mob, new ArrayDeque<DamageData>(25));
 			}
 			
 			return _mobsToDamageInformation.get(mob);
@@ -203,13 +202,13 @@ public final class Utilities {
 		@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
 		public void onDeath(final EntityDeathEvent event){
 			// An entity died, so its previous damagers no longer can do anything
-			getDeque(event.getEntity().getUniqueId()).clear();
+			getDamageInformationDeque(event.getEntity().getUniqueId()).clear();
 		}
 		
 		@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
 		public void onHealthRegain(final EntityRegainHealthEvent event){
 			double regainAmountTicker = event.getAmount();
-			Deque<DamageData> damagers = getDeque(event.getEntity().getUniqueId());
+			Deque<DamageData> damagers = getDamageInformationDeque(event.getEntity().getUniqueId());
 			while(regainAmountTicker > 0 && damagers.size() > 0){
 				DamageData leastRecentDamage = damagers.getLast();
 				if(leastRecentDamage.getDamageAmount() > regainAmountTicker){
@@ -230,11 +229,8 @@ public final class Utilities {
 
 		@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
 		public void onHealthLoss(final EntityDamageEvent event){
-			Deque<DamageData> damagers = getDeque(event.getEntity().getUniqueId());
-			
-//			//LOGGING
-//			Bukkit.getLogger().log(Level.INFO, "GBukkitLib listener: Received " + event.getEventName() + " for a mob. Let's see what happens!");
-//			//END LOGGING
+			Deque<DamageData> damagers = getDamageInformationDeque(event.getEntity().getUniqueId());
+
 			Object dmgSrc = null;
 			if(event instanceof EntityDamageByEntityEvent){
 				dmgSrc = ((EntityDamageByEntityEvent)event).getDamager();
@@ -242,33 +238,14 @@ public final class Utilities {
 				dmgSrc = ((EntityDamageByBlockEvent)event).getDamager();
 			}
 			
-//			//LOGGING
-//			Bukkit.getLogger().log(Level.INFO, "GBukkitLib listener: Received " + event.getEventName() + " for a mob. We've determined the source to be..... " + dmgSrc + " w/ cause of " + event.getCause());
-//			if(dmgSrc instanceof Entity){
-//				Bukkit.getLogger().log(Level.INFO, "Entity ID: " + ((Entity)dmgSrc).getEntityId());
-//			}
-//			//END LOGGING
+			// Similiar objects are not supported here, but are used in the getter methods
+			DamageData info = new DamageData();
 			
-			DamageData info;
-			DamageData currentHead = damagers.peekFirst();
-			boolean useExistingHead = currentHead != null && Utilities.equals(currentHead.getRawSource() instanceof Projectile ? ((Projectile)currentHead.getRawSource()).getShooter() : currentHead.getRawSource(), dmgSrc instanceof Projectile ? ((Projectile)dmgSrc).getShooter() : dmgSrc);
-			if(useExistingHead){
-				// If possible, use the same object for multiple hits
-				info = currentHead;
-			}else{
-				info = new DamageData();
-				info.setDamageAmount(0);
-			}
-			
-			// Update the time accordingly, just in case we're using a "similiar object"
 			info.setCause(event.getCause());
 			info.setRawSource(dmgSrc);
 			info._time = System.currentTimeMillis();
 			info.setDamageAmount(info.getDamageAmount() + event.getDamage());
-			
-			if(!useExistingHead){
-				damagers.addFirst(info);
-			}
+			damagers.addFirst(info);
 		}
 	}
 
@@ -642,6 +619,57 @@ public final class Utilities {
 		
 		/**
 		 * Gets the list of recent damagers of the entity with the specified ID, as tracked by the utility event listener.
+		 * The primary advantage to this method over {@link #getDamagers(UUID)} is that the list will have damage sources compressed,
+		 * such that multiple successive damage events by the same source will be represented as one event with the sum of the damage at the latest time.
+		 * @param entity The entity for which to retrieve damager data.
+		 * @return A list of damage information about the specified entity.
+		 * @see #getDamagersCompressed(UUID)
+		 */
+		public static List<DamageData> getDamagersCompressed(Entity entity){
+			Validate.notNull(entity, "The entity for which information is being retrieved must not be null.");
+			return getDamagersCompressed(entity.getUniqueId());
+		}
+		
+		/**
+		 * Gets the list of recent damagers of the entity with the specified ID, as tracked by the utility event listener.
+		 * The primary advantage to this method over {@link #getDamagers(UUID)} is that the list will have damage sources compressed,
+		 * such that multiple successive damage events by the same source will be represented as one event with the sum of the damage at the latest time.
+		 * @param entityId The UUID of the entity for which to retrieve damager data.
+		 * @return A mutable list of damage information about the specified entity.
+		 * @see #getDamagers(UUID)
+		 */
+		public static List<DamageData> getDamagersCompressed(UUID entityId){
+			Validate.notNull(entityId, "The entity for which information is being retrieved must not be null.");
+			Deque<DamageData> info = _eventListener.getDamageInformationDeque(entityId);
+			if(info.size() == 0){
+				return Lists.newArrayListWithExpectedSize(0);
+			}
+			List<DamageData> returnedList = Lists.newArrayListWithExpectedSize(info.size());
+			for(DamageData data : info){
+				// The iterator, according to docs, iterates from head to tail
+				// This is consistent with our docs, which puts the most recent damage cause first
+				try {
+					returnedList.add(data.clone());
+				} catch (CloneNotSupportedException e) {
+					throw new RuntimeException("Damager information for this entity could not be cloned from the internal data store.", e);
+				}
+			}
+			for(int i = 0; i < returnedList.size() - 1 /* Don't loop over the last element, we don't need to (plus saves a check later) */; i++){
+				DamageData current = returnedList.get(i);
+				DamageData previous = returnedList.get(i + 1);
+				if(DamageData.sourcesEqual(current, previous)){
+					returnedList.remove(i + 1); // Remove the similiar element
+					current.setDamageAmount(current.getDamageAmount() + previous.getDamageAmount());
+					
+					i--; // Continually check the current element against subsequent elements
+				}
+			}
+			
+			return returnedList;
+		}
+		
+		/**
+		 * Gets the list of recent damagers of the entity with the specified ID, as tracked by the utility event listener.
 		 * <p>
 		 * The sum of the damage amounts of the values in the list should equal the current health of the entity.
 		 * <p>
@@ -650,12 +678,16 @@ public final class Utilities {
 		 * The returned list is sorted such that the first element will represent the most recent damage source and the last element will represent the last damage source that has still played a part in entity damage.
 		 * <p>
 		 * Due to the returned list being cloned, this reference is not necessarily valid for multiple server ticks.
+		 * <p>
+		 * Entities that have been damaged multiple times by a successive source will <em>not</em> have damage information compressed.
+		 * To retrieve information with damage data compressed, see {@link #getDamagersCompressed(UUID)}.
+		 * </p>
 		 * @param entityId The UUID of the entity for which to retrieve damager data.
 		 * @return A mutable list of damage information about the specified entity.
 		 */
 		public static List<DamageData> getDamagers(UUID entityId){
 			Validate.notNull(entityId, "The entity for which information is being retrieved must not be null.");
-			Deque<DamageData> info = _eventListener.getDeque(entityId);
+			Deque<DamageData> info = _eventListener.getDamageInformationDeque(entityId);
 			if(info.size() == 0){
 				return Lists.newArrayListWithExpectedSize(0);
 			}

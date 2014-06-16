@@ -21,6 +21,14 @@ public final class DamageData implements Cloneable {
 	long _time = System.currentTimeMillis();
 	
 	/**
+	 * Determines if this damage information has a recognisable damaging source.
+	 * @return {@code true} if and only if one of {@link #getSourceAsBlock()}, {@link #getSourceAsEntity()}, or {@link #getSourceAsProjectile()} will <em>not</em> return {@code null}.
+	 */
+	public boolean hasSource(){
+		return _source != null;
+	}
+	
+	/**
 	 * Internal method provided to get the raw source object.
 	 */
 	Object getRawSource(){
@@ -35,9 +43,8 @@ public final class DamageData implements Cloneable {
 	}
 	
 	/**
-	 * Gets the time at which the damage occurred.
-	 * @return The time at which the damage occurred, in milliseconds.
-	 * @see System#currentTimeMillis()
+	 * Gets the time at which the damage occurred. This time is set by using the {@link System#currentTimeMillis() currentTimeMillis} function.
+	 * @return The time at which the damage occurred, in milliseconds since midnight, January 1, 1970 UTC.
 	 */
 	public long getTime(){
 		return _time;
@@ -106,6 +113,7 @@ public final class DamageData implements Cloneable {
 	
 	/**
 	 * Set the source of damage done to a new value.
+	 * Note that this method will accept <em>projectile</em> instances and entities passed in will not be set as projectile shooters even if the current source is a projectile.
 	 * @param newSource The new source of damage.
 	 */
 	public void setSource(Entity newSource){
@@ -124,7 +132,7 @@ public final class DamageData implements Cloneable {
 	 * <p>
 	 * This value is intended to be decreased by using this setter if health lost by this damage event is regenerated.
 	 * <p>
-	 * This setter method will round incoming values to the nearest 100th decimal place.
+	 * This setter method will round incoming values to the nearest thousandth decimal place.
 	 * @param amount The new amount.
 	 * @see Math#rint(double)
 	 */
@@ -133,7 +141,7 @@ public final class DamageData implements Cloneable {
 			throw new IllegalArgumentException("The damage amount must be positive.");
 		}
 		
-		this._amount = Math.rint(amount * 100.0) / 100.0; // Round to hundredth decimal place
+		this._amount = Math.rint(amount * 1000.0) / 1000.0; // Round to thousandth decimal place
 	}
 
 	/**
@@ -167,6 +175,34 @@ public final class DamageData implements Cloneable {
 				+ ", Cause=" + _cause + ", Time=" + _time + "]";
 	}
 
+	/**
+	 * INTERNAL METHOD. Determines if the sources of two damage events are equal.
+	 */
+	static boolean sourcesEqual(DamageData a, DamageData b){
+		if(a == null){
+			return b == null;
+		}
+		if(b == null){
+			return a == null;
+		}
+		
+		if(a.getRawSource() == null){
+			return b.getRawSource() == null;
+		}
+		if(b.getRawSource() == null){
+			return a.getRawSource() == null;
+		}
+		
+		if(a.getRawSource() instanceof Projectile){
+			ProjectileSource aSrc = a.getSourceAsProjectile().getShooter();
+			ProjectileSource bSrc = b.getSourceAsProjectile().getShooter();
+			
+			return Utilities.equals(aSrc, bSrc);
+		}
+		
+		return Utilities.equals(a.getRawSource(), b.getRawSource());
+	}
+	
 	@Override
 	public int hashCode() {
 		final int prime = 31;
