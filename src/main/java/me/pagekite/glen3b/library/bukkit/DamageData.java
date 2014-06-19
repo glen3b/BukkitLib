@@ -17,8 +17,9 @@ public final class DamageData implements Cloneable {
 
 	private Object _source;
 	private double _amount;
+	double regen;
 	private DamageCause _cause;
-	long _time = System.currentTimeMillis();
+	private long _time = System.currentTimeMillis();
 	
 	/**
 	 * Determines if this damage information has a recognisable damaging source.
@@ -121,9 +122,18 @@ public final class DamageData implements Cloneable {
 	}
 
 	/**
-	 * @return The final amount of damage dealt by this event.
+	 * Gets the amount of damage that is still effecting the entity in question (as in not regenerated) caused by this damage event.
+	 * @return The final amount of effective damage dealt by this event.
 	 */
 	public double getDamageAmount() {
+		return _amount - regen;
+	}
+	
+	/**
+	 * Gets the amount of damage <em>initially</em> caused by this event, regardless of health regeneration.
+	 * @return The final amount of damage initially dealt by this event.
+	 */
+	public double getInitialDamageAmount(){
 		return _amount;
 	}
 

@@ -213,7 +213,7 @@ public final class Utilities {
 				DamageData leastRecentDamage = damagers.getLast();
 				if(leastRecentDamage.getDamageAmount() > regainAmountTicker){
 					// Remove damage attribution from a specific source
-					leastRecentDamage.setDamageAmount(leastRecentDamage.getDamageAmount() - regainAmountTicker);
+					leastRecentDamage.regen += regainAmountTicker;
 					regainAmountTicker = 0;
 				}else if(Utilities.equals(leastRecentDamage.getDamageAmount(), regainAmountTicker)){
 					// Just enough to remove the damage source
@@ -243,7 +243,6 @@ public final class Utilities {
 			
 			info.setCause(event.getCause());
 			info.setRawSource(dmgSrc);
-			info._time = System.currentTimeMillis();
 			info.setDamageAmount(info.getDamageAmount() + event.getDamage());
 			damagers.addFirst(info);
 		}
